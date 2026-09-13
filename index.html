@@ -406,50 +406,58 @@ function doLogin(name, email, pictureUrl, displayNo) {
   toast((name||email||displayNo+"번") + "님, 로그인 완료!");
 }
 
-// 테스트용 학번 로그인
-$("#loginBtn").onclick=()=>{
-  const no=+$("#noIn").value||20301;
-  doLogin("학생 "+no, no+"@school.go.kr", null, no);
-};
+// 테스트용 학번 로그인 (엘리먼트가 존재하는 경우)
+if($("#loginBtn")) {
+  $("#loginBtn").onclick=()=>{
+    const no=$("#noIn") ? +$("#noIn").value : 20301;
+    doLogin("학생 "+no, no+"@school.go.kr", null, no);
+  };
+}
 
 // Google 로그인 버튼 클릭 (원클릭 바로 로그인)
-$("#gLoginBtn").onclick=()=>{
-  if(typeof google !== 'undefined' && google.accounts && GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.endsWith(".apps.googleusercontent.com")) {
-    google.accounts.id.prompt();
-  } else {
-    // 학번/이름 입력창 없이 구글 계정(yooonchae96@gmail.com)으로 원클릭 바로 로그인!
-    const defaultEmail = (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.includes("@")) ? GOOGLE_CLIENT_ID : "yooonchae96@gmail.com";
-    const name = defaultEmail.split("@")[0];
-    const displayNo = 20314;
-    doLogin(name, defaultEmail, null, displayNo);
-  }
-};
+if($("#gLoginBtn")) {
+  $("#gLoginBtn").onclick=()=>{
+    if(typeof google !== 'undefined' && google.accounts && GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.endsWith(".apps.googleusercontent.com")) {
+      google.accounts.id.prompt();
+    } else {
+      // 학번/이름 입력창 없이 구글 계정(yooonchae96@gmail.com)으로 원클릭 바로 로그인!
+      const defaultEmail = (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.includes("@")) ? GOOGLE_CLIENT_ID : "yooonchae96@gmail.com";
+      const name = defaultEmail.split("@")[0];
+      const displayNo = 20314;
+      doLogin(name, defaultEmail, null, displayNo);
+    }
+  };
+}
 
 // 모달 닫기
 if($("#closeGModal")) $("#closeGModal").onclick=()=> $("#gAuthModal").classList.add("hide");
 
 // 모달 구글 로그인 제출
-$("#gModalSubmit").onclick=()=>{
-  const email = $("#gModalEmail").value.trim() || "student@school.sen.go.kr";
-  const nameInput = $("#gModalName").value.trim();
-  const numMatch = email.match(/^(\d{5,})/);
-  let no = +$("#gModalNo").value || (numMatch ? +numMatch[1] : 20314);
-  const name = nameInput || (email.includes("@") ? email.split("@")[0] : email);
-  doLogin(name, email, null, no);
-};
+if($("#gModalSubmit")) {
+  $("#gModalSubmit").onclick=()=>{
+    const email = $("#gModalEmail") ? $("#gModalEmail").value.trim() : "yooonchae96@gmail.com";
+    const nameInput = $("#gModalName") ? $("#gModalName").value.trim() : "";
+    const numMatch = email.match(/^(\d{5,})/);
+    let no = ($("#gModalNo") && $("#gModalNo").value) ? +$("#gModalNo").value : (numMatch ? +numMatch[1] : 20314);
+    const name = nameInput || (email.includes("@") ? email.split("@")[0] : email);
+    doLogin(name, email, null, no);
+  };
+}
 
 // Client ID 저장 버튼
-$("#saveClientIdBtn").onclick=()=>{
-  const val = $("#gClientIdInput").value.trim();
-  if(val) {
-    localStorage.setItem("GOOGLE_CLIENT_ID", val);
-    GOOGLE_CLIENT_ID = val;
-    toast("Google Client ID가 저장되었습니다! 새로고침합니다.");
-    setTimeout(()=>location.reload(), 800);
-  } else {
-    toast("Client ID를 입력해주세요.");
-  }
-};
+if($("#saveClientIdBtn")) {
+  $("#saveClientIdBtn").onclick=()=>{
+    const val = $("#gClientIdInput") ? $("#gClientIdInput").value.trim() : "";
+    if(val) {
+      localStorage.setItem("GOOGLE_CLIENT_ID", val);
+      GOOGLE_CLIENT_ID = val;
+      toast("Google Client ID가 저장되었습니다! 새로고침합니다.");
+      setTimeout(()=>location.reload(), 800);
+    } else {
+      toast("Client ID를 입력해주세요.");
+    }
+  };
+}
 
 // GIS 콜백
 function handleCredentialResponse(response) {
