@@ -38,13 +38,19 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .roster{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
 .rc{border:1px solid var(--line);border-radius:8px;padding:3px 2px;text-align:center;font-size:10px;background:#fff}
 .rc b{display:block;font-size:11px}.rc canvas{display:block;margin:0 auto}
-#stage{width:100%;height:460px;background:#BFE3D8;border-radius:12px;display:block;touch-action:none;border:1px solid var(--line)}
-.dpad{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(3,46px);gap:5px;justify-content:center;margin-top:10px}
-.dpad button{background:#fff;border:1px solid var(--line);color:var(--ink);font-size:18px;padding:0;user-select:none}
-.dpad button:active{background:var(--accent);color:#fff}
-.mini{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;align-items:center}
-.mini i{width:30px;height:30px;border-radius:7px;border:1px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:11px;background:#fff;color:var(--sub)}
-.mini i.done{background:var(--barrier);border-color:var(--barrier);color:#062E29;font-weight:700}
+#stageContainer {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+#stage{width:100%;height:clamp(560px,70vh,780px);background:#BFE3D8;border-radius:16px;display:block;touch-action:none;border:1px solid var(--line)}
+.dpad{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:100;display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,38px);gap:4px;justify-content:center;margin-top:0;background:rgba(255,255,255,0.85);backdrop-filter:blur(10px);padding:6px;border-radius:18px;border:1px solid rgba(255,255,255,0.8);box-shadow:0 6px 20px rgba(0,0,0,0.18);user-select:none}
+.dpad button{background:#fff;border:1px solid #d1d5db;border-radius:10px;color:var(--ink);font-size:16px;font-weight:700;padding:0;user-select:none;box-shadow:0 2px 4px rgba(0,0,0,0.06);cursor:pointer;transition:all .12s}
+.dpad button:active{background:var(--accent);color:#fff;border-color:var(--accent);transform:scale(0.94)}
+.mini{position:absolute;bottom:16px;left:16px;z-index:100;display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:0;background:rgba(255,255,255,0.88);backdrop-filter:blur(10px);padding:7px 12px;border-radius:18px;border:1px solid rgba(255,255,255,0.8);box-shadow:0 6px 20px rgba(0,0,0,0.18);user-select:none}
+.mini i{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;background:#fff;color:var(--sub);box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.mini i.done{background:var(--barrier);border-color:var(--barrier);color:#062E29;font-weight:700;box-shadow:0 2px 6px rgba(15,110,99,.35)}
 /* 추첨판 */
 .lotto{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-top:10px}
 .lc{border:1px solid var(--line);border-radius:9px;background:#fff;text-align:center;padding:3px 1px 2px;
@@ -220,6 +226,47 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   color: #374151;
   min-width: 78px;
   text-align: center;
+}
+#mapMsg {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f6e63;
+  border: 1px solid rgba(15,110,99,0.25);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  margin: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#mapMsg:empty {
+  display: none;
+}
+@media (max-width: 768px) {
+  .mini {
+    top: 14px;
+    bottom: auto;
+    left: 14px;
+    padding: 5px 8px;
+  }
+  .zoom-controls {
+    top: 14px;
+    bottom: auto;
+    right: 14px;
+    padding: 4px 8px;
+  }
+  #mapMsg {
+    top: 56px;
+    font-size: 11px;
+    padding: 4px 12px;
+  }
 }
 </style>
 </head>
@@ -955,8 +1002,12 @@ function seatAll(){
 }
 
 const cvs=$("#stage"),cx=cvs.getContext("2d");
-function resize(){cvs.width=cvs.clientWidth*devicePixelRatio;cvs.height=460*devicePixelRatio;
-  cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);}
+function resize(){
+  const h = cvs.clientHeight || 640;
+  cvs.width = cvs.clientWidth * devicePixelRatio;
+  cvs.height = h * devicePixelRatio;
+  cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
 addEventListener("resize",resize);
 const keys={};
 function handleKey(e, isDown) {
@@ -1036,7 +1087,8 @@ addEventListener("pointermove", e => {
   const dx = (dragStart.x - e.clientX) / scale;
   const dy = (dragStart.y - e.clientY) / scale;
   if (!S.cam) S.cam = { x: S.me ? S.me.x : W/2, y: S.me ? S.me.y : H/2 };
-  const vw = cvs.clientWidth / scale, vh = 460 / scale;
+  const h = cvs.clientHeight || 640;
+  const vw = cvs.clientWidth / scale, vh = h / scale;
   S.cam.x = Math.max(vw/2, Math.min(W - vw/2, camStart.x + dx));
   S.cam.y = Math.max(vh/2, Math.min(H - vh/2, camStart.y + dy));
 });
@@ -1163,7 +1215,8 @@ function loop(ts){
     if (dx || dy) {
       const d = Math.hypot(dx, dy);
       const camSpeed = SPEED * 2.2;
-      const vw = cvs.clientWidth, vh = 460;
+      const h = cvs.clientHeight || 640;
+      const vw = cvs.clientWidth, vh = h;
       S.cam.x = Math.max(vw / 2, Math.min(W - vw / 2, S.cam.x + (dx / d) * camSpeed * dt));
       S.cam.y = Math.max(vh / 2, Math.min(H - vh / 2, S.cam.y + (dy / d) * camSpeed * dt));
     }
@@ -1173,7 +1226,8 @@ function loop(ts){
     if ((dx || dy) && !S.lottoCandidateId) {
       const d = Math.hypot(dx, dy);
       const camSpeed = SPEED * 2.2;
-      const vw = cvs.clientWidth, vh = 460;
+      const h = cvs.clientHeight || 640;
+      const vw = cvs.clientWidth, vh = h;
       S.cam.x = Math.max(vw / 2, Math.min(W - vw / 2, S.cam.x + (dx / d) * camSpeed * dt));
       S.cam.y = Math.max(vh / 2, Math.min(H - vh / 2, S.cam.y + (dy / d) * camSpeed * dt));
     }
@@ -1332,7 +1386,8 @@ function drawSpeechBubble(cx, x, y, claim) {
 
 function render(ts){
   const scale = S.zoomScale || 1.0;
-  const vw = cvs.clientWidth / scale, vh = 460 / scale, me = S.me;
+  const stageH = cvs.clientHeight || 640;
+  const vw = cvs.clientWidth / scale, vh = stageH / scale, me = S.me;
   let targetX = (S.cam && S.cam.x) ? S.cam.x : (me ? me.x : W/2);
   let targetY = (S.cam && S.cam.y) ? S.cam.y : (me ? me.y : H/2);
 
@@ -1343,7 +1398,7 @@ function render(ts){
 
   const camx = Math.max(0, Math.min(W - vw, targetX - vw / 2));
   const camy = Math.max(0, Math.min(H - vh, targetY - vh / 2));
-  cx.clearRect(0, 0, cvs.clientWidth, 460);
+  cx.clearRect(0, 0, cvs.clientWidth, stageH);
   cx.save();
   cx.scale(scale, scale);
   cx.translate(-camx, -camy);
