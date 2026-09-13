@@ -1068,20 +1068,30 @@ function loop(ts){
   const me=S.me;
   const dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0),dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
 
-  if (!S.cam) S.cam = { x: me ? me.x : W/2, y: me ? me.y : H/2 };
-
-  if (dx || dy) {
-    const d = Math.hypot(dx, dy);
-    const camSpeed = SPEED * 2.5;
-    const vw = cvs.clientWidth, vh = 460;
-    S.cam.x = Math.max(vw / 2, Math.min(W - vw / 2, S.cam.x + (dx / d) * camSpeed * dt));
-    S.cam.y = Math.max(vh / 2, Math.min(H - vh / 2, S.cam.y + (dy / d) * camSpeed * dt));
-  } else if (me && !me.frozen && S.tab === 2 && !isDragging && !S.lottoCandidateId && !S.winnerId) {
-    S.cam = { x: me.x, y: me.y };
-  }
-
   if (me && !me.frozen && S.tab === 2) {
+    // 이동 중일 때는 캐릭터가 언제나 맵 중앙에 오도록 카메라 위치 고정!
     me.run = step(me, dx, dy, dt);
+    S.cam = { x: me.x, y: me.y };
+  } else if (me && me.frozen) {
+    // 결계 완성 후에는 방향키 / D-pad / 화면 드래그로 카메라 자유 이동 가능
+    if (!S.cam) S.cam = { x: me.x, y: me.y };
+    if (dx || dy) {
+      const d = Math.hypot(dx, dy);
+      const camSpeed = SPEED * 2.2;
+      const vw = cvs.clientWidth, vh = 460;
+      S.cam.x = Math.max(vw / 2, Math.min(W - vw / 2, S.cam.x + (dx / d) * camSpeed * dt));
+      S.cam.y = Math.max(vh / 2, Math.min(H - vh / 2, S.cam.y + (dy / d) * camSpeed * dt));
+    }
+  } else if (S.tab === 3) {
+    // 3번 탭 추첨/토론 모드에서도 방향키/드래그로 자유 이동 가능
+    if (!S.cam) S.cam = { x: me ? me.x : W/2, y: me ? me.y : H/2 };
+    if ((dx || dy) && !S.lottoCandidateId) {
+      const d = Math.hypot(dx, dy);
+      const camSpeed = SPEED * 2.2;
+      const vw = cvs.clientWidth, vh = 460;
+      S.cam.x = Math.max(vw / 2, Math.min(W - vw / 2, S.cam.x + (dx / d) * camSpeed * dt));
+      S.cam.y = Math.max(vh / 2, Math.min(H - vh / 2, S.cam.y + (dy / d) * camSpeed * dt));
+    }
   }
 
   S.players.forEach(p=>{
