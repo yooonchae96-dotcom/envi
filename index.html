@@ -96,7 +96,15 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 /* 출발 버튼 */
 .btn-start-tab2{background:linear-gradient(135deg,#0f6e63,#15b097);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(15,110,99,.35);transition:transform .15s,box-shadow .15s;display:inline-flex;align-items:center;gap:6px}
 .btn-start-tab2:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(15,110,99,.45)}
-@media(max-width:700px){.grid28{grid-template-columns:repeat(4,1fr)}.roster,.lotto{grid-template-columns:repeat(5,1fr)}}
+/* 법적 약관 모달 및 푸터 스타일 */
+.legal-modal-content{background:#fff;border-radius:16px;width:92%;max-width:580px;max-height:85vh;display:flex;flex-direction:column;padding:20px 24px;box-shadow:0 12px 32px rgba(0,0,0,0.25);position:relative;margin:auto}
+.legal-modal-body{flex:1;overflow-y:auto;padding-right:6px;margin:10px 0;font-size:13.5px;line-height:1.65;color:#333;border-top:1px solid #eee;border-bottom:1px solid #eee;padding-top:10px;padding-bottom:10px}
+.legal-modal-body h4{font-size:15px;margin:14px 0 6px;color:var(--ink)}
+.legal-modal-body ul{padding-left:18px;margin:6px 0}
+.legal-modal-body blockquote{background:#f8f9fa;border-left:4px solid var(--accent);padding:8px 12px;margin:10px 0;font-size:12.5px;color:#555}
+.app-footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);text-align:center;font-size:12px;color:var(--sub)}
+.btn-legal-link{color:var(--accent);text-decoration:none;font-weight:600;background:none;border:none;padding:0 6px;cursor:pointer;font-size:13px}
+.btn-legal-link:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -221,7 +229,28 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
     <div id="teamOut"></div></div>
 </section>
 
-<div class="toast" id="toast"></div>
+  <!-- 이용약관 및 개인정보처리방침 팝업 모달 -->
+  <div id="legalModal" class="modal-backdrop hide">
+    <div class="legal-modal-content">
+      <div class="modal-header">
+        <h3 id="legalModalTitle">이용약관</h3>
+        <button class="modal-close" id="closeLegalModalBtn">&times;</button>
+      </div>
+      <div class="legal-modal-body" id="legalModalBody"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px">
+        <button type="button" class="btn-gsubmit" id="confirmLegalModalBtn" style="padding:8px 22px;font-size:14px">확인 및 닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <div class="row" style="justify-content:center;gap:12px;margin-bottom:6px">
+      <button type="button" class="btn-legal-link" id="openTermsBtn">이용약관</button>
+      <span class="muted">|</span>
+      <button type="button" class="btn-legal-link" id="openPrivacyBtn">개인정보처리방침</button>
+    </div>
+    <div>© 2026 도덕적 고려의 범위 벤다이어그램 메타버스. All rights reserved.</div>
+  </footer>
 </div>
 
 <script>
@@ -375,10 +404,18 @@ function drawChar(ctx,x,y,ch,sc,opt){
     ctx.drawImage(im,left,topY,w,DH);
   }
   ctx.restore();
-  (ch.pets||[]).forEach(function(pk,i){
+  const pets=ch.pets||[];
+  const numPets=pets.length;
+  pets.forEach(function(pk,i){
     const img=PIMG[pk];if(!img||!img.complete)return;
-    const ps=28*sc,pb=run?Math.abs(Math.sin(ph+i*0.9))*4*sc:Math.sin(ph*0.5+i)*1.2*sc;
-    ctx.drawImage(img,x-dir*(w*0.42+i*ps*0.82)-ps/2,y+3-pb-ps,ps,ps);
+    const ps=(numPets>=4?18:numPets===3?20:23)*sc;
+    const gap=ps*0.72;
+    const side=(i%2===0)?-1:1;
+    const pairIndex=Math.floor(i/2);
+    const offset=w*0.35+gap*pairIndex;
+    const pb=run?Math.abs(Math.sin(ph+i*0.9))*4*sc:Math.sin(ph*0.5+i)*1.2*sc;
+    const petX=x+(dir*side*offset);
+    ctx.drawImage(img,petX-ps/2,y+3-pb-ps,ps,ps);
   });
   if(opt.name){ctx.save();ctx.font="700 "+(12*sc)+"px sans-serif";ctx.textAlign="center";
     ctx.lineWidth=3.5*sc;ctx.strokeStyle="rgba(12,34,32,.85)";ctx.fillStyle="#fff";
@@ -572,7 +609,7 @@ function renderGrid(){
     const isSelected=(selectedCharId===ch.charId);
     const d=document.createElement("div");
     d.className="cell"+(taken?" taken":"")+(taken&&taken.isMe?" mine":"")+(isSelected?" selected":"");
-    const cv=document.createElement("canvas");cv.width=96;cv.height=104;d.appendChild(cv);
+    const cv=document.createElement("canvas");cv.width=112;cv.height=104;d.appendChild(cv);
     
     let takenInfo = "";
     if(taken) {
@@ -587,7 +624,7 @@ function renderGrid(){
     
     d.insertAdjacentHTML("beforeend",
       `<div class="nm"><b style="color:${ch.color}">${ch.scholar}</b><br>${ch.styleName}${takenInfo}</div>${confirmBtnHtml}`);
-    drawChar(cv.getContext("2d"),48,96,ch,0.72,{dir:1});
+    drawChar(cv.getContext("2d"),56,96,ch,0.72,{dir:1});
     
     if(!taken && (!S.me || !S.me.charId)) {
       d.onclick=()=>{
@@ -661,38 +698,56 @@ function renderRoster(){
 /* ===== 2번 탭 ===== */
 function seatAll(){
   S.spots=SPOTPOS.map((p,i)=>({id:i,x:p[0],y:p[1],done:false,t0:0}));
-  const by={ari:[],sin:[],sch:[],leo:[]};
-  S.players.forEach(p=>by[p.thinkerId].push(p));
-  const mySpot=6;
-  THINKERS.forEach(t=>by[t.id].forEach((p,i)=>{p.spot=i%S.spots.length;p._was=p.spot;}));
-  const mine=S.players.find(p=>p.isMe);
-  const clash=S.players.find(p=>!p.isMe&&p.thinkerId===mine.thinkerId&&p.spot===mySpot);
-  if(clash)clash.spot=mine._was;
-  mine.spot=mySpot;
-  S.players.forEach(p=>{
-    const sp=S.spots[p.spot];
-    // 사상가별 벤다이어그램 위계에 맞춘 개별 영역 타겟 좌표 설정 (수학적 링 타겟팅)
-    let offset;
-    if(p.thinkerId === "ari") offset = {x: 0, y: 15};           // 아리스토텔레스: 인간 원 중심 내부 (Ratio < 0.1)
-    else if(p.thinkerId === "sin") offset = {x: -90, y: -45};   // 피터 싱어: 동물 원 내부, 아리스토텔레스 바깥 (Ratio ~ 0.46)
-    else if(p.thinkerId === "sch") offset = {x: 165, y: -65};   // 슈바이처: 생명 원 내부, 피터 싱어 바깥 (Ratio ~ 0.61)
-    else offset = {x: -240, y: 80};                             // 레오폴드: 대지 원 내부, 슈바이처 원 바깥 (Ratio ~ 0.69)
+  
+  // 28명의 사상가를 7개 모둠 스팟에 4명씩(ari, sin, sch, leo 각각 1명씩) 정확하게 배정
+  const byThinker = {ari:[], sin:[], sch:[], leo:[]};
+  S.players.forEach(p => byThinker[p.thinkerId].push(p));
+  
+  // 각 사상가 종류별로 7개 스팟(0~6)에 1명씩 균등 할당 -> 7개 벤다이어그램 완성 가능
+  THINKERS.forEach(t => {
+    byThinker[t.id].forEach((p, i) => {
+      p.spot = i % S.spots.length;
+      p.isRoamer = false;
+    });
+  });
 
-    p.tx=sp.x+offset.x;
-    p.ty=sp.y+offset.y;
-
-    if(p.isMe){p.x=170;p.y=H-170;}
-    else{
-      const randA=Math.random()*6.28;
-      p.x=sp.x+Math.cos(randA)*(320+Math.random()*180);
-      p.y=sp.y+Math.sin(randA)*(260+Math.random()*160);
+  const mine = S.players.find(p => p.isMe);
+  if(mine) {
+    const mySpot = 6; // 우리 모둠 자리
+    const clash = S.players.find(p => !p.isMe && p.thinkerId === mine.thinkerId && p.spot === mySpot);
+    if(clash) {
+      clash.spot = mine.spot;
     }
-    p.x=Math.max(60,Math.min(W-60,p.x));
-    p.y=Math.max(110,Math.min(H-60,p.y));
-    p.ph=Math.random()*6;p.dir=1;p.ringT=0;p.frozen=false;p.run=false;
+    mine.spot = mySpot;
+  }
+
+  // 각 사상가별 타겟 좌표 설정 및 초기 위치 배치
+  S.players.forEach(p => {
+    const sp = S.spots[p.spot];
+    let offset;
+    if(p.thinkerId === "ari") offset = {x: 0, y: 15};           // 아리스토텔레스: 가장 작은 인간 원 (중심)
+    else if(p.thinkerId === "sin") offset = {x: -90, y: -45};   // 피터 싱어: 동물 원 링 (3번째 크기)
+    else if(p.thinkerId === "sch") offset = {x: 165, y: -65};   // 슈바이처: 생명 원 링 (2번째 크기)
+    else offset = {x: -240, y: 80};                             // 레오폴드: 가장 큰 대지 원 링 (1번째 크기)
+
+    p.tx = sp.x + offset.x;
+    p.ty = sp.y + offset.y;
+
+    if(p.isMe){
+      p.x = 170; p.y = H - 170;
+    } else {
+      const randA = Math.random() * 6.28;
+      p.x = sp.x + Math.cos(randA) * (320 + Math.random() * 180);
+      p.y = sp.y + Math.sin(randA) * (260 + Math.random() * 160);
+    }
+
+    p.x = Math.max(60, Math.min(W - 60, p.x));
+    p.y = Math.max(110, Math.min(H - 60, p.y));
+    p.ph = Math.random() * 6; p.dir = 1; p.ringT = 0; p.frozen = false; p.run = false;
   });
   drawMini();
 }
+
 const cvs=$("#stage"),cx=cvs.getContext("2d");
 function resize(){cvs.width=cvs.clientWidth*devicePixelRatio;cvs.height=460*devicePixelRatio;
   cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);}
@@ -707,15 +762,41 @@ $$(".dpad button").forEach(b=>{
   b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);
   b.addEventListener("pointerleave",off);b.addEventListener("pointercancel",off);
 });
+
 function blocked(p,nx,ny){
   for(const sp of S.spots){
-    if(!sp.done||p.spot===sp.id)continue;
-    if(Math.hypot(nx-sp.x,ny-sp.y)<T.leo.ringR*1.6+35){
-      if(p.isMe&&performance.now()-S.warnAt>1200){S.warnAt=performance.now();toast("완성된 모둠입니다. 결계가 쳐져 있어요");}
-      return true;}
+    const dist = Math.hypot(nx - sp.x, ny - sp.y);
+    
+    // 1. 이미 완성되어 결계가 쳐진 스팟
+    if(sp.done){
+      if(p.spot === sp.id && p.frozen) continue; // 결계 내부 멤버는 차단 대상에서 제외
+      const barrierR = T.leo.ringR * 1.6 + 35;
+      if(dist < barrierR){
+        if(p.isMe && performance.now() - S.warnAt > 1200){
+          S.warnAt = performance.now();
+          toast("완성된 모둠입니다. 결계가 쳐져 있어 들어갈 수 없습니다.");
+        }
+        return true;
+      }
+    } else {
+      // 2. 완성 전 스팟: 난자-정자 결계 원리 적용
+      // 동일 사상가가 이미 스팟 존(<260)에 들어와 있으면, 동일 사상가의 다른 캐릭터는 입장 불가!
+      if(dist < 260){
+        const occupantsInZone = S.players.filter(other => other.id !== p.id && (other.spot === sp.id || Math.hypot(other.x - sp.x, other.y - sp.y) < 260));
+        const hasSameThinker = occupantsInZone.some(other => other.thinkerId === p.thinkerId);
+        if(hasSameThinker){
+          if(p.isMe && performance.now() - S.warnAt > 1200){
+            S.warnAt = performance.now();
+            toast("이미 동일한 사상가가 자리에 있습니다! 다른 사상가 4명이 모여야 합니다.");
+          }
+          return true;
+        }
+      }
+    }
   }
   return false;
 }
+
 function step(p,dx,dy,dt){
   if(p.frozen)return false;
   const d=Math.hypot(dx,dy);if(!d)return false;
@@ -724,14 +805,15 @@ function step(p,dx,dy,dt){
   if(dx)p.dir=dx>0?1:-1;
   p.x=nx;p.y=ny;p.ph+=dt*10;return true;
 }
+
 function alignSpotThinkersInLine(sp) {
-  const inSpot = S.players.filter(p => p.spot === sp.id);
+  const inSpot = S.players.filter(p => p.spot === sp.id && p.frozen);
   inSpot.forEach(p => {
     let offsetX = 0;
-    if (p.thinkerId === "ari") offsetX = 0;           // 아리스토텔레스: 인간 중심 원 (가장 안쪽 중심)
-    else if (p.thinkerId === "sin") offsetX = 130;    // 피터 싱어: 동물 원 링 (두 번째)
-    else if (p.thinkerId === "sch") offsetX = 215;    // 슈바이처: 생명 원 링 (세 번째)
-    else if (p.thinkerId === "leo") offsetX = 295;    // 레오폴드: 대지 원 링 (네 번째 외곽)
+    if (p.thinkerId === "ari") offsetX = 0;           // 아리스토텔레스: 가장 작은 인간 원 (가장 안쪽 중심)
+    else if (p.thinkerId === "sin") offsetX = 130;    // 피터 싱어: 동물 원 링 (세 번째 크기)
+    else if (p.thinkerId === "sch") offsetX = 215;    // 슈바이처: 생명 원 링 (두 번째 크기)
+    else if (p.thinkerId === "leo") offsetX = 295;    // 레오폴드: 가장 큰 대지 원 링 (네 번째 외곽)
     
     p.x = sp.x + offsetX;
     p.y = sp.y + 10;
@@ -745,30 +827,48 @@ function alignSpotThinkersInLine(sp) {
 function checkSpots(){
   S.spots.forEach(sp=>{
     if(sp.done)return;
-    const inZone=S.players.filter(p=>p.spot===sp.id&&Math.hypot(p.x-sp.x,p.y-sp.y)<260);
+    const inZone=S.players.filter(p=>Math.hypot(p.x-sp.x,p.y-sp.y)<260);
     
     // 참여자(S.me)의 모둠은 실제 참여자가 자리에 도착할 때까지 완성되지 않음!
     if(S.me && sp.id === S.me.spot && !inZone.some(p => p.isMe)) return;
 
-    if(new Set(inZone.map(p=>p.thinkerId)).size===4){
-      sp.done=true;sp.t0=performance.now();inZone.forEach(p=>p.frozen=true);
-      
-      // 완성 시 4명의 사상가를 벤다이어그램 동심원 상에 일렬(Horizontal Line)로 깔끔하게 정렬!
-      alignSpotThinkersInLine(sp);
+    // 정확하게 서로 다른 사상가 4명(ari, sin, sch, leo)이 모두 모였을 때 결계 형성!
+    const thinkersInZone = new Set(inZone.map(p=>p.thinkerId));
+    if(thinkersInZone.size === 4 && inZone.length >= 4){
+      const memberMap = new Map();
+      inZone.forEach(p => {
+        if(!memberMap.has(p.thinkerId)) memberMap.set(p.thinkerId, p);
+      });
+      if(memberMap.size === 4){
+        const finalMembers = Array.from(memberMap.values());
+        sp.done = true;
+        sp.t0 = performance.now();
+        finalMembers.forEach(p => {
+          p.spot = sp.id;
+          p.frozen = true;
+          p.isRoamer = false;
+        });
+        
+        // 완성 시 4명의 사상가를 벤다이어그램 동심원 상에 일렬(Horizontal Line)로 깔끔하게 정렬!
+        alignSpotThinkersInLine(sp);
 
-      toast("모둠 " + (sp.id + 1) + " 벤다이어그램 완성!");
-      if(inZone.some(p=>p.isMe)){
-        $("#mapMsg").textContent="완성! 인간 ⊂ 동물 ⊂ 생명 ⊂ 대지 — 벤다이어그램 완성! (방향키를 눌러 맵을 이동하고 다른 모둠을 확인해보세요)";
-        toast("우리 모둠 완성! 방향키를 눌러 맵을 이동하며 다른 모둠을 둘러보세요! 🚀");
-        fanfare();}
-      drawMini();
+        toast("모둠 " + (sp.id + 1) + " 벤다이어그램 완성!");
+        if(finalMembers.some(p=>p.isMe)){
+          $("#mapMsg").textContent="완성! 인간 ⊂ 동물 ⊂ 생명 ⊂ 대지 — 벤다이어그램 완성! (방향키를 눌러 맵을 이동하고 다른 모둠을 확인해보세요)";
+          toast("우리 모둠 완성! 방향키를 눌러 맵을 이동하며 다른 모둠을 둘러보세요! 🚀");
+          fanfare();
+        }
+        drawMini();
+      }
     }
   });
 }
+
 function drawMini(){
   $("#mini").innerHTML=S.spots.map(s=>`<i class="${s.done?"done":""}">${s.id+1}</i>`).join("")+
     `<span class="muted">완성 ${S.spots.filter(s=>s.done).length} / ${S.spots.length}</span>`;
 }
+
 let prev=0;
 function loop(ts){
   requestAnimationFrame(loop);
@@ -778,7 +878,6 @@ function loop(ts){
   const dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0),dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
 
   if (me && me.frozen) {
-    // 결계 완성 후: 방향키를 누르면 카메라(맵 화면)가 자유롭게 이동하여 다른 벤다이어그램 확인 가능!
     if (!S.cam) S.cam = { x: me.x, y: me.y };
     if (dx || dy) {
       const d = Math.hypot(dx, dy);
@@ -800,10 +899,11 @@ function loop(ts){
       ax += Math.cos((p.no||1)*2.5)*wiggle;
       ay += Math.sin((p.no||1)*2.5)*wiggle;
     }
-    // NPC 이동 속도를 여유롭게 조정하여 사용자가 직접 움직일 시간을 확보
     p.run = dist > 6 ? step(p, ax, ay, dt * 0.22) : false;
   });
+
   S.players.forEach(p=>{
+    if (p.spot === null || p.spot === undefined) { p.ringT = 0; return; }
     const sp=S.spots[p.spot],d=Math.hypot(p.x-sp.x,p.y-sp.y);
     p.ringT+=((d<260?1:0)-p.ringT)*Math.min(1,dt*5);
   });
@@ -824,30 +924,30 @@ function render(ts){
   for(let x=0;x<W;x+=120){cx.beginPath();cx.moveTo(x,90);cx.lineTo(x,H-80);cx.stroke();}
   for(let y=90;y<H-80;y+=120){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();}
   S.spots.forEach(sp=>{
-    if(sp.done)return;
-    const mine=sp.id===me.spot;
-    cx.save();cx.globalAlpha=mine?.55+.3*Math.sin(ts/260):.16;
-    cx.fillStyle=mine?"#0F6E63":"#5B7371";
-    cx.beginPath();cx.arc(sp.x,sp.y,mine?13:7,0,7);cx.fill();
-    if(mine){cx.globalAlpha=.9;cx.font="700 15px sans-serif";cx.textAlign="center";
-      cx.fillText("우리 모둠 자리",sp.x,sp.y-26);}
-    cx.restore();
-  });
-  S.spots.forEach(sp=>{
-    S.players.filter(p=>p.spot===sp.id&&p.ringT>0.02)
-      .sort((a,b)=>T[b.thinkerId].ringR-T[a.thinkerId].ringR)
-      .forEach(p=>{
-        const t=T[p.thinkerId], Rx=t.ringR*1.6*p.ringT, Ry=Rx*0.56;
-        cx.save();cx.globalAlpha=.35+.55*p.ringT;
-        cx.fillStyle=t.color+"28";cx.strokeStyle=t.color;cx.lineWidth=3.8;
-        cx.beginPath();cx.ellipse(sp.x,sp.y,Rx,Ry,0,0,7);cx.fill();cx.stroke();
-        if(p.ringT>0.8){
-          cx.globalAlpha=.95;cx.fillStyle=t.color;cx.font="700 13px sans-serif";cx.textAlign="center";
-          cx.fillText(t.scholar + " (" + PETNAME[t.pets[t.pets.length-1]] + ")", sp.x, sp.y - Ry + 18);
-        }
+    if(!sp.done){
+      const mine=sp.id===me.spot;
+      cx.save();cx.globalAlpha=mine?.55+.3*Math.sin(ts/260):.16;
+      cx.fillStyle=mine?"#0F6E63":"#5B7371";
+      cx.beginPath();cx.arc(sp.x,sp.y,mine?13:7,0,7);cx.fill();
+      if(mine){cx.globalAlpha=.9;cx.font="700 15px sans-serif";cx.textAlign="center";
+        cx.fillText("우리 모둠 자리",sp.x,sp.y-26);}
+      cx.restore();
+    } else {
+      // 4개 동심원 (레오폴드, 슈바이처, 피터싱어, 아리스토텔레스)
+      THINKERS.slice().reverse().forEach(t => {
+        const Rx = t.ringR * 1.6, Ry = Rx * 0.56;
+        cx.save();
+        cx.globalAlpha = 0.45;
+        cx.fillStyle = t.color + "22";
+        cx.strokeStyle = t.color;
+        cx.lineWidth = 3.5;
+        cx.beginPath();
+        cx.ellipse(sp.x, sp.y, Rx, Ry, 0, 0, 7);
+        cx.fill();
+        cx.stroke();
         cx.restore();
       });
-    if(sp.done){
+      // 결계 파동선
       const k=(ts-sp.t0)/1000;
       const leoRx = T.leo.ringR * 1.6 + 24;
       const leoRy = leoRx * 0.56;
@@ -857,9 +957,33 @@ function render(ts){
       cx.stroke();cx.restore();
     }
   });
+
+  // 사상가 및 캐릭터 렌더링 (사상가 뒤에 자기 벤다이어그램 크기만한 원이 그대로 같이 이동)
   [...S.players].sort((a,b)=>a.y-b.y).forEach(p=>{
+    const t = T[p.thinkerId];
+    if(t && !p.frozen){
+      // 이동 중일 때 사상가 발밑/뒤에 자기 벤다이어그램 크기의 원을 그대로 그려 같이 이동
+      const Rx = t.ringR * 1.6, Ry = Rx * 0.56;
+      cx.save();
+      cx.globalAlpha = p.isMe ? 0.65 : 0.42;
+      cx.fillStyle = t.color + "28";
+      cx.strokeStyle = t.color;
+      cx.lineWidth = p.isMe ? 4.5 : 3.2;
+      cx.beginPath();
+      cx.ellipse(p.x, p.y + 10, Rx, Ry, 0, 0, 7);
+      cx.fill();
+      cx.stroke();
+      
+      // 원 상단에 사상가 및 영역 이름 명시
+      cx.globalAlpha = 0.95;
+      cx.fillStyle = t.color;
+      cx.font = "700 12px sans-serif";
+      cx.textAlign = "center";
+      cx.fillText(t.scholar + " (" + PETNAME[t.pets[t.pets.length-1]] + ")", p.x, p.y + 10 - Ry + 16);
+      cx.restore();
+    }
+
     drawChar(cx,p.x,p.y,p.ch,0.95,{name:p.isMe?"나":p.no,phase:p.ph,run:p.run,dir:p.dir});
-    if(p.ringT<0.05)drawCarried(cx,p.x,p.y,p.ch,0.95*(1-p.ringT*0.9),p.ph);
   });
   cx.restore();
 }
@@ -998,6 +1122,54 @@ function afterLoad(){
   renderGrid();
   if(S.me.charId){showMine();renderRoster();if(S.tab===3)renderLotto();}
 }
+/* ===== 이용약관 & 개인정보처리방침 모달 제어 ===== */
+const LEGAL_TEXTS = {
+  terms: `
+    <h4>제1조 (목적)</h4>
+    <p>본 약관은 [확인 필요: 소속 학교/기관명](이하 "운영자")이 제공하는 <strong>도덕적 고려의 범위 벤다이어그램 메타버스</strong> 웹앱(이하 "서비스")의 이용 조건 및 절차를 규정함을 목적으로 합니다.</p>
+    <h4>제2조 (서비스의 성격 및 이용 대상)</h4>
+    <p>1. 본 서비스는 초·중·고등학교 도덕/윤리 교과 수업을 위한 <strong>학생 수업용 인터랙티브 웹 애플리케이션</strong>입니다.<br>
+    2. 주요 이용 대상은 수업에 참여하는 학생 및 수업을 진행하는 담당 교사입니다.</p>
+    <h4>제3조 (이용자의 의무 및 주의사항)</h4>
+    <p>1. 학생 및 이용자는 수업 목적 외에 타인의 개인정보를 도용하거나 서비스를 오용해서는 안 됩니다.<br>
+    2. 토론 및 주장 작성 시 올바른 언어를 사용해야 하며, 타인에게 불쾌감을 주는 비방 글을 작성해서는 안 됩니다.</p>
+    <h4>제4조 (저작권 및 명시 사항)</h4>
+    <p>1. 본 서비스 내의 프로그램 코드, 디자인 및 학습 콘텐츠의 저작권은 서비스 개발자 및 운영자에게 있습니다.<br>
+    2. <strong>운영 주체, 학교명, 개인정보 관리 책임자 연락처는 사용자가 확인하여 등록한 정보만 표시됩니다.</strong> [확인 필요 항목 질문 리스트 참조]</p>
+  `,
+  privacy: `
+    <h4>제1조 (개인정보의 수집 및 이용 목적)</h4>
+    <p>1. 수업 참여자 식별 및 본인 확인 (Google 계정 연동)<br>
+    2. 모둠 구성, 학번/이름 표시, 캐릭터 매칭 및 수행평가 토론 주장 작성</p>
+    <h4>제2조 (수집하는 개인정보 항목)</h4>
+    <p>1. <strong>처리 항목</strong>: Google 계정 이메일 주소, 학번, 학생 이름(디스플레이명), 선택 사상가 ID, 말풍선 작성 주장 텍스트<br>
+    2. 본 서비스는 주민등록번호 등 민감정보나 고유식별정보를 일체 수집하거나 요구하지 않습니다.</p>
+    <h4>제3조 (개인정보의 보관 및 파기)</h4>
+    <p>본 서비스는 단일 브라우저 세션(In-Memory) 중심으로 작동하며, 수업 종료 및 브라우저 창 닫기 시 세션 데이터는 즉시 초기화/파기됩니다.</p>
+    <h4>제4조 (외부 서비스 연동 및 제3자 제공)</h4>
+    <p>1. <strong>Google Identity Services</strong>: Google 계정 본인 인증 연동<br>
+    2. <strong>외부 AI (OpenAI 등) 및 유료 외부 서비스 전송 없음 (0%)</strong></p>
+    <h4>제5조 (개인정보보호책임자 및 문의처)</h4>
+    <p>• <strong>개인정보보호책임자</strong>: [확인 필요: 담당 교사 성명]<br>
+    • <strong>소속 기관</strong>: [확인 필요: 학교명/기관명]<br>
+    • <strong>문의 E-mail</strong>: [확인 필요: 문의용 이메일 주소]<br>
+    • <strong>시행일</strong>: 2026년 9월 13일</p>
+  `
+};
+
+function openLegalModal(type) {
+  const isTerms = (type === 'terms');
+  if($("#legalModalTitle")) $("#legalModalTitle").textContent = isTerms ? "이용약관" : "개인정보처리방침";
+  if($("#legalModalBody")) $("#legalModalBody").innerHTML = isTerms ? LEGAL_TEXTS.terms : LEGAL_TEXTS.privacy;
+  if($("#legalModal")) $("#legalModal").classList.remove("hide");
+  if($("#legalModalBody")) $("#legalModalBody").scrollTop = 0;
+}
+
+if($("#openTermsBtn")) $("#openTermsBtn").onclick = () => openLegalModal('terms');
+if($("#openPrivacyBtn")) $("#openPrivacyBtn").onclick = () => openLegalModal('privacy');
+if($("#closeLegalModalBtn")) $("#closeLegalModalBtn").onclick = () => $("#legalModal").classList.add("hide");
+if($("#confirmLegalModalBtn")) $("#confirmLegalModalBtn").onclick = () => $("#legalModal").classList.add("hide");
+
 resize();
 </script>
 </body>
