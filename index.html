@@ -112,6 +112,80 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .btn-legal-link{color:var(--accent);text-decoration:none;font-weight:600;background:none;border:none;padding:0 6px;cursor:pointer;font-size:13px}
 .btn-legal-link:hover{text-decoration:underline}
 
+/* 10배 확대 말풍선 모달 스타일 */
+.enlarged-bubble-content {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 92%;
+  max-width: 780px;
+  padding: 28px 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 6px rgba(15, 110, 99, 0.18);
+  position: relative;
+  margin: auto;
+  border: 4px solid var(--accent);
+  transform: scale(1);
+  animation: popEnlarge 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+@keyframes popEnlarge {
+  0% { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.enlarged-bubble-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 14px;
+}
+.enlarged-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  padding: 6px 18px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+.enlarged-who {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1e293b;
+  flex: 1;
+}
+.enlarged-bubble-body {
+  position: relative;
+  background: #f8fafc;
+  border-radius: 18px;
+  padding: 26px 30px;
+  border: 2px dashed #cbd5e1;
+  margin-bottom: 16px;
+}
+.enlarged-quote-icon {
+  font-size: 34px;
+  position: absolute;
+  top: -18px;
+  left: 24px;
+  background: #fff;
+  padding: 0 8px;
+  line-height: 1;
+}
+.enlarged-reason-text {
+  font-size: 28px;
+  line-height: 1.55;
+  font-weight: 700;
+  color: #0f172a;
+  word-break: keep-all;
+  white-space: pre-wrap;
+}
+.enlarged-bubble-footer {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+}
+
 /* 오른쪽 위 접속 끊김(튕김) 위젯 */
 .disconnect-widget {
   position: fixed;
@@ -437,6 +511,21 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
       <div class="legal-modal-body" id="legalModalBody"></div>
       <div style="display:flex;justify-content:flex-end;margin-top:8px">
         <button type="button" class="btn-gsubmit" id="confirmLegalModalBtn" style="padding:8px 22px;font-size:14px">확인 및 닫기</button>
+      </div>
+  <!-- 10배 확대 말풍선 팝업 모달 -->
+  <div id="enlargedBubbleModal" class="modal-backdrop hide" style="z-index:9999;">
+    <div class="enlarged-bubble-content" id="enlargedBubbleCard">
+      <div class="enlarged-bubble-header">
+        <span class="enlarged-badge" id="ebStance">찬성</span>
+        <span class="enlarged-who" id="ebWho">20314번 · 아리스토텔레스</span>
+        <button class="modal-close" id="closeEnlargedBubbleBtn">&times;</button>
+      </div>
+      <div class="enlarged-bubble-body">
+        <div class="enlarged-quote-icon">💬</div>
+        <div id="ebReasonText" class="enlarged-reason-text"></div>
+      </div>
+      <div class="enlarged-bubble-footer">
+        <span>🔍 10배 확대 말풍선 모드 (클릭하거나 ✕ 버튼을 누르면 닫힙니다)</span>
       </div>
     </div>
   </div>
@@ -1371,7 +1460,83 @@ addEventListener("pointermove", e => {
   S.cam.x = Math.max(vw/2, Math.min(W - vw/2, camStart.x + dx));
   S.cam.y = Math.max(vh/2, Math.min(H - vh/2, camStart.y + dy));
 });
-addEventListener("pointerup", () => isDragging = false);
+// 10배 확대 말풍선 제어 함수
+function showEnlargedBubble(claim) {
+  if (!claim) return;
+  const th = T[claim.thinkerId];
+  const stanceText = claim.stance || "찬성";
+  const stanceColor = stanceText === "찬성" ? "#0F6E63" : "#E64A19";
+  const scholarName = th ? th.scholar : "";
+  const whoText = (claim.who ? claim.who + "번 " : "") + scholarName;
+
+  const stanceEl = $("#ebStance");
+  if (stanceEl) {
+    stanceEl.textContent = stanceText;
+    stanceEl.style.backgroundColor = stanceColor;
+  }
+  if ($("#ebWho")) $("#ebWho").textContent = whoText;
+  if ($("#ebReasonText")) $("#ebReasonText").textContent = claim.reason || "";
+  
+  const card = $("#enlargedBubbleCard");
+  if (card) {
+    card.style.borderColor = th ? th.color : stanceColor;
+  }
+  
+  const modal = $("#enlargedBubbleModal");
+  if (modal) modal.classList.remove("hide");
+  beep(780, 0.12, "sine", 0.15);
+}
+
+function hideEnlargedBubble() {
+  const modal = $("#enlargedBubbleModal");
+  if (modal) modal.classList.add("hide");
+  beep(400, 0.08, "sine", 0.08);
+}
+
+setTimeout(() => {
+  if($("#enlargedBubbleModal")) $("#enlargedBubbleModal").onclick = (e) => {
+    hideEnlargedBubble();
+  };
+  if($("#closeEnlargedBubbleBtn")) $("#closeEnlargedBubbleBtn").onclick = (e) => {
+    e.stopPropagation();
+    hideEnlargedBubble();
+  };
+}, 100);
+
+addEventListener("pointerup", e => {
+  if (!isDragging) return;
+  const distMoved = Math.hypot(e.clientX - dragStart.x, e.clientY - dragStart.y);
+  isDragging = false;
+
+  if (distMoved < 12) {
+    const rect = cvs.getBoundingClientRect();
+    const scale = S.zoomScale || 1.0;
+    const stageH = cvs.clientHeight || 640;
+    const vw = cvs.clientWidth / scale, vh = stageH / scale;
+    const me = S.me;
+    let targetX = (S.cam && S.cam.x) ? S.cam.x : (me ? me.x : W/2);
+    let targetY = (S.cam && S.cam.y) ? S.cam.y : (me ? me.y : H/2);
+    if (scale <= 0.32) { targetX = W / 2; targetY = H / 2; }
+    const camx = Math.max(0, Math.min(W - vw, targetX - vw / 2));
+    const camy = Math.max(0, Math.min(H - vh, targetY - vh / 2));
+
+    const clickCanvasX = (e.clientX - rect.left);
+    const clickCanvasY = (e.clientY - rect.top);
+    const worldX = clickCanvasX / scale + camx;
+    const worldY = clickCanvasY / scale + camy;
+
+    const targetPlayer = S.players.find(p => {
+      const activeClaim = p.claim || (S.drawn?.id === p.id ? S.claim : null);
+      if (!activeClaim) return false;
+      return Math.hypot(worldX - p.x, worldY - (p.y - 90)) < 130;
+    });
+
+    if (targetPlayer) {
+      const activeClaim = targetPlayer.claim || (S.drawn?.id === targetPlayer.id ? S.claim : null);
+      showEnlargedBubble(activeClaim);
+    }
+  }
+});
 addEventListener("pointercancel", () => isDragging = false);
 
 function blocked(p,nx,ny){
@@ -1660,6 +1825,20 @@ function drawSpeechBubble(cx, x, y, claim) {
     cx.fillText(line, bx + 12, by + headerHeight + paddingV + 12 + idx * lineHeight);
   });
 
+  // 10배 확대 힌트 뱃지 렌더링
+  cx.fillStyle = "#FFD700";
+  cx.strokeStyle = "#D97706";
+  cx.lineWidth = 1.2;
+  cx.beginPath();
+  if (cx.roundRect) cx.roundRect(bx + bubbleWidth - 75, by - 12, 70, 18, 9);
+  else cx.rect(bx + bubbleWidth - 75, by - 12, 70, 18);
+  cx.fill(); cx.stroke();
+
+  cx.fillStyle = "#92400E";
+  cx.font = "bold 10px sans-serif";
+  cx.textAlign = "center";
+  cx.fillText("🔍 10배 확대", bx + bubbleWidth - 40, by + 1);
+
   cx.restore();
 }
 
@@ -1911,10 +2090,13 @@ function openClaim(p){
 }
 function showBubble(){
   const c=S.claim,t=T[c.thinkerId];
-  $("#claimArea").innerHTML=`<div class="bubble"><span class="stance">${c.stance}</span>${c.reason}</div>
+  $("#claimArea").innerHTML=`<div class="bubble" id="domBubbleCard" style="cursor:pointer;" title="클릭하여 10배 확대"><span class="stance">${c.stance}</span>${c.reason}<div style="font-size:12px;color:var(--accent);margin-top:6px;font-weight:700">🔍 클릭하여 10배 확대 보기</div></div>
     <p class="muted">${c.who} · ${t.scholar}
       <button class="ghost" id="editBtn" style="padding:4px 10px;font-size:13px">수정</button>
-      본인과 교사만 수정할 수 있습니다</p>`;
+      본인과 교사만 수정할 수 있습니다
+      <button class="btn-start-tab2" id="zoomBubbleBtn" style="padding:4px 12px;font-size:13px;margin-left:6px">🔍 10배 확대</button></p>`;
+  if($("#domBubbleCard")) $("#domBubbleCard").onclick = () => showEnlargedBubble(c);
+  if($("#zoomBubbleBtn")) $("#zoomBubbleBtn").onclick = () => showEnlargedBubble(c);
   $("#editBtn").onclick=()=>openClaim(S.drawn);
   $("#voteCard").classList.remove("hide");$("#gradeBtn").disabled=false;renderVotes();
 }
