@@ -758,8 +758,9 @@ function checkSpots(){
 
       toast("모둠 " + (sp.id + 1) + " 벤다이어그램 완성!");
       if(inZone.some(p=>p.isMe)){
-        $("#mapMsg").textContent="완성! 인간 ⊂ 동물 ⊂ 생명 ⊂ 대지 — 네 사람의 원이 겹쳐 벤다이어그램이 되었습니다.";
-        toast("우리 모둠 완성!");fanfare();}
+        $("#mapMsg").textContent="완성! 인간 ⊂ 동물 ⊂ 생명 ⊂ 대지 — 벤다이어그램 완성! (방향키를 눌러 맵을 이동하고 다른 모둠을 확인해보세요)";
+        toast("우리 모둠 완성! 방향키를 눌러 맵을 이동하며 다른 모둠을 둘러보세요! 🚀");
+        fanfare();}
       drawMini();
     }
   });
@@ -775,7 +776,21 @@ function loop(ts){
   if(S.tab!==2||!S.spots.length)return;
   const me=S.me;
   const dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0),dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
-  me.run=step(me,dx,dy,dt);
+
+  if (me && me.frozen) {
+    // 결계 완성 후: 방향키를 누르면 카메라(맵 화면)가 자유롭게 이동하여 다른 벤다이어그램 확인 가능!
+    if (!S.cam) S.cam = { x: me.x, y: me.y };
+    if (dx || dy) {
+      const d = Math.hypot(dx, dy);
+      const camSpeed = SPEED * 2.4;
+      S.cam.x = Math.max(cvs.clientWidth / 2, Math.min(W - cvs.clientWidth / 2, S.cam.x + (dx / d) * camSpeed * dt));
+      S.cam.y = Math.max(460 / 2, Math.min(H - 460 / 2, S.cam.y + (dy / d) * camSpeed * dt));
+    }
+  } else if (me) {
+    me.run = step(me, dx, dy, dt);
+    S.cam = { x: me.x, y: me.y };
+  }
+
   S.players.forEach(p=>{
     if(p.isMe||p.frozen){if(!p.isMe)p.run=false;return;}
     let ax=p.tx-p.x, ay=p.ty-p.y;
@@ -796,7 +811,11 @@ function loop(ts){
 }
 function render(ts){
   const vw=cvs.clientWidth,vh=460,me=S.me;
-  const camx=Math.max(0,Math.min(W-vw,me.x-vw/2)),camy=Math.max(0,Math.min(H-vh,me.y-vh/2));
+  const targetX = (S.cam && S.cam.x) ? S.cam.x : (me ? me.x : W/2);
+  const targetY = (S.cam && S.cam.y) ? S.cam.y : (me ? me.y : H/2);
+
+  const camx=Math.max(0,Math.min(W-vw,targetX-vw/2));
+  const camy=Math.max(0,Math.min(H-vh,targetY-vh/2));
   cx.clearRect(0,0,vw,vh);cx.save();cx.translate(-camx,-camy);
   cx.fillStyle="#BFE3D8";cx.fillRect(0,0,W,H);
   cx.fillStyle="#A9D79A";cx.fillRect(0,90,W,H-170);
