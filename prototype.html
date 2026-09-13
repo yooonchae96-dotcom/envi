@@ -69,6 +69,14 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;opacity:0;transition:.2s;pointer-events:none;z-index:9}
 .toast.on{opacity:1}
 .hide{display:none}
+/* Google 로그인 */
+.glogin-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 0}
+.glogin-btn{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #dadce0;border-radius:8px;padding:10px 18px;font-size:15px;font-weight:500;color:#3c4043;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12);transition:box-shadow .15s}
+.glogin-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.glogin-btn svg{flex:0 0 20px}
+.user-info{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--sub)}
+.user-info img{width:28px;height:28px;border-radius:50%;object-fit:cover}
+#googleSignInDiv{display:flex;justify-content:center}
 @media(max-width:700px){.grid28{grid-template-columns:repeat(4,1fr)}.roster,.lotto{grid-template-columns:repeat(5,1fr)}}
 </style>
 </head>
@@ -84,8 +92,21 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 <section id="t1">
   <div class="card" id="loginCard"><h2>구글로 로그인</h2>
-    <p class="muted">실제 앱에서는 학교 구글 계정으로만 들어옵니다. 시험용으로 학번만 넣습니다.</p>
-    <div class="row"><input id="noIn" type="number" value="20314" style="width:120px"><button id="loginBtn">로그인</button></div></div>
+    <p class="muted">학교 구글 계정으로 로그인하면 캐릭터를 선택할 수 있습니다.</p>
+    <div class="glogin-wrap">
+      <div id="googleSignInDiv"></div>
+      <button class="glogin-btn" id="gLoginBtn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          <path fill="none" d="M0 0h48v48H0z"/>
+        </svg>
+        Google 계정으로 로그인
+      </button>
+      <p class="muted" style="font-size:12px;text-align:center">또는 테스트용 학번 입력: <input id="noIn" type="number" value="20314" style="width:90px;font-size:12px;padding:4px 8px"> <button id="loginBtn" style="font-size:12px;padding:5px 10px">입력</button></p>
+    </div></div>
   <div class="card hide" id="pickCard"><h2>캐릭터 고르기 <span class="muted">선착순 · 사상가 4명 × 스타일 7개</span></h2>
     <div class="grid28" id="grid28"></div></div>
   <div class="card hide" id="myCard"><h2>내 입장</h2><div id="mine"></div></div>
@@ -314,12 +335,71 @@ $$("nav button").forEach(b=>b.onclick=()=>{
 });
 
 /* ===== 1번 탭 ===== */
+/* --- Google Identity Services 로그인 --- */
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"; // ← 여기에 실제 Client ID 입력
+
+function doLogin(name, email, pictureUrl, displayNo) {
+  S.me = {id:"me", no:displayNo, name:name||displayNo+"번", email:email||null, isMe:true};
+  $("#loginCard").classList.add("hide");
+  $("#pickCard").classList.remove("hide");
+  if(pictureUrl) {
+    $("#whoami").innerHTML = `<span class="user-info"><img src="${pictureUrl}" alt=""> ${name||displayNo+"번"}</span>`;
+  } else {
+    $("#whoami").textContent = "· " + (name||displayNo+"번");
+  }
+  renderGrid();
+}
+
+// 테스트용 학번 로그인
 $("#loginBtn").onclick=()=>{
   const no=+$("#noIn").value||20301;
-  S.me={id:"me",no,name:no+"번",isMe:true};
-  $("#loginCard").classList.add("hide");$("#pickCard").classList.remove("hide");
-  $("#whoami").textContent="· "+no;renderGrid();
+  doLogin(null, null, null, no);
 };
+
+// Google 로그인 버튼 (GIS 미로드 시 폴백)
+$("#gLoginBtn").onclick=()=>{
+  if(typeof google !== 'undefined' && google.accounts) {
+    google.accounts.id.prompt();
+  } else {
+    toast("Google 로그인을 사용하려면 Client ID를 설정해 주세요. 아래 학번 입력을 사용하세요.");
+  }
+};
+
+// GIS 콜백
+function handleCredentialResponse(response) {
+  try {
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    const name = payload.name || payload.email;
+    const email = payload.email || '';
+    const picture = payload.picture || null;
+    // 이메일 앞 숫자를 학번처럼 사용
+    const numMatch = email.match(/^(\d{5,})/);
+    const no = numMatch ? +numMatch[1] : Math.floor(Math.random()*9000+20000);
+    doLogin(name, email, picture, no);
+  } catch(e) {
+    toast("로그인 처리 중 오류가 발생했습니다.");
+  }
+}
+
+// GIS 초기화 (Client ID가 설정된 경우)
+(function(){
+  if(GOOGLE_CLIENT_ID.startsWith('YOUR_')) return; // 미설정 시 건너뜀
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.async = true; s.defer = true;
+  s.onload = function() {
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleCredentialResponse,
+      auto_select: false,
+    });
+    google.accounts.id.renderButton(
+      $("#googleSignInDiv"),
+      {theme:"outline", size:"large", locale:"ko", width:280}
+    );
+  };
+  document.head.appendChild(s);
+})();
 function renderGrid(){
   const g=$("#grid28");g.innerHTML="";
   CHARACTERS.forEach(ch=>{
