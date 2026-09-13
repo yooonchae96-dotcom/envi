@@ -138,7 +138,7 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
         <p class="muted" style="margin:0 0 10px;font-size:13px">학교 Google 계정 정보를 입력하여 접속하세요.</p>
         <div>
           <label>Google 계정 이메일</label>
-          <input type="email" id="gModalEmail" value="20314@school.sen.go.kr" placeholder="student@school.go.kr">
+          <input type="email" id="gModalEmail" value="yooonchae96@gmail.com" placeholder="yooonchae96@gmail.com">
         </div>
         <div>
           <label>이름 (선택)</label>
@@ -391,7 +391,7 @@ $$("nav button").forEach(b=>b.onclick=()=>{
 
 /* ===== 1번 탭 ===== */
 /* --- Google 로그인 및 Client ID 설정 --- */
-let GOOGLE_CLIENT_ID = localStorage.getItem("GOOGLE_CLIENT_ID") || "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+let GOOGLE_CLIENT_ID = localStorage.getItem("GOOGLE_CLIENT_ID") || "yooonchae96@gmail.com";
 
 function doLogin(name, email, pictureUrl, displayNo) {
   S.me = {id:"me", no:displayNo, name:name||displayNo+"번", email:email||null, isMe:true};
