@@ -326,8 +326,8 @@ function gradeClaim({thinkerId,stance,reason}){
 /* ===== 상태 ===== */
 const S={me:null,players:[],spots:[],tab:1,drawn:null,pool:[],claim:null,votes:{ok:0,no:0},
          teams:[],rot:0,warnAt:0,sound:true};
-const W=1900,H=1150,SPEED=200;
-const SPOTPOS=[[330,300],[950,260],[1570,320],[300,850],[950,880],[1580,860],[950,570]];
+const W=3200,H=2000,SPEED=220;
+const SPOTPOS=[[550,480],[1600,420],[2650,480],[550,1500],[1600,1580],[2650,1500],[1600,1000]];
 const IMG={},PIMG={};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),1500);}
@@ -724,12 +724,39 @@ function step(p,dx,dy,dt){
   if(dx)p.dir=dx>0?1:-1;
   p.x=nx;p.y=ny;p.ph+=dt*10;return true;
 }
+function alignSpotThinkersInLine(sp) {
+  const inSpot = S.players.filter(p => p.spot === sp.id);
+  inSpot.forEach(p => {
+    let offsetX = 0;
+    if (p.thinkerId === "ari") offsetX = 0;           // 아리스토텔레스: 인간 중심 원 (가장 안쪽 중심)
+    else if (p.thinkerId === "sin") offsetX = 130;    // 피터 싱어: 동물 원 링 (두 번째)
+    else if (p.thinkerId === "sch") offsetX = 215;    // 슈바이처: 생명 원 링 (세 번째)
+    else if (p.thinkerId === "leo") offsetX = 295;    // 레오폴드: 대지 원 링 (네 번째 외곽)
+    
+    p.x = sp.x + offsetX;
+    p.y = sp.y + 10;
+    p.tx = p.x;
+    p.ty = p.y;
+    p.dir = 1;
+    p.run = false;
+  });
+}
+
 function checkSpots(){
   S.spots.forEach(sp=>{
     if(sp.done)return;
     const inZone=S.players.filter(p=>p.spot===sp.id&&Math.hypot(p.x-sp.x,p.y-sp.y)<260);
+    
+    // 참여자(S.me)의 모둠은 실제 참여자가 자리에 도착할 때까지 완성되지 않음!
+    if(S.me && sp.id === S.me.spot && !inZone.some(p => p.isMe)) return;
+
     if(new Set(inZone.map(p=>p.thinkerId)).size===4){
       sp.done=true;sp.t0=performance.now();inZone.forEach(p=>p.frozen=true);
+      
+      // 완성 시 4명의 사상가를 벤다이어그램 동심원 상에 일렬(Horizontal Line)로 깔끔하게 정렬!
+      alignSpotThinkersInLine(sp);
+
+      toast("모둠 " + (sp.id + 1) + " 벤다이어그램 완성!");
       if(inZone.some(p=>p.isMe)){
         $("#mapMsg").textContent="완성! 인간 ⊂ 동물 ⊂ 생명 ⊂ 대지 — 네 사람의 원이 겹쳐 벤다이어그램이 되었습니다.";
         toast("우리 모둠 완성!");fanfare();}
@@ -754,11 +781,12 @@ function loop(ts){
     let ax=p.tx-p.x, ay=p.ty-p.y;
     const dist=Math.hypot(ax,ay);
     if(dist > 15) {
-      const wiggle = Math.sin((ts||0)*0.003 + (p.no||0)*7.3)*22;
+      const wiggle = Math.sin((ts||0)*0.002 + (p.no||0)*7.3)*20;
       ax += Math.cos((p.no||1)*2.5)*wiggle;
       ay += Math.sin((p.no||1)*2.5)*wiggle;
     }
-    p.run = dist > 6 ? step(p, ax, ay, dt * 0.7) : false;
+    // NPC 이동 속도를 여유롭게 조정하여 사용자가 직접 움직일 시간을 확보
+    p.run = dist > 6 ? step(p, ax, ay, dt * 0.22) : false;
   });
   S.players.forEach(p=>{
     const sp=S.spots[p.spot],d=Math.hypot(p.x-sp.x,p.y-sp.y);
