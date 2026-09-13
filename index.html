@@ -481,11 +481,8 @@ function subscribeAll(){
   }, e=>toast("명단 동기화 오류: "+e.code));
 
   C("spots").onSnapshot(snap=>{
-    snap.forEach(doc=>{
-      const sp=S.spots[+doc.id];
-      if(sp && doc.data().done && !sp.done){ sp.done=true; sp.t0=performance.now(); }
-    });
-    drawMini();
+    snap.forEach(doc=>{ if(doc.data().done) DONE_SPOTS.add(+doc.id); });
+    applyDoneSpots();
   });
 
   R("state/draw").onSnapshot(s=>{ if(s.exists) onDraw(s.data()); });
@@ -576,6 +573,15 @@ function renderRoster(){
 }
 
 /* ===== 2번 탭 ===== */
+const DONE_SPOTS=new Set();
+function applyDoneSpots(){
+  if(!S.spots.length)return;
+  DONE_SPOTS.forEach(i=>{
+    const sp=S.spots[i];
+    if(sp&&!sp.done){sp.done=true;sp.t0=performance.now();}
+  });
+  drawMini();
+}
 function assignSpots(){
   if(!S.spots.length)S.spots=SPOTPOS.map((p,i)=>({id:i,x:p[0],y:p[1],done:false,t0:0}));
   const list=[...active()].sort((a,b)=>a.no-b.no);
@@ -597,6 +603,7 @@ function assignSpots(){
     if(p.frozen===undefined)p.frozen=false;
     if(p.run===undefined)p.run=false;
   });
+  applyDoneSpots();
   drawMini();
 }
 const cvs=$("#stage"),cx=cvs.getContext("2d");

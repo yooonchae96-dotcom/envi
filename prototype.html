@@ -77,6 +77,19 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .user-info{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--sub)}
 .user-info img{width:28px;height:28px;border-radius:50%;object-fit:cover}
 #googleSignInDiv{display:flex;justify-content:center}
+/* 모달 스타일 */
+.modal-backdrop{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:1;transition:opacity .2s}
+.modal-backdrop.hide{display:none;opacity:0;pointer-events:none}
+.modal-content{background:#fff;border-radius:16px;width:90%;max-width:440px;padding:24px;box-shadow:0 12px 32px rgba(0,0,0,0.25);position:relative}
+.modal-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;border-bottom:1px solid #eee;padding-bottom:12px}
+.modal-header h3{margin:0;font-size:18px;color:#202124;flex:1}
+.modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:#70757a}
+.modal-body{display:flex;flex-direction:column;gap:12px}
+.modal-body label{font-size:13px;font-weight:600;color:#3c4043;margin-bottom:4px;display:block}
+.modal-body input{width:100%;padding:9px 12px;font-size:14px;border:1px solid #dadce0;border-radius:8px;box-sizing:border-box}
+.modal-body input:focus{border-color:#1a73e8;outline:none}
+.btn-gsubmit{background:#1a73e8;color:#fff;border:none;padding:12px;font-size:15px;font-weight:600;border-radius:8px;cursor:pointer;transition:background .15s}
+.btn-gsubmit:hover{background:#1557b0}
 @media(max-width:700px){.grid28{grid-template-columns:repeat(4,1fr)}.roster,.lotto{grid-template-columns:repeat(5,1fr)}}
 </style>
 </head>
@@ -107,6 +120,48 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
       </button>
       <p class="muted" style="font-size:12px;text-align:center">또는 테스트용 학번 입력: <input id="noIn" type="number" value="20314" style="width:90px;font-size:12px;padding:4px 8px"> <button id="loginBtn" style="font-size:12px;padding:5px 10px">입력</button></p>
     </div></div>
+
+  <!-- Google 로그인 팝업 모달 -->
+  <div id="gAuthModal" class="modal-backdrop hide">
+    <div class="modal-content">
+      <div class="modal-header">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24" height="24">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        <h3>Google 계정으로 로그인</h3>
+        <button class="modal-close" id="closeGModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted" style="margin:0 0 10px;font-size:13px">학교 Google 계정 정보를 입력하여 접속하세요.</p>
+        <div>
+          <label>Google 계정 이메일</label>
+          <input type="email" id="gModalEmail" value="20314@school.sen.go.kr" placeholder="student@school.go.kr">
+        </div>
+        <div>
+          <label>이름 (선택)</label>
+          <input type="text" id="gModalName" value="홍길동" placeholder="학생 이름">
+        </div>
+        <div>
+          <label>학번</label>
+          <input type="number" id="gModalNo" value="20314" placeholder="20314">
+        </div>
+        <button class="btn-gsubmit" id="gModalSubmit" style="margin-top:6px">Google 계정으로 로그인</button>
+
+        <hr style="margin:14px 0 8px;border:0;border-top:1px solid #eee">
+        <details style="font-size:12px;color:#666">
+          <summary style="cursor:pointer;font-weight:600;padding:4px 0">⚙ 실제 Google OAuth Client ID 설정하기</summary>
+          <div style="margin-top:8px;background:#f8f9fa;padding:10px;border-radius:6px">
+            <p style="margin:0 0 6px">Google Cloud Console 또는 Firebase에서 발급받은 OAuth Client ID가 있으시면 아래에 붙여넣어 주세요:</p>
+            <input type="text" id="gClientIdInput" placeholder="xxxx.apps.googleusercontent.com" style="width:100%;padding:6px;font-size:12px;margin-bottom:6px">
+            <button id="saveClientIdBtn" style="font-size:12px;padding:4px 10px;background:var(--ink);color:#fff;border:none;border-radius:4px;cursor:pointer">Client ID 저장</button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
   <div class="card hide" id="pickCard"><h2>캐릭터 고르기 <span class="muted">선착순 · 사상가 4명 × 스타일 7개</span></h2>
     <div class="grid28" id="grid28"></div></div>
   <div class="card hide" id="myCard"><h2>내 입장</h2><div id="mine"></div></div>
@@ -335,33 +390,61 @@ $$("nav button").forEach(b=>b.onclick=()=>{
 });
 
 /* ===== 1번 탭 ===== */
-/* --- Google Identity Services 로그인 --- */
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"; // ← 여기에 실제 Client ID 입력
+/* --- Google 로그인 및 Client ID 설정 --- */
+let GOOGLE_CLIENT_ID = localStorage.getItem("GOOGLE_CLIENT_ID") || "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
 function doLogin(name, email, pictureUrl, displayNo) {
   S.me = {id:"me", no:displayNo, name:name||displayNo+"번", email:email||null, isMe:true};
   $("#loginCard").classList.add("hide");
+  if($("#gAuthModal")) $("#gAuthModal").classList.add("hide");
   $("#pickCard").classList.remove("hide");
   if(pictureUrl) {
-    $("#whoami").innerHTML = `<span class="user-info"><img src="${pictureUrl}" alt=""> ${name||displayNo+"번"}</span>`;
+    $("#whoami").innerHTML = `<span class="user-info"><img src="${pictureUrl}" alt=""> ${name||email||displayNo+"번"}</span>`;
   } else {
-    $("#whoami").textContent = "· " + (name||displayNo+"번");
+    $("#whoami").innerHTML = `<span class="user-info">🌐 ${name||email||displayNo+"번"}</span>`;
   }
   renderGrid();
+  toast((name||email||displayNo+"번") + "님, 로그인 완료!");
 }
 
 // 테스트용 학번 로그인
 $("#loginBtn").onclick=()=>{
   const no=+$("#noIn").value||20301;
-  doLogin(null, null, null, no);
+  doLogin("학생 "+no, no+"@school.go.kr", null, no);
 };
 
-// Google 로그인 버튼 (GIS 미로드 시 폴백)
+// Google 로그인 버튼 클릭
 $("#gLoginBtn").onclick=()=>{
-  if(typeof google !== 'undefined' && google.accounts) {
+  if(typeof google !== 'undefined' && google.accounts && GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE")) {
     google.accounts.id.prompt();
   } else {
-    toast("Google 로그인을 사용하려면 Client ID를 설정해 주세요. 아래 학번 입력을 사용하세요.");
+    $("#gAuthModal").classList.remove("hide");
+  }
+};
+
+// 모달 닫기
+if($("#closeGModal")) $("#closeGModal").onclick=()=> $("#gAuthModal").classList.add("hide");
+
+// 모달 구글 로그인 제출
+$("#gModalSubmit").onclick=()=>{
+  const email = $("#gModalEmail").value.trim() || "student@school.sen.go.kr";
+  const nameInput = $("#gModalName").value.trim();
+  const numMatch = email.match(/^(\d{5,})/);
+  let no = +$("#gModalNo").value || (numMatch ? +numMatch[1] : 20314);
+  const name = nameInput || (email.includes("@") ? email.split("@")[0] : email);
+  doLogin(name, email, null, no);
+};
+
+// Client ID 저장 버튼
+$("#saveClientIdBtn").onclick=()=>{
+  const val = $("#gClientIdInput").value.trim();
+  if(val) {
+    localStorage.setItem("GOOGLE_CLIENT_ID", val);
+    GOOGLE_CLIENT_ID = val;
+    toast("Google Client ID가 저장되었습니다! 새로고침합니다.");
+    setTimeout(()=>location.reload(), 800);
+  } else {
+    toast("Client ID를 입력해주세요.");
   }
 };
 
@@ -372,7 +455,6 @@ function handleCredentialResponse(response) {
     const name = payload.name || payload.email;
     const email = payload.email || '';
     const picture = payload.picture || null;
-    // 이메일 앞 숫자를 학번처럼 사용
     const numMatch = email.match(/^(\d{5,})/);
     const no = numMatch ? +numMatch[1] : Math.floor(Math.random()*9000+20000);
     doLogin(name, email, picture, no);
@@ -383,7 +465,7 @@ function handleCredentialResponse(response) {
 
 // GIS 초기화 (Client ID가 설정된 경우)
 (function(){
-  if(GOOGLE_CLIENT_ID.startsWith('YOUR_')) return; // 미설정 시 건너뜀
+  if(!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.startsWith('YOUR_')) return;
   const s = document.createElement('script');
   s.src = 'https://accounts.google.com/gsi/client';
   s.async = true; s.defer = true;
