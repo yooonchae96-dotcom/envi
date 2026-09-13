@@ -597,6 +597,7 @@ function populateNPCs(){
   });
   renderGrid();
   renderRoster();
+  seatAll();
 }
 
 function goToTab(tabIndex){
@@ -606,7 +607,7 @@ function goToTab(tabIndex){
   }
   if(tabIndex === 2 || tabIndex === 3) {
     if(!S.players.some(p => !p.isMe)) populateNPCs();
-    if(!S.spots.length) seatAll();
+    else if(!S.spots.length) seatAll();
   }
   S.tab = tabIndex;
   $$("nav button").forEach(x => x.classList.toggle("on", +x.dataset.tab === tabIndex));
@@ -634,6 +635,7 @@ function startDeparture(){
     confirmPick(availableCh.charId);
   }
   populateNPCs();
+  seatAll();
   goToTab(2);
   toast("🚀 벤다이어그램 탭으로 이동했습니다! 27명의 사상가가 출발합니다.");
 }
