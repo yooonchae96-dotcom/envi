@@ -413,10 +413,15 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 </section>
 
 <section id="t4" class="hide">
-  <div class="card"><h2>역할 바꿔 토론</h2>
-    <div class="row"><button id="teamBtn">모둠 짜기</button><button class="ghost" id="rotBtn" disabled>다음 차례</button>
-      <span class="muted" id="rotMsg">사상가가 서로 다른 네 명이 한 모둠이 됩니다.</span></div>
-    <div id="teamOut"></div></div>
+  <div class="card" id="t4Card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+      <h2 style="margin:0">역할 바꿔 토론 <span class="muted">메타버스 벤다이어그램 모둠 내 역할 순환</span></h2>
+      <div class="row"><button id="teamBtn">모둠 짜기 👥</button><button class="ghost" id="rotBtn" disabled>다음 차례 🔄</button></div>
+    </div>
+    <p class="muted" id="rotMsg" style="margin-bottom:8px">사상가가 서로 다른 네 명이 한 모둠이 되어 메타버스 무대 위에서 역할을 교환합니다.</p>
+    <div id="t4StageSlot" style="margin-bottom:12px"></div>
+    <div id="teamOut"></div>
+  </div>
 </section>
 
   <!-- 이용약관 및 개인정보처리방침 팝업 모달 -->
@@ -652,7 +657,7 @@ function goToTab(tabIndex){
     const availableCh = CHARACTERS.find(c => !S.players.some(p => p.charId === c.charId)) || CHARACTERS[0];
     confirmPick(availableCh.charId);
   }
-  if(tabIndex === 2 || tabIndex === 3) {
+  if(tabIndex === 2 || tabIndex === 3 || tabIndex === 4) {
     if(!S.players.some(p => !p.isMe)) populateNPCs();
     else if(!S.spots.length) seatAll();
   }
@@ -669,6 +674,15 @@ function goToTab(tabIndex){
     if(stageWrap && $("#t3StageSlot")) $("#t3StageSlot").appendChild(stageWrap);
     resize();
     renderLotto();
+  }
+  if(S.tab === 4) {
+    if(stageWrap && $("#t4StageSlot")) $("#t4StageSlot").appendChild(stageWrap);
+    resize();
+    if(!S.teams || !S.teams.length) {
+      if($("#teamBtn")) $("#teamBtn").click();
+    } else {
+      renderTeam();
+    }
   }
 }
 
@@ -1523,6 +1537,31 @@ function render(ts){
 
     drawChar(cx,p.x,p.y,p.ch,0.95,{name:p.isMe?"나":p.no,phase:p.ph,run:p.run,dir:p.dir});
 
+    // 4번 탭 역할바꿔 토론 메타버스 무대 역할 표식 렌더링
+    if (S.tab === 4 && p.swappedThinkerId) {
+      const st = T[p.swappedThinkerId];
+      if (st) {
+        cx.save();
+        cx.font = "bold 12px sans-serif";
+        const roleLabel = (p.isMe ? "나 🔄 " : `${p.no}번 🔄 `) + st.scholar + " 역할";
+        const tw = cx.measureText(roleLabel).width + 18;
+        
+        cx.fillStyle = "rgba(255, 255, 255, 0.95)";
+        cx.strokeStyle = st.color;
+        cx.lineWidth = 2.8;
+        cx.beginPath();
+        if (cx.roundRect) cx.roundRect(p.x - tw/2, p.y - 82, tw, 24, 7);
+        else cx.rect(p.x - tw/2, p.y - 82, tw, 24);
+        cx.fill();
+        cx.stroke();
+
+        cx.fillStyle = st.color;
+        cx.textAlign = "center";
+        cx.fillText(roleLabel, p.x, p.y - 65);
+        cx.restore();
+      }
+    }
+
     // 메타버스 2D 캔버스 말풍선 렌더링
     const activeClaim = p.claim || (S.drawn?.id === p.id ? S.claim : null);
     if (activeClaim) {
@@ -1634,27 +1673,75 @@ $("#gradeBtn").onclick=()=>{
 
 /* ===== 4번 탭 ===== */
 $("#teamBtn").onclick=()=>{
-  const by={ari:[],sin:[],sch:[],leo:[]};S.players.forEach(p=>by[p.thinkerId].push(p));
+  const by={ari:[],sin:[],sch:[],leo:[]};
+  S.players.forEach(p=>by[p.thinkerId].push(p));
   Object.values(by).forEach(a=>a.sort(()=>Math.random()-.5));
-  const n=Math.min(...Object.values(by).map(a=>a.length));S.teams=[];
-  for(let i=0;i<n;i++)S.teams.push(["ari","sin","sch","leo"].map(k=>by[k][i]));
-  S.rot=0;$("#rotBtn").disabled=false;renderTeam();
+  const n=Math.min(...Object.values(by).map(a=>a.length));
+  S.teams=[];
+  for(let i=0;i<n;i++) S.teams.push(["ari","sin","sch","leo"].map(k=>by[k][i]));
+  S.rot=0;
+
+  // 메타버스 무대 상 모둠원 위치 고정 및 초기 역할 할당
+  S.teams.forEach((team, spotIdx) => {
+    const sp = S.spots[spotIdx] || (SPOTPOS[spotIdx] ? { id: spotIdx, x: SPOTPOS[spotIdx][0], y: SPOTPOS[spotIdx][1] } : null);
+    if(sp) {
+      if(S.spots[spotIdx]) S.spots[spotIdx].done = true;
+      team.forEach((p, i) => {
+        p.spot = spotIdx;
+        p.frozen = true;
+        p.isRoamer = false;
+        p.swappedThinkerId = team[(i + S.rot) % 4].thinkerId;
+        let offsetX = 0;
+        if(p.thinkerId === "ari") offsetX = 0;
+        else if(p.thinkerId === "sin") offsetX = 130;
+        else if(p.thinkerId === "sch") offsetX = 215;
+        else if(p.thinkerId === "leo") offsetX = 295;
+        p.x = sp.x + offsetX;
+        p.y = sp.y + 10;
+        p.tx = p.x;
+        p.ty = p.y;
+      });
+    }
+  });
+
+  $("#rotBtn").disabled=false;
+  renderTeam();
+  toast("👥 7개 벤다이어그램 모둠이 형성되었습니다! 메타버스 무대 위에서 역할을 교환해보세요.");
 };
-$("#rotBtn").onclick=()=>{S.rot=(S.rot+1)%4;beep(600+S.rot*80,0.08,"triangle",0.1);renderTeam();};
+
+$("#rotBtn").onclick=()=>{
+  S.rot=(S.rot+1)%4;
+  beep(600+S.rot*80,0.08,"triangle",0.1);
+
+  S.teams.forEach(team => {
+    team.forEach((p, i) => {
+      p.swappedThinkerId = team[(i + S.rot) % 4].thinkerId;
+    });
+  });
+
+  renderTeam();
+  const me = S.me;
+  if(me && me.swappedThinkerId) {
+    const nowT = T[me.swappedThinkerId];
+    toast(`🔄 역할 교환 (${S.rot + 1}/4 차례)! 지금 나는 [${nowT.scholar}] 역할을 연기합니다!`);
+    S.cam = { x: me.x, y: me.y };
+  }
+};
+
 function renderTeam(){
   const team=S.teams.find(t=>t.some(p=>p.isMe))||S.teams[0];
   if(!team){$("#teamOut").innerHTML="";return;}
   const myIdx=Math.max(0,team.findIndex(p=>p.isMe));
   const nowT=T[team[(myIdx+S.rot)%4].thinkerId];
-  $("#rotMsg").textContent=`${S.rot+1}번째 차례 / 4`;
-  $("#teamOut").innerHTML=`<div class="banner">지금 나는 <b>${nowT.scholar}</b>입니다 — ${nowT.name}<br>
+  $("#rotMsg").textContent=`${S.rot+1}번째 차례 / 4 — 메타버스 2D 무대 캐릭터 머리 위 🔄 표식을 확인하세요`;
+  $("#teamOut").innerHTML=`<div class="banner">지금 나는 <b>${nowT.scholar}</b> 역할을 연기합니다 — ${nowT.name}<br>
       <span style="color:#cfe">${nowT.core}</span></div>
-    <div>${nowT.keywords.slice(0,3).map(k=>`<span class="kw">${k}</span>`).join("")}</div>
+    <div>${nowT.keywords.slice(0,4).map(k=>`<span class="kw">${k}</span>`).join("")}</div>
     <div class="teamring">${team.map((p,i)=>{const t=T[team[(i+S.rot)%4].thinkerId];
-      return `<div class="tm ${p.isMe?"now":""}"><b>${p.isMe?"나":p.no}</b>
-        <div style="color:${t.color};font-weight:700">${t.scholar}</div>
+      return `<div class="tm ${p.isMe?"now":""}"><b>${p.isMe?"나 (" + p.no + "번)":p.no + "번"}</b>
+        <div style="color:${t.color};font-weight:700">🔄 ${t.scholar}</div>
         <div class="muted" style="font-size:12px">${t.name}</div></div>`;}).join("")}</div>
-    ${S.rot===3?`<p class="muted" style="margin-top:10px">네 사람 모두 경험 완료 — 이제 각자 원래 사상가로 수행평가를 준비하세요.</p>`:""}`;
+    ${S.rot===3?`<p class="muted" style="margin-top:10px">네 사람 모두 역할 교환 경험 완료 — 이제 각자 원래 사상가로 돌아가 수행평가를 준비하세요.</p>`:""}`;
 }
 
 /* ===== QR ===== */
