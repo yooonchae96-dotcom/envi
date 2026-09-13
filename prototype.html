@@ -474,9 +474,9 @@ function handleCredentialResponse(response) {
   }
 }
 
-// GIS 초기화 (Client ID가 설정된 경우)
+// GIS 초기화 (Google OAuth Client ID가 .apps.googleusercontent.com 형식을 갖춘 경우에만 실행)
 (function(){
-  if(!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.startsWith('YOUR_')) return;
+  if(!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_ID.endsWith('.apps.googleusercontent.com')) return;
   const s = document.createElement('script');
   s.src = 'https://accounts.google.com/gsi/client';
   s.async = true; s.defer = true;
