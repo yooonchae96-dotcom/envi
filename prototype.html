@@ -290,7 +290,7 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 <section id="t1">
   <div class="card" id="loginCard"><h2>구글로 로그인</h2>
-    <p class="muted">학교 구글 계정으로 로그인하면 캐릭터를 선택할 수 있습니다.</p>
+    <p class="muted">학교 구글 계정으로 로그인하면 캐릭터를 선택할 수 있습니다. (또는 테스트 버튼 클릭 시 바로 4명이 선택되어 시작됩니다)</p>
     <div class="glogin-wrap">
       <div id="googleSignInDiv"></div>
       <button class="glogin-btn" id="gLoginBtn">
@@ -302,6 +302,9 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
           <path fill="none" d="M0 0h48v48H0z"/>
         </svg>
         Google 계정으로 로그인
+      </button>
+      <button class="btn-start-tab2" id="quick4TestBtn" style="background:linear-gradient(135deg,#1e40af,#3b82f6);margin-top:6px">
+        ⚡ 4명 즉시 참석 테스트 (본인 포함 4명 캐릭터 자동 선택)
       </button>
     </div></div>
 
@@ -746,6 +749,47 @@ if($("#gLoginBtn")) {
     }
   };
 }
+
+// ⚡ 4명 즉시 참석 테스트 (구글 로그인 없이 본인 포함 4명 사상가 캐릭터 자동 선택)
+function runQuick4Test() {
+  doLogin("테스트 학생", "test20314@school.sen.go.kr", null, 20314);
+
+  const thinkerTypes = ["ari", "sin", "sch", "leo"];
+  const pickedChars = thinkerTypes.map(tId => CHARACTERS.find(c => c.thinkerId === tId));
+
+  const myChar = pickedChars[0];
+  Object.assign(S.me, { charId: myChar.charId, thinkerId: myChar.thinkerId, ch: myChar });
+
+  S.players = [S.me];
+
+  for (let i = 1; i < 4; i++) {
+    const ch = pickedChars[i];
+    const n = 20300 + i;
+    const mockEmail = "student" + n + "@school.sen.go.kr";
+    S.players.push({
+      id: "n" + (i - 1),
+      no: n,
+      name: mockEmail.split("@")[0],
+      email: mockEmail,
+      charId: ch.charId,
+      thinkerId: ch.thinkerId,
+      ch: ch,
+      isNPC: true
+    });
+  }
+
+  renderGrid();
+  showMine();
+  $("#rosterCard").classList.remove("hide");
+  renderRoster();
+  seatAll();
+
+  toast("⚡ 4명 캐릭터 즉시 참석 테스트 완료! (나 + 3명 사상가 기본 선택 완료)");
+}
+
+setTimeout(() => {
+  if($("#quick4TestBtn")) $("#quick4TestBtn").onclick = runQuick4Test;
+}, 100);
 
 // 모달 닫기
 if($("#closeGModal")) $("#closeGModal").onclick=()=> $("#gAuthModal").classList.add("hide");
