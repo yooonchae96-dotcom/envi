@@ -180,6 +180,47 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .btn-sim-reconnect:hover {
   background: #15b097;
 }
+
+/* 오른쪽 아래 4단계 맵 확대/축소 위젯 */
+.zoom-controls {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 20px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  user-select: none;
+}
+.zoom-controls button {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.zoom-controls button:hover {
+  background: #0f6e63;
+  color: #ffffff;
+  border-color: #0f6e63;
+}
+.zoom-controls span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+  min-width: 78px;
+  text-align: center;
+}
 </style>
 </head>
 <body>
@@ -284,10 +325,17 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   <div class="card" id="t2Card"><h2>벤다이어그램 만들기</h2>
     <p class="muted">각자 자기 크기의 원을 머리에 이고 다닙니다. 반짝이는 우리 모둠 자리로 달려가면
       네 원이 겹쳐 벤다이어그램이 됩니다. (결계가 완성된 후에도 방향키/화면 드래그로 전체 맵을 자유롭게 둘러보실 수 있습니다)</p>
-    <div id="stageContainer">
+    <div id="stageContainer" style="position:relative">
       <canvas id="stage"></canvas>
       <div class="dpad"><i></i><button data-mv="u">↑</button><i></i>
         <button data-mv="l">←</button><button data-mv="d">↓</button><button data-mv="r">→</button></div>
+      <!-- 오른쪽 아래 4단계 맵 확대/축소 위젯 -->
+      <div class="zoom-controls">
+        <button id="zoomOutBtn" title="축소 (-)">−</button>
+        <span id="zoomLabel">1단계 (100%)</span>
+        <button id="zoomInBtn" title="확대 (+)">+</button>
+        <button id="zoomFullBtn" title="전체 맵 보기">🗺️ 전체</button>
+      </div>
       <div class="mini" id="mini"></div>
       <p class="muted" id="mapMsg" style="margin-top:8px"></p>
     </div>
@@ -940,6 +988,39 @@ $$(".dpad button").forEach(b=>{
   b.addEventListener("pointerleave",off);b.addEventListener("pointercancel",off);
 });
 
+// 4단계 맵 확대/축소 관리
+const ZOOM_LEVELS = [
+  { scale: 1.00, label: "1단계 (100%)" },
+  { scale: 0.75, label: "2단계 (75%)" },
+  { scale: 0.55, label: "3단계 (55%)" },
+  { scale: 0.30, label: "4단계 (전체)" }
+];
+let currentZoomIdx = 0;
+
+function setZoomLevel(idx) {
+  currentZoomIdx = Math.max(0, Math.min(ZOOM_LEVELS.length - 1, idx));
+  const level = ZOOM_LEVELS[currentZoomIdx];
+  S.zoomScale = level.scale;
+  if ($("#zoomLabel")) $("#zoomLabel").textContent = level.label;
+  toast(`🔍 맵 시점: ${level.label}`);
+}
+
+function initZoomControls() {
+  if ($("#zoomOutBtn")) {
+    $("#zoomOutBtn").onclick = () => setZoomLevel(currentZoomIdx + 1);
+  }
+  if ($("#zoomInBtn")) {
+    $("#zoomInBtn").onclick = () => setZoomLevel(currentZoomIdx - 1);
+  }
+  if ($("#zoomFullBtn")) {
+    $("#zoomFullBtn").onclick = () => {
+      if (currentZoomIdx === 3) setZoomLevel(0);
+      else setZoomLevel(3);
+    };
+  }
+}
+setTimeout(initZoomControls, 100);
+
 // 화면 드래그로 자유 카메라 탐색
 let isDragging = false, dragStart = {x:0, y:0}, camStart = {x:0, y:0};
 cvs.addEventListener("pointerdown", e => {
@@ -951,10 +1032,11 @@ cvs.addEventListener("pointerdown", e => {
 });
 addEventListener("pointermove", e => {
   if (!isDragging) return;
-  const dx = dragStart.x - e.clientX;
-  const dy = dragStart.y - e.clientY;
+  const scale = S.zoomScale || 1.0;
+  const dx = (dragStart.x - e.clientX) / scale;
+  const dy = (dragStart.y - e.clientY) / scale;
   if (!S.cam) S.cam = { x: S.me ? S.me.x : W/2, y: S.me ? S.me.y : H/2 };
-  const vw = cvs.clientWidth, vh = 460;
+  const vw = cvs.clientWidth / scale, vh = 460 / scale;
   S.cam.x = Math.max(vw/2, Math.min(W - vw/2, camStart.x + dx));
   S.cam.y = Math.max(vh/2, Math.min(H - vh/2, camStart.y + dy));
 });
@@ -1204,13 +1286,22 @@ function drawSpeechBubble(cx, x, y, claim) {
 }
 
 function render(ts){
-  const vw=cvs.clientWidth,vh=460,me=S.me;
-  const targetX = (S.cam && S.cam.x) ? S.cam.x : (me ? me.x : W/2);
-  const targetY = (S.cam && S.cam.y) ? S.cam.y : (me ? me.y : H/2);
+  const scale = S.zoomScale || 1.0;
+  const vw = cvs.clientWidth / scale, vh = 460 / scale, me = S.me;
+  let targetX = (S.cam && S.cam.x) ? S.cam.x : (me ? me.x : W/2);
+  let targetY = (S.cam && S.cam.y) ? S.cam.y : (me ? me.y : H/2);
 
-  const camx=Math.max(0,Math.min(W-vw,targetX-vw/2));
-  const camy=Math.max(0,Math.min(H-vh,targetY-vh/2));
-  cx.clearRect(0,0,vw,vh);cx.save();cx.translate(-camx,-camy);
+  if (scale <= 0.32) {
+    targetX = W / 2;
+    targetY = H / 2;
+  }
+
+  const camx = Math.max(0, Math.min(W - vw, targetX - vw / 2));
+  const camy = Math.max(0, Math.min(H - vh, targetY - vh / 2));
+  cx.clearRect(0, 0, cvs.clientWidth, 460);
+  cx.save();
+  cx.scale(scale, scale);
+  cx.translate(-camx, -camy);
   cx.fillStyle="#BFE3D8";cx.fillRect(0,0,W,H);
   cx.fillStyle="#A9D79A";cx.fillRect(0,90,W,H-170);
   cx.fillStyle="#E6D9B4";cx.fillRect(0,H-80,W,80);
