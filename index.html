@@ -27,11 +27,14 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .muted{color:var(--sub);font-size:13px}
 .grid28{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cell{border:1px solid var(--line);border-radius:10px;padding:5px 2px;text-align:center;background:#fff;cursor:pointer}
+.cell{border:1px solid var(--line);border-radius:10px;padding:5px 2px;text-align:center;background:#fff;cursor:pointer;position:relative;transition:all .15s}
+.cell.selected{border:2px solid #1a73e8;background:#e8f0fe;transform:scale(1.05);z-index:2;box-shadow:0 4px 12px rgba(26,115,232,.35)}
+.btn-select-confirm{display:block;width:90%;margin:4px auto 2px;padding:4px 0;background:#1a73e8;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 4px rgba(26,115,232,.4);animation:pulseSelect 1s infinite alternate}
+@keyframes pulseSelect{0%{transform:scale(0.96)}100%{transform:scale(1.04)}}
 .cell canvas{display:block;margin:0 auto}
 .cell .nm{font-size:10px;color:var(--sub);line-height:1.25}
-.cell.taken{opacity:.38;cursor:default}
-.cell.mine{outline:3px solid var(--accent);outline-offset:-1px}
+.cell.taken{opacity:.65;cursor:default;background:#f5f6f7}
+.cell.mine{outline:3px solid var(--accent);outline-offset:-1px;opacity:1!important;background:#e6f4ea}
 .roster{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
 .rc{border:1px solid var(--line);border-radius:8px;padding:3px 2px;text-align:center;font-size:10px;background:#fff}
 .rc b{display:block;font-size:11px}.rc canvas{display:block;margin:0 auto}
@@ -493,20 +496,51 @@ function handleCredentialResponse(response) {
   };
   document.head.appendChild(s);
 })();
+let selectedCharId = null;
+
 function renderGrid(){
-  const g=$("#grid28");g.innerHTML="";
+  const g=$("#grid28");
+  if(!g) return;
+  g.innerHTML="";
   CHARACTERS.forEach(ch=>{
     const taken=S.players.find(p=>p.charId===ch.charId);
+    const isSelected=(selectedCharId===ch.charId);
     const d=document.createElement("div");
-    d.className="cell"+(taken?" taken":"")+(taken&&taken.isMe?" mine":"");
+    d.className="cell"+(taken?" taken":"")+(taken&&taken.isMe?" mine":"")+(isSelected?" selected":"");
     const cv=document.createElement("canvas");cv.width=96;cv.height=104;d.appendChild(cv);
+    
+    let takenInfo = "";
+    if(taken) {
+      const googleId = taken.email || taken.name || (taken.no ? taken.no + "번" : "");
+      takenInfo = `<div style="font-size:9px;color:#1a73e8;word-break:break-all;font-weight:700;margin-top:2px">📧 ${googleId}</div>`;
+    }
+    
+    let confirmBtnHtml = "";
+    if(!taken && isSelected && (!S.me || !S.me.charId)) {
+      confirmBtnHtml = `<button class="btn-select-confirm" onclick="event.stopPropagation(); confirmPick('${ch.charId}')">선택</button>`;
+    }
+    
     d.insertAdjacentHTML("beforeend",
-      `<div class="nm"><b style="color:${ch.color}">${ch.scholar}</b><br>${ch.styleName}${taken?"<br>"+taken.no:""}</div>`);
+      `<div class="nm"><b style="color:${ch.color}">${ch.scholar}</b><br>${ch.styleName}${takenInfo}</div>${confirmBtnHtml}`);
     drawChar(cv.getContext("2d"),48,96,ch,0.72,{dir:1});
-    if(!taken)d.onclick=()=>pick(ch);
+    
+    if(!taken && (!S.me || !S.me.charId)) {
+      d.onclick=()=>{
+        selectedCharId = (selectedCharId === ch.charId) ? null : ch.charId;
+        renderGrid();
+      };
+    }
     g.appendChild(d);
   });
 }
+
+function confirmPick(charId) {
+  const ch = CHARACTERS.find(c => c.charId === charId);
+  if (!ch) return;
+  selectedCharId = null;
+  pick(ch);
+}
+
 function pick(ch){
   if(S.players.find(p=>p.isMe))return;
   if(S.players.find(p=>p.charId===ch.charId)){toast("이미 누가 골랐어요");renderGrid();return;}
@@ -514,13 +548,16 @@ function pick(ch){
   S.players.push(S.me);beep(880,0.08,"triangle",0.1);
   renderGrid();showMine();$("#rosterCard").classList.remove("hide");renderRoster();seatAll();
 }
+
 function showMine(){
   const t=T[S.me.thinkerId],ch=S.me.ch;
   $("#myCard").classList.remove("hide");
+  const userGoogleId = S.me.email || S.me.name || (S.me.no + "번");
   $("#mine").innerHTML=`<div class="row" style="align-items:flex-start">
     <canvas id="mc" width="230" height="200"></canvas>
     <div style="flex:1;min-width:250px">
       <div style="font-size:18px;font-weight:700;color:${t.color}">${t.scholar} · ${t.name} <span class="muted">(${t.label})</span></div>
+      <p style="margin:4px 0"><b>선택자 Google 계정:</b> <span style="color:#1a73e8;font-weight:700">📧 ${userGoogleId}</span></p>
       <p style="margin:4px 0"><b>고려 범위</b> ${t.scope}</p>
       <p style="margin:4px 0" class="muted">${t.core}</p>
       <p style="margin:4px 0">데리고 다니는 대상 ${t.pets.map(p=>PETNAME[p]).join(" · ")} · 내가 인 원은 ${["가장 작은","두 번째로 작은","세 번째로 큰","가장 큰"][t.band]} 원</p>
@@ -529,15 +566,18 @@ function showMine(){
   const c=$("#mc").getContext("2d");
   drawChar(c,115,185,ch,1.35,{dir:1});drawCarried(c,115,185,ch,1.35,0);
 }
+
 $("#simBtn").onclick=()=>{
   const used=new Set(S.players.map(p=>p.charId));
   const base=S.me.no-14;let k=0;
   CHARACTERS.filter(c=>!used.has(c.charId)).forEach((ch,i)=>{
     let n=base+k++;if(n===S.me.no)n=base+k++;
-    S.players.push({id:"n"+i,no:n,name:n+"번",charId:ch.charId,thinkerId:ch.thinkerId,ch,isNPC:true});
+    const mockEmail = "student" + n + "@school.sen.go.kr";
+    S.players.push({id:"n"+i,no:n,name:mockEmail.split("@")[0],email:mockEmail,charId:ch.charId,thinkerId:ch.thinkerId,ch:ch,isNPC:true});
   });
   renderGrid();renderRoster();seatAll();$("#simBtn").disabled=true;
 };
+
 function renderRoster(){
   const list=[...S.players].sort((a,b)=>b.no-a.no);
   $("#cnt").textContent=`${list.length}명 접속`;
@@ -545,7 +585,8 @@ function renderRoster(){
   list.forEach(p=>{
     const d=document.createElement("div");d.className="rc";
     const cv=document.createElement("canvas");cv.width=62;cv.height=68;d.appendChild(cv);
-    d.insertAdjacentHTML("beforeend",`<b>${p.no}</b><span style="color:${p.ch.color}">${p.ch.scholar.slice(0,3)}</span>`);
+    const googleId = p.email || p.name || (p.no + "번");
+    d.insertAdjacentHTML("beforeend",`<b style="font-size:9px;color:#1a73e8;word-break:break-all;display:block;margin-bottom:2px" title="${googleId}">${googleId}</b><span style="color:${p.ch.color}">${p.ch.scholar.slice(0,3)}</span>`);
     if(p.isMe)d.style.outline="2px solid var(--accent)";
     drawChar(cv.getContext("2d"),31,62,p.ch,0.46,{dir:1});
     r.appendChild(d);
