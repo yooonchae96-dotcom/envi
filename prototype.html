@@ -554,7 +554,7 @@ function gradeClaim({thinkerId,stance,reason}){
 const S={me:null,players:[],spots:[],tab:1,drawn:null,pool:[],claim:null,votes:{ok:0,no:0},
          teams:[],rot:0,warnAt:0,sound:true};
 const W=3200,H=2000,SPEED=220;
-const SPOTPOS=[[550,480],[1600,420],[2650,480],[550,1500],[1600,1580],[2650,1500],[1600,1000]];
+const SPOTPOS=[[500,420],[1600,420],[2700,420],[500,1580],[1600,1580],[2700,1580],[1600,1000]];
 const IMG={},PIMG={};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),1500);}
@@ -1492,25 +1492,33 @@ function render(ts){
       cx.fillText(labelText, sp.x, sp.y - 42);
       cx.restore();
     } else {
+      // 4개 concentric Venn diagram 원 중첩 없이 정교하게 렌더링 (sp.x + 135 중심)
+      const centerX = sp.x + 135;
+      const centerY = sp.y + 10;
       THINKERS.slice().reverse().forEach(t => {
-        const Rx = t.ringR * 1.6, Ry = Rx * 0.56;
+        let Rx, Ry, offX;
+        if (t.id === "leo") { Rx = 230; Ry = 120; offX = 0; }
+        else if (t.id === "sch") { Rx = 170; Ry = 92; offX = -35; }
+        else if (t.id === "sin") { Rx = 115; Ry = 66; offX = -70; }
+        else { Rx = 55; Ry = 40; offX = -105; }
+
         cx.save();
-        cx.globalAlpha = 0.45;
+        cx.globalAlpha = 0.42;
         cx.fillStyle = t.color + "22";
         cx.strokeStyle = t.color;
         cx.lineWidth = 3.5;
         cx.beginPath();
-        cx.ellipse(sp.x, sp.y, Rx, Ry, 0, 0, 7);
+        cx.ellipse(centerX + offX, centerY, Rx, Ry, 0, 0, 7);
         cx.fill();
         cx.stroke();
         cx.restore();
       });
       const k=(ts-sp.t0)/1000;
-      const leoRx = T.leo.ringR * 1.6 + 24;
-      const leoRy = leoRx * 0.56;
-      cx.save();cx.strokeStyle="#3FC4B0";cx.lineWidth=6;cx.globalAlpha=.85;
+      const leoRx = 230 + 16;
+      const leoRy = 120 + 10;
+      cx.save();cx.strokeStyle="#3FC4B0";cx.lineWidth=5;cx.globalAlpha=.85;
       cx.setLineDash([16,12]);cx.lineDashOffset=-k*45;
-      cx.beginPath();cx.ellipse(sp.x,sp.y,leoRx,leoRy,0,0,7);
+      cx.beginPath();cx.ellipse(centerX,centerY,leoRx,leoRy,0,0,7);
       cx.stroke();cx.restore();
     }
   });
@@ -1528,12 +1536,6 @@ function render(ts){
       cx.ellipse(p.x, p.y + 10, Rx, Ry, 0, 0, 7);
       cx.fill();
       cx.stroke();
-      
-      cx.globalAlpha = 0.95;
-      cx.fillStyle = t.color;
-      cx.font = "700 12px sans-serif";
-      cx.textAlign = "center";
-      cx.fillText(t.scholar + " (" + PETNAME[t.pets[t.pets.length-1]] + ")", p.x, p.y + 10 - Ry + 16);
       cx.restore();
     }
 
@@ -1542,7 +1544,7 @@ function render(ts){
       cx.fillStyle = "#EF4444";
       cx.font = "bold 11px sans-serif";
       cx.textAlign = "center";
-      cx.fillText("🔴 접속 끊김", p.x, p.y - 55);
+      cx.fillText("🔴 접속 끊김", p.x, p.y - 68);
       cx.restore();
     }
 
@@ -1558,7 +1560,7 @@ function render(ts){
       cx.fillStyle = "#D97706";
       cx.font = "bold 13px sans-serif";
       cx.textAlign = "center";
-      cx.fillText("🎯 추첨 후보", p.x, p.y - 65);
+      cx.fillText("🎯 추첨 후보", p.x, p.y - 75);
       cx.restore();
     }
 
@@ -1575,11 +1577,54 @@ function render(ts){
       cx.fillStyle = "#B45309";
       cx.font = "bold 14px sans-serif";
       cx.textAlign = "center";
-      cx.fillText("✨ 당첨 발표자 ✨", p.x, p.y - 70);
+      cx.fillText("✨ 당첨 발표자 ✨", p.x, p.y - 80);
       cx.restore();
     }
 
-    drawChar(cx,p.x,p.y,p.ch,0.95,{name:p.isMe?"나":p.no,phase:p.ph,run:p.run,dir:p.dir});
+    // 1. 캐릭터 위 (ABOVE): 본인 아이디 / 학번 / 계정
+    const userIdLabel = p.email || p.name || (p.isMe ? "나 (" + p.no + "번)" : p.no + "번");
+    cx.save();
+    cx.font = "bold 11px sans-serif";
+    const uTw = cx.measureText(userIdLabel).width + 14;
+    cx.fillStyle = p.isMe ? "rgba(15, 110, 99, 0.94)" : "rgba(31, 41, 55, 0.85)";
+    cx.strokeStyle = p.isMe ? "#3FC4B0" : "rgba(255, 255, 255, 0.6)";
+    cx.lineWidth = 1.8;
+    cx.beginPath();
+    if (cx.roundRect) cx.roundRect(p.x - uTw/2, p.y - 62, uTw, 20, 6);
+    else cx.rect(p.x - uTw/2, p.y - 62, uTw, 20);
+    cx.fill();
+    cx.stroke();
+
+    cx.fillStyle = "#FFFFFF";
+    cx.textAlign = "center";
+    cx.fillText(userIdLabel, p.x, p.y - 48);
+    cx.restore();
+
+    // 2. 캐릭터 본체 및 이동 모션
+    drawChar(cx, p.x, p.y, p.ch, 0.95, { phase: p.ph, run: p.run, dir: p.dir });
+
+    // 3. 캐릭터 아래 (BELOW): 사상가 이름
+    const thinkerObj = T[p.thinkerId];
+    if (thinkerObj) {
+      cx.save();
+      cx.font = "bold 12px sans-serif";
+      const scholarText = thinkerObj.scholar;
+      const sTw = cx.measureText(scholarText).width + 14;
+      
+      cx.fillStyle = "rgba(255, 255, 255, 0.92)";
+      cx.strokeStyle = thinkerObj.color;
+      cx.lineWidth = 2.2;
+      cx.beginPath();
+      if (cx.roundRect) cx.roundRect(p.x - sTw/2, p.y + 16, sTw, 20, 5);
+      else cx.rect(p.x - sTw/2, p.y + 16, sTw, 20);
+      cx.fill();
+      cx.stroke();
+
+      cx.fillStyle = thinkerObj.color;
+      cx.textAlign = "center";
+      cx.fillText(scholarText, p.x, p.y + 30);
+      cx.restore();
+    }
 
     // 4번 탭 역할바꿔 토론 메타버스 무대 역할 표식 렌더링
     if (S.tab === 4 && p.swappedThinkerId) {
@@ -1594,14 +1639,14 @@ function render(ts){
         cx.strokeStyle = st.color;
         cx.lineWidth = 2.8;
         cx.beginPath();
-        if (cx.roundRect) cx.roundRect(p.x - tw/2, p.y - 82, tw, 24, 7);
-        else cx.rect(p.x - tw/2, p.y - 82, tw, 24);
+        if (cx.roundRect) cx.roundRect(p.x - tw/2, p.y - 88, tw, 24, 7);
+        else cx.rect(p.x - tw/2, p.y - 88, tw, 24);
         cx.fill();
         cx.stroke();
 
         cx.fillStyle = st.color;
         cx.textAlign = "center";
-        cx.fillText(roleLabel, p.x, p.y - 65);
+        cx.fillText(roleLabel, p.x, p.y - 71);
         cx.restore();
       }
     }
