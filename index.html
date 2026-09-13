@@ -766,6 +766,16 @@ function render(ts){
         cx.restore();
       }
     }
+
+    // 메타버스 2D 캔버스 말풍선 렌더링
+    const activeClaim = p.claim || (S.drawn?.id === p.id ? S.claim : null);
+    if (activeClaim) {
+      drawSpeechBubble(cx, p.x, p.y, activeClaim);
+    }
+  });
+  cx.restore();
+}
+
 const IMG={},PIMG={};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),1500);}
