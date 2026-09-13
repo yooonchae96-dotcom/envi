@@ -118,7 +118,6 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
         </svg>
         Google 계정으로 로그인
       </button>
-      <p class="muted" style="font-size:12px;text-align:center">또는 테스트용 학번 입력: <input id="noIn" type="number" value="20314" style="width:90px;font-size:12px;padding:4px 8px"> <button id="loginBtn" style="font-size:12px;padding:5px 10px">입력</button></p>
     </div></div>
 
   <!-- Google 로그인 팝업 모달 -->
@@ -413,12 +412,16 @@ $("#loginBtn").onclick=()=>{
   doLogin("학생 "+no, no+"@school.go.kr", null, no);
 };
 
-// Google 로그인 버튼 클릭
+// Google 로그인 버튼 클릭 (원클릭 바로 로그인)
 $("#gLoginBtn").onclick=()=>{
-  if(typeof google !== 'undefined' && google.accounts && GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE")) {
+  if(typeof google !== 'undefined' && google.accounts && GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.endsWith(".apps.googleusercontent.com")) {
     google.accounts.id.prompt();
   } else {
-    $("#gAuthModal").classList.remove("hide");
+    // 학번/이름 입력창 없이 구글 계정(yooonchae96@gmail.com)으로 원클릭 바로 로그인!
+    const defaultEmail = (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.includes("@")) ? GOOGLE_CLIENT_ID : "yooonchae96@gmail.com";
+    const name = defaultEmail.split("@")[0];
+    const displayNo = 20314;
+    doLogin(name, defaultEmail, null, displayNo);
   }
 };
 
