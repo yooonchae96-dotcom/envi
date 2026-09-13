@@ -194,25 +194,33 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 </section>
 
 <section id="t2" class="hide">
-  <div class="card"><h2>벤다이어그램 만들기</h2>
+  <div class="card" id="t2Card"><h2>벤다이어그램 만들기</h2>
     <p class="muted">각자 자기 크기의 원을 머리에 이고 다닙니다. 반짝이는 우리 모둠 자리로 달려가면
-      네 원이 겹쳐 벤다이어그램이 됩니다. 방향키를 누르고 있으면 계속 달립니다.</p>
-    <canvas id="stage"></canvas>
-    <div class="dpad"><i></i><button data-mv="u">↑</button><i></i>
-      <button data-mv="l">←</button><button data-mv="d">↓</button><button data-mv="r">→</button></div>
-    <div class="mini" id="mini"></div>
-    <p class="muted" id="mapMsg" style="margin-top:8px"></p></div>
+      네 원이 겹쳐 벤다이어그램이 됩니다. (결계가 완성된 후에도 방향키/화면 드래그로 전체 맵을 자유롭게 둘러보실 수 있습니다)</p>
+    <div id="stageContainer">
+      <canvas id="stage"></canvas>
+      <div class="dpad"><i></i><button data-mv="u">↑</button><i></i>
+        <button data-mv="l">←</button><button data-mv="d">↓</button><button data-mv="r">→</button></div>
+      <div class="mini" id="mini"></div>
+      <p class="muted" id="mapMsg" style="margin-top:8px"></p>
+    </div>
+  </div>
 </section>
 
 <section id="t3" class="hide">
   <div class="card"><h2 id="caseTitle"></h2>
     <p id="caseQ" style="font-size:17px;font-weight:600;margin:2px 0 8px"></p>
     <p id="caseSit" class="muted" style="font-size:14px"></p></div>
-  <div class="card"><h2>누가 말할까요</h2>
-    <div class="row"><button id="drawBtn">추첨</button><button class="ghost" id="soundBtn">소리 끄기</button>
-      <span class="muted" id="drawMsg">추첨을 누르면 한 명이 뽑힙니다.</span></div>
-    <div class="lotto" id="lotto"></div>
-    <div id="winArea"></div></div>
+  <div class="card" id="t3Card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+      <h2 style="margin:0">누가 말할까요 <span class="muted">메타버스 무대 내 추첨 & 말풍선</span></h2>
+      <div class="row"><button id="drawBtn">추첨하기 🎲</button><button class="ghost" id="soundBtn">소리 끄기</button></div>
+    </div>
+    <p class="muted" id="drawMsg" style="margin-bottom:8px">추첨을 누르면 메타버스 맵 안에서 실시간 카메라 추적과 함께 발표자가 선택되며, 발표자의 주장과 근거가 캐릭터 머리 위에 말풍선으로 띄워집니다.</p>
+    <div id="t3StageSlot"></div>
+    <div class="lotto" id="lotto" style="margin-top:10px"></div>
+    <div id="winArea"></div>
+  </div>
   <div class="card hide" id="claimCard"><h2>주장과 근거</h2>
     <div class="row" style="margin-bottom:8px"><button class="ghost" id="gradeBtn" disabled>채점</button></div>
     <div id="claimArea"></div></div>
@@ -461,17 +469,24 @@ function goToTab(tabIndex){
     const availableCh = CHARACTERS.find(c => !S.players.some(p => p.charId === c.charId)) || CHARACTERS[0];
     confirmPick(availableCh.charId);
   }
-  if(tabIndex === 2) {
-    populateNPCs();
+  if(tabIndex === 2 || tabIndex === 3) {
+    if(!S.players.some(p => !p.isMe)) populateNPCs();
+    if(!S.spots.length) seatAll();
   }
   S.tab = tabIndex;
   $$("nav button").forEach(x => x.classList.toggle("on", +x.dataset.tab === tabIndex));
   [1,2,3,4].forEach(i => $("#t" + i).classList.toggle("hide", i !== tabIndex));
+  
+  const stageWrap = $("#stageContainer");
   if(S.tab === 2) {
+    if(stageWrap && $("#t2Card")) $("#t2Card").appendChild(stageWrap);
     resize();
-    seatAll();
   }
-  if(S.tab === 3) renderLotto();
+  if(S.tab === 3) {
+    if(stageWrap && $("#t3StageSlot")) $("#t3StageSlot").appendChild(stageWrap);
+    resize();
+    renderLotto();
+  }
 }
 
 $$("nav button").forEach(b => b.onclick = () => {
@@ -753,7 +768,7 @@ function resize(){cvs.width=cvs.clientWidth*devicePixelRatio;cvs.height=460*devi
   cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);}
 addEventListener("resize",resize);
 const keys={};
-addEventListener("keydown",e=>{if(S.tab!==2)return;
+addEventListener("keydown",e=>{if(S.tab!==2 && S.tab!==3)return;
   if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){e.preventDefault();keys[e.key]=1;}});
 addEventListener("keyup",e=>{keys[e.key]=0;});
 $$(".dpad button").forEach(b=>{
@@ -763,13 +778,32 @@ $$(".dpad button").forEach(b=>{
   b.addEventListener("pointerleave",off);b.addEventListener("pointercancel",off);
 });
 
+// 화면 드래그로 자유 카메라 탐색
+let isDragging = false, dragStart = {x:0, y:0}, camStart = {x:0, y:0};
+cvs.addEventListener("pointerdown", e => {
+  if (S.tab !== 2 && S.tab !== 3) return;
+  isDragging = true;
+  dragStart = { x: e.clientX, y: e.clientY };
+  if (!S.cam) S.cam = { x: S.me ? S.me.x : W/2, y: S.me ? S.me.y : H/2 };
+  camStart = { x: S.cam.x, y: S.cam.y };
+});
+addEventListener("pointermove", e => {
+  if (!isDragging) return;
+  const dx = dragStart.x - e.clientX;
+  const dy = dragStart.y - e.clientY;
+  if (!S.cam) S.cam = { x: S.me ? S.me.x : W/2, y: S.me ? S.me.y : H/2 };
+  const vw = cvs.clientWidth, vh = 460;
+  S.cam.x = Math.max(vw/2, Math.min(W - vw/2, camStart.x + dx));
+  S.cam.y = Math.max(vh/2, Math.min(H - vh/2, camStart.y + dy));
+});
+addEventListener("pointerup", () => isDragging = false);
+addEventListener("pointercancel", () => isDragging = false);
+
 function blocked(p,nx,ny){
   for(const sp of S.spots){
     const dist = Math.hypot(nx - sp.x, ny - sp.y);
-    
-    // 1. 이미 완성되어 결계가 쳐진 스팟
     if(sp.done){
-      if(p.spot === sp.id && p.frozen) continue; // 결계 내부 멤버는 차단 대상에서 제외
+      if(p.spot === sp.id && p.frozen) continue;
       const barrierR = T.leo.ringR * 1.6 + 35;
       if(dist < barrierR){
         if(p.isMe && performance.now() - S.warnAt > 1200){
@@ -779,8 +813,6 @@ function blocked(p,nx,ny){
         return true;
       }
     } else {
-      // 2. 완성 전 스팟: 난자-정자 결계 원리 적용
-      // 동일 사상가가 이미 스팟 존(<260)에 들어와 있으면, 동일 사상가의 다른 캐릭터는 입장 불가!
       if(dist < 260){
         const occupantsInZone = S.players.filter(other => other.id !== p.id && (other.spot === sp.id || Math.hypot(other.x - sp.x, other.y - sp.y) < 260));
         const hasSameThinker = occupantsInZone.some(other => other.thinkerId === p.thinkerId);
@@ -810,10 +842,10 @@ function alignSpotThinkersInLine(sp) {
   const inSpot = S.players.filter(p => p.spot === sp.id && p.frozen);
   inSpot.forEach(p => {
     let offsetX = 0;
-    if (p.thinkerId === "ari") offsetX = 0;           // 아리스토텔레스: 가장 작은 인간 원 (가장 안쪽 중심)
-    else if (p.thinkerId === "sin") offsetX = 130;    // 피터 싱어: 동물 원 링 (세 번째 크기)
-    else if (p.thinkerId === "sch") offsetX = 215;    // 슈바이처: 생명 원 링 (두 번째 크기)
-    else if (p.thinkerId === "leo") offsetX = 295;    // 레오폴드: 가장 큰 대지 원 링 (네 번째 외곽)
+    if (p.thinkerId === "ari") offsetX = 0;
+    else if (p.thinkerId === "sin") offsetX = 130;
+    else if (p.thinkerId === "sch") offsetX = 215;
+    else if (p.thinkerId === "leo") offsetX = 295;
     
     p.x = sp.x + offsetX;
     p.y = sp.y + 10;
@@ -828,11 +860,8 @@ function checkSpots(){
   S.spots.forEach(sp=>{
     if(sp.done)return;
     const inZone=S.players.filter(p=>Math.hypot(p.x-sp.x,p.y-sp.y)<260);
-    
-    // 참여자(S.me)의 모둠은 실제 참여자가 자리에 도착할 때까지 완성되지 않음!
     if(S.me && sp.id === S.me.spot && !inZone.some(p => p.isMe)) return;
 
-    // 정확하게 서로 다른 사상가 4명(ari, sin, sch, leo)이 모두 모였을 때 결계 형성!
     const thinkersInZone = new Set(inZone.map(p=>p.thinkerId));
     if(thinkersInZone.size === 4 && inZone.length >= 4){
       const memberMap = new Map();
@@ -849,14 +878,14 @@ function checkSpots(){
           p.isRoamer = false;
         });
         
-        // 완성 시 4명의 사상가를 벤다이어그램 동심원 상에 일렬(Horizontal Line)로 깔끔하게 정렬!
         alignSpotThinkersInLine(sp);
 
         toast("모둠 " + (sp.id + 1) + " 벤다이어그램 완성!");
         if(finalMembers.some(p=>p.isMe)){
-          $("#mapMsg").textContent="완성! 인간 ⊂ 동물 ⊂ 생명 ⊂ 대지 — 벤다이어그램 완성! (방향키를 눌러 맵을 이동하고 다른 모둠을 확인해보세요)";
-          toast("우리 모둠 완성! 방향키를 눌러 맵을 이동하며 다른 모둠을 둘러보세요! 🚀");
+          $("#mapMsg").textContent="🎉 우리 모둠 완성! (방향키/화면 드래그로 맵을 이동하고 다른 모둠을 탐색해보세요)";
+          toast("우리 모둠 완성! 방향키/화면 드래그로 맵을 둘러보세요! 🚀");
           fanfare();
+          if(S.me) S.cam = { x: S.me.x, y: S.me.y };
         }
         drawMini();
       }
@@ -873,21 +902,24 @@ let prev=0;
 function loop(ts){
   requestAnimationFrame(loop);
   const dt=Math.min(.05,(ts-prev)/1000||0);prev=ts;
-  if(S.tab!==2||!S.spots.length)return;
+  if((S.tab!==2 && S.tab!==3)||!S.spots.length)return;
   const me=S.me;
   const dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0),dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
 
-  if (me && me.frozen) {
-    if (!S.cam) S.cam = { x: me.x, y: me.y };
-    if (dx || dy) {
-      const d = Math.hypot(dx, dy);
-      const camSpeed = SPEED * 2.4;
-      S.cam.x = Math.max(cvs.clientWidth / 2, Math.min(W - cvs.clientWidth / 2, S.cam.x + (dx / d) * camSpeed * dt));
-      S.cam.y = Math.max(460 / 2, Math.min(H - 460 / 2, S.cam.y + (dy / d) * camSpeed * dt));
-    }
-  } else if (me) {
-    me.run = step(me, dx, dy, dt);
+  if (!S.cam) S.cam = { x: me ? me.x : W/2, y: me ? me.y : H/2 };
+
+  if (dx || dy) {
+    const d = Math.hypot(dx, dy);
+    const camSpeed = SPEED * 2.5;
+    const vw = cvs.clientWidth, vh = 460;
+    S.cam.x = Math.max(vw / 2, Math.min(W - vw / 2, S.cam.x + (dx / d) * camSpeed * dt));
+    S.cam.y = Math.max(vh / 2, Math.min(H - vh / 2, S.cam.y + (dy / d) * camSpeed * dt));
+  } else if (me && !me.frozen && S.tab === 2 && !isDragging && !S.lottoCandidateId && !S.winnerId) {
     S.cam = { x: me.x, y: me.y };
+  }
+
+  if (me && !me.frozen && S.tab === 2) {
+    me.run = step(me, dx, dy, dt);
   }
 
   S.players.forEach(p=>{
@@ -909,6 +941,96 @@ function loop(ts){
   });
   checkSpots();render(ts);
 }
+
+// 2D 캔버스 메타버스 말풍선 렌더링 함수
+function drawSpeechBubble(cx, x, y, claim) {
+  if (!claim) return;
+  cx.save();
+  const stanceText = claim.stance || "찬성";
+  const stanceColor = stanceText === "찬성" ? "#0F6E63" : "#E64A19";
+  const reasonText = claim.reason || "";
+  const th = T[claim.thinkerId];
+
+  cx.font = "12px sans-serif";
+  const maxWidth = 230;
+  
+  const words = reasonText.split("");
+  let lines = [];
+  let currentLine = "";
+  for (let i = 0; i < words.length; i++) {
+    const testLine = currentLine + words[i];
+    if (cx.measureText(testLine).width > maxWidth - 24 && i > 0) {
+      lines.push(currentLine);
+      currentLine = words[i];
+    } else {
+      currentLine = testLine;
+    }
+  }
+  lines.push(currentLine);
+  if (lines.length > 4) lines = lines.slice(0, 4);
+
+  const lineHeight = 16;
+  const paddingH = 12;
+  const paddingV = 10;
+  const headerHeight = 22;
+  const bubbleWidth = Math.max(180, Math.min(maxWidth, Math.max(...lines.map(l => cx.measureText(l).width)) + paddingH * 2));
+  const bubbleHeight = headerHeight + lines.length * lineHeight + paddingV * 2;
+
+  const bx = x - bubbleWidth / 2;
+  const by = y - bubbleHeight - 65;
+
+  cx.shadowColor = "rgba(0, 0, 0, 0.28)";
+  cx.shadowBlur = 12;
+  cx.shadowOffsetY = 4;
+
+  cx.fillStyle = "#FFFFFF";
+  cx.strokeStyle = stanceColor;
+  cx.lineWidth = 2.8;
+  cx.beginPath();
+  const r = 10;
+  cx.moveTo(bx + r, by);
+  cx.lineTo(bx + bubbleWidth - r, by);
+  cx.quadraticCurveTo(bx + bubbleWidth, by, bx + bubbleWidth, by + r);
+  cx.lineTo(bx + bubbleWidth, by + bubbleHeight - r);
+  cx.quadraticCurveTo(bx + bubbleWidth, by + bubbleHeight, bx + bubbleWidth - r, by + bubbleHeight);
+  
+  cx.lineTo(x + 10, by + bubbleHeight);
+  cx.lineTo(x, by + bubbleHeight + 12);
+  cx.lineTo(x - 10, by + bubbleHeight);
+  cx.lineTo(bx + r, by + bubbleHeight);
+  cx.quadraticCurveTo(bx, by + bubbleHeight, bx, by + bubbleHeight - r);
+  cx.lineTo(bx, by + r);
+  cx.quadraticCurveTo(bx, by, bx + r, by);
+  cx.closePath();
+  cx.fill();
+  cx.stroke();
+
+  cx.shadowColor = "transparent";
+
+  cx.fillStyle = stanceColor;
+  cx.beginPath();
+  if(cx.roundRect) cx.roundRect(bx + 10, by + 8, 44, 18, 4); else cx.rect(bx + 10, by + 8, 44, 18);
+  cx.fill();
+
+  cx.fillStyle = "#FFFFFF";
+  cx.font = "700 11px sans-serif";
+  cx.textAlign = "center";
+  cx.fillText(stanceText, bx + 32, by + 21);
+
+  cx.fillStyle = "#1F2937";
+  cx.font = "700 12px sans-serif";
+  cx.textAlign = "left";
+  cx.fillText((claim.who ? claim.who + "번 " : "") + (th ? th.scholar : ""), bx + 60, by + 21);
+
+  cx.fillStyle = "#111827";
+  cx.font = "12px sans-serif";
+  lines.forEach((line, idx) => {
+    cx.fillText(line, bx + 12, by + headerHeight + paddingV + 12 + idx * lineHeight);
+  });
+
+  cx.restore();
+}
+
 function render(ts){
   const vw=cvs.clientWidth,vh=460,me=S.me;
   const targetX = (S.cam && S.cam.x) ? S.cam.x : (me ? me.x : W/2);
@@ -925,7 +1047,7 @@ function render(ts){
   for(let y=90;y<H-80;y+=120){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();}
   S.spots.forEach(sp=>{
     if(!sp.done){
-      const mine=sp.id===me.spot;
+      const mine=sp.id===me?.spot;
       cx.save();cx.globalAlpha=mine?.55+.3*Math.sin(ts/260):.16;
       cx.fillStyle=mine?"#0F6E63":"#5B7371";
       cx.beginPath();cx.arc(sp.x,sp.y,mine?13:7,0,7);cx.fill();
@@ -933,7 +1055,6 @@ function render(ts){
         cx.fillText("우리 모둠 자리",sp.x,sp.y-26);}
       cx.restore();
     } else {
-      // 4개 동심원 (레오폴드, 슈바이처, 피터싱어, 아리스토텔레스)
       THINKERS.slice().reverse().forEach(t => {
         const Rx = t.ringR * 1.6, Ry = Rx * 0.56;
         cx.save();
@@ -947,7 +1068,6 @@ function render(ts){
         cx.stroke();
         cx.restore();
       });
-      // 결계 파동선
       const k=(ts-sp.t0)/1000;
       const leoRx = T.leo.ringR * 1.6 + 24;
       const leoRy = leoRx * 0.56;
@@ -958,11 +1078,9 @@ function render(ts){
     }
   });
 
-  // 사상가 및 캐릭터 렌더링 (사상가 뒤에 자기 벤다이어그램 크기만한 원이 그대로 같이 이동)
   [...S.players].sort((a,b)=>a.y-b.y).forEach(p=>{
     const t = T[p.thinkerId];
     if(t && !p.frozen){
-      // 이동 중일 때 사상가 발밑/뒤에 자기 벤다이어그램 크기의 원을 그대로 그려 같이 이동
       const Rx = t.ringR * 1.6, Ry = Rx * 0.56;
       cx.save();
       cx.globalAlpha = p.isMe ? 0.65 : 0.42;
@@ -974,7 +1092,6 @@ function render(ts){
       cx.fill();
       cx.stroke();
       
-      // 원 상단에 사상가 및 영역 이름 명시
       cx.globalAlpha = 0.95;
       cx.fillStyle = t.color;
       cx.font = "700 12px sans-serif";
@@ -983,7 +1100,46 @@ function render(ts){
       cx.restore();
     }
 
+    // 추첨 진행 중 하이라이트 스팟라이트 효과
+    if (S.lottoCandidateId === p.id) {
+      cx.save();
+      cx.fillStyle = "rgba(255, 215, 0, 0.38)";
+      cx.strokeStyle = "#FFD700";
+      cx.lineWidth = 4;
+      cx.beginPath();
+      cx.ellipse(p.x, p.y + 10, 48, 26, 0, 0, 7);
+      cx.fill(); cx.stroke();
+      cx.fillStyle = "#D97706";
+      cx.font = "bold 13px sans-serif";
+      cx.textAlign = "center";
+      cx.fillText("🎯 추첨 후보", p.x, p.y - 65);
+      cx.restore();
+    }
+
+    // 당첨 발표자 축하 이펙트
+    if (S.winnerId === p.id) {
+      cx.save();
+      const pulse = 1 + Math.sin((ts || 0) * 0.008) * 0.12;
+      cx.fillStyle = "rgba(255, 223, 0, 0.42)";
+      cx.strokeStyle = "#F59E0B";
+      cx.lineWidth = 5;
+      cx.beginPath();
+      cx.ellipse(p.x, p.y + 10, 52 * pulse, 30 * pulse, 0, 0, 7);
+      cx.fill(); cx.stroke();
+      cx.fillStyle = "#B45309";
+      cx.font = "bold 14px sans-serif";
+      cx.textAlign = "center";
+      cx.fillText("✨ 당첨 발표자 ✨", p.x, p.y - 70);
+      cx.restore();
+    }
+
     drawChar(cx,p.x,p.y,p.ch,0.95,{name:p.isMe?"나":p.no,phase:p.ph,run:p.run,dir:p.dir});
+
+    // 메타버스 2D 캔버스 말풍선 렌더링
+    const activeClaim = p.claim || (S.drawn?.id === p.id ? S.claim : null);
+    if (activeClaim) {
+      drawSpeechBubble(cx, p.x, p.y, activeClaim);
+    }
   });
   cx.restore();
 }
@@ -1009,23 +1165,31 @@ $("#drawBtn").onclick=()=>{
   if(!S.pool.length)S.pool=[...list];
   renderLotto();$("#winArea").innerHTML="";
   $("#claimCard").classList.add("hide");$("#voteCard").classList.add("hide");$("#gradeCard").classList.add("hide");
-  $("#drawBtn").disabled=true;$("#drawMsg").textContent="추첨 중…";
+  $("#drawBtn").disabled=true;$("#drawMsg").textContent="메타버스 맵에서 실시간 추첨 진행 중… 🎯";
   const cells=$$("#lotto .lc");
   const winner=S.pool[Math.floor(Math.random()*S.pool.length)];
   const winIdx=list.indexOf(winner),L=cells.length;
   const i0=Math.floor(Math.random()*L);
-  const N=L+(((winIdx-i0)%L)+L)%L;          // 한 바퀴 돌고 당첨자에서 멈춘다
+  const N=L+(((winIdx-i0)%L)+L)%L;
   let n=0;
+  S.winnerId = null;
   (function hop(){
     const i=(i0+n)%L;
+    const currentCandidate = list[i];
+    S.lottoCandidateId = currentCandidate.id;
+    S.cam = { x: currentCandidate.x, y: currentCandidate.y };
+
     cells.forEach(c=>c.classList.remove("hot"));
     cells[i].classList.add("hot");
     const t=n/N;
     beep(460+t*520,0.045,"square",0.07);
     if(n>=N){
+      S.lottoCandidateId = null;
+      S.winnerId = winner.id;
+      S.cam = { x: winner.x, y: winner.y };
       cells[i].classList.remove("hot");cells[i].classList.add("win");
       fanfare();S.drawn=winner;S.pool=S.pool.filter(x=>x!==winner);
-      $("#drawBtn").disabled=false;$("#drawMsg").textContent="";
+      $("#drawBtn").disabled=false;$("#drawMsg").textContent="✨ 발표자가 선정되었습니다! 주장을 작성하세요.";
       const th=T[winner.thinkerId];
       $("#winArea").innerHTML='<p class="winline">'+winner.no+' · <span style="color:'+th.color+'">'+th.scholar+'</span> — '+th.name+'</p><p class="muted">'+th.scope+'</p>';
       openClaim(winner);return;
@@ -1045,7 +1209,10 @@ function openClaim(p){
   $("#sendBtn").onclick=()=>{
     const r=$("#reasonIn").value.trim();
     if(r.length<10){toast("근거를 조금 더 써 주세요");return;}
-    S.claim={thinkerId:p.thinkerId,stance:$("#stanceIn").value,reason:r,who:p.no};
+    const claimObj = {thinkerId:p.thinkerId,stance:$("#stanceIn").value,reason:r,who:p.no};
+    S.claim = claimObj;
+    p.claim = claimObj;
+    S.cam = { x: p.x, y: p.y };
     beep(660,0.1,"triangle",0.12);showBubble();
   };
 }
