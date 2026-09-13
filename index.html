@@ -265,25 +265,25 @@ const CHARS=SPRITES.CHARS, META=SPRITES.CHAR_META, PET_SRC=SPRITES.PET_IMG;
 /* ===== 사상 데이터 ===== */
 const THINKERS=[
  {id:"ari",label:"라",scholar:"아리스토텔레스",name:"인간 중심주의",scope:"오직 이성을 지닌 인간",
-  color:"#5B4FCF",ringR:26,band:0,pets:["human"],
+  color:"#5B4FCF",ringR:60,band:0,pets:["human"],
   rule:"인간에게 도움과 혜택이 되면 찬성. 동식물·자연은 인간이 이용할 수단일 뿐이다.",
   core:"인간만이 이성을 지닌 존재로서 가치가 있으며, 도덕적으로 고려할 대상은 오직 이성을 지닌 인간뿐이다.",
   keywords:["이성","인간만","수단","도움과 혜택","혜택","우월","인간의 이익"],
   forbidden:["고통","생명 공동체","살고자 하는 의지","생태계 그 자체","똑같이 존중","고유한 가치","복지"]},
  {id:"sin",label:"다",scholar:"피터 싱어",name:"동물 중심주의",scope:"인간과 동물 — 쾌락과 고통을 느끼는 존재",
-  color:"#E03E52",ringR:38,band:1,pets:["human","animal"],
+  color:"#E03E52",ringR:110,band:1,pets:["human","animal"],
   rule:"동물이 고통을 겪으면 반대. 식물·무생물만 관련되면 고려 대상이 아니다.",
   core:"동물도 쾌락과 고통을 느끼기 때문에 인간뿐만 아니라 동물까지 도덕적으로 고려해야 한다.",
   keywords:["고통","쾌락","똑같이 고려","동물까지","복지","권리","고통을 원하지"],
   forbidden:["생명 공동체","무생물","살고자 하는 의지","이성을 지닌 인간만","고유한 가치","이용할 수단"]},
  {id:"sch",label:"나",scholar:"슈바이처",name:"생명 중심주의",scope:"동식물을 포함한 모든 생명",
-  color:"#2FA36B",ringR:50,band:2,pets:["human","animal","plant"],
+  color:"#2FA36B",ringR:160,band:2,pets:["human","animal","plant"],
   rule:"동물이나 식물이 해를 입으면 반대. 무생물만 관련되면 고려 대상이 아니다.",
   core:"살고자 하는 의지를 지닌 존재라면 동식물을 포함한 모든 생명을 도덕적으로 고려해야 한다.",
   keywords:["살고자 하는 의지","모든 생명","식물","고유한 가치","똑같이 존중","생명의 신비","살아가려는 힘"],
   forbidden:["무생물","이성을 지닌 인간만","이용할 수단","생태계 그 자체"]},
  {id:"leo",label:"가",scholar:"레오폴드",name:"생태 중심주의",scope:"무생물까지 포함한 생태계 전체",
-  color:"#8A6A3B",ringR:62,band:3,pets:["human","animal","plant","land"],
+  color:"#8A6A3B",ringR:210,band:3,pets:["human","animal","plant","land"],
   rule:"자연(무생물 포함)이 훼손되면 반대. 생태계가 회복되면 찬성.",
   core:"생태계의 모든 존재는 생명 공동체로 연결되어 있으므로 무생물을 포함한 생태계 그 자체를 도덕적으로 고려해야 한다.",
   keywords:["생명 공동체","자연 그 자체","생태계 그 자체","무생물","대자연의 일부","유기적","그물망"],
@@ -670,11 +670,25 @@ function seatAll(){
   if(clash)clash.spot=mine._was;
   mine.spot=mySpot;
   S.players.forEach(p=>{
-    const sp=S.spots[p.spot],a=T[p.thinkerId].band*1.5708-0.78;
-    p.tx=sp.x+Math.cos(a)*80;p.ty=sp.y+Math.sin(a)*68;
+    const sp=S.spots[p.spot];
+    // 사상가별 벤다이어그램 위계에 맞춘 개별 영역 타겟 좌표 설정
+    let offset;
+    if(p.thinkerId === "ari") offset = {x: 0, y: 15};          // 아리스토텔레스: 제일 작은 원(인간) 중심 내부
+    else if(p.thinkerId === "sin") offset = {x: -75, y: -40};   // 피터 싱어: 동물 원 내부, 아리스토텔레스 바깥
+    else if(p.thinkerId === "sch") offset = {x: 145, y: -65};   // 슈바이처: 생명 원 내부, 피터 싱어 바깥
+    else offset = {x: -225, y: 85};                             // 레오폴드: 가장 큰 대지 원 내부, 슈바이처 원 바깥
+
+    p.tx=sp.x+offset.x;
+    p.ty=sp.y+offset.y;
+
     if(p.isMe){p.x=170;p.y=H-170;}
-    else{p.x=sp.x+Math.cos(a)*(280+Math.random()*180);p.y=sp.y+Math.sin(a)*(240+Math.random()*160);}
-    p.x=Math.max(60,Math.min(W-60,p.x));p.y=Math.max(110,Math.min(H-60,p.y));
+    else{
+      const randA=Math.random()*6.28;
+      p.x=sp.x+Math.cos(randA)*(320+Math.random()*180);
+      p.y=sp.y+Math.sin(randA)*(260+Math.random()*160);
+    }
+    p.x=Math.max(60,Math.min(W-60,p.x));
+    p.y=Math.max(110,Math.min(H-60,p.y));
     p.ph=Math.random()*6;p.dir=1;p.ringT=0;p.frozen=false;p.run=false;
   });
   drawMini();
@@ -696,7 +710,7 @@ $$(".dpad button").forEach(b=>{
 function blocked(p,nx,ny){
   for(const sp of S.spots){
     if(!sp.done||p.spot===sp.id)continue;
-    if(Math.hypot(nx-sp.x,ny-sp.y)<T.leo.ringR*1.8+30){
+    if(Math.hypot(nx-sp.x,ny-sp.y)<T.leo.ringR*1.6+35){
       if(p.isMe&&performance.now()-S.warnAt>1200){S.warnAt=performance.now();toast("완성된 모둠입니다. 결계가 쳐져 있어요");}
       return true;}
   }
@@ -713,7 +727,7 @@ function step(p,dx,dy,dt){
 function checkSpots(){
   S.spots.forEach(sp=>{
     if(sp.done)return;
-    const inZone=S.players.filter(p=>p.spot===sp.id&&Math.hypot(p.x-sp.x,p.y-sp.y)<130);
+    const inZone=S.players.filter(p=>p.spot===sp.id&&Math.hypot(p.x-sp.x,p.y-sp.y)<260);
     if(new Set(inZone.map(p=>p.thinkerId)).size===4){
       sp.done=true;sp.t0=performance.now();inZone.forEach(p=>p.frozen=true);
       if(inZone.some(p=>p.isMe)){
@@ -748,7 +762,7 @@ function loop(ts){
   });
   S.players.forEach(p=>{
     const sp=S.spots[p.spot],d=Math.hypot(p.x-sp.x,p.y-sp.y);
-    p.ringT+=((d<150?1:0)-p.ringT)*Math.min(1,dt*5);
+    p.ringT+=((d<260?1:0)-p.ringT)*Math.min(1,dt*5);
   });
   checkSpots();render(ts);
 }
@@ -776,19 +790,25 @@ function render(ts){
     S.players.filter(p=>p.spot===sp.id&&p.ringT>0.02)
       .sort((a,b)=>T[b.thinkerId].ringR-T[a.thinkerId].ringR)
       .forEach(p=>{
-        const t=T[p.thinkerId],R=t.ringR*1.75*p.ringT;
-        cx.save();cx.globalAlpha=.3+.55*p.ringT;
-        cx.fillStyle=t.color+"26";cx.strokeStyle=t.color;cx.lineWidth=3.5;
-        cx.beginPath();cx.ellipse(sp.x,sp.y,R,R*0.52,0,0,7);cx.fill();cx.stroke();
-        if(p.ringT>0.8){cx.globalAlpha=.95;cx.fillStyle=t.color;cx.font="700 13px sans-serif";cx.textAlign="center";
-          cx.fillText(PETNAME[t.pets[t.pets.length-1]],sp.x,sp.y-R*0.52+16);}
+        const t=T[p.thinkerId], Rx=t.ringR*1.6*p.ringT, Ry=Rx*0.56;
+        cx.save();cx.globalAlpha=.35+.55*p.ringT;
+        cx.fillStyle=t.color+"28";cx.strokeStyle=t.color;cx.lineWidth=3.8;
+        cx.beginPath();cx.ellipse(sp.x,sp.y,Rx,Ry,0,0,7);cx.fill();cx.stroke();
+        if(p.ringT>0.8){
+          cx.globalAlpha=.95;cx.fillStyle=t.color;cx.font="700 13px sans-serif";cx.textAlign="center";
+          cx.fillText(t.scholar + " (" + PETNAME[t.pets[t.pets.length-1]] + ")", sp.x, sp.y - Ry + 18);
+        }
         cx.restore();
       });
-    if(sp.done){const k=(ts-sp.t0)/1000;
-      cx.save();cx.strokeStyle="#3FC4B0";cx.lineWidth=6;cx.globalAlpha=.8;
+    if(sp.done){
+      const k=(ts-sp.t0)/1000;
+      const leoRx = T.leo.ringR * 1.6 + 24;
+      const leoRy = leoRx * 0.56;
+      cx.save();cx.strokeStyle="#3FC4B0";cx.lineWidth=6;cx.globalAlpha=.85;
       cx.setLineDash([16,12]);cx.lineDashOffset=-k*45;
-      cx.beginPath();cx.ellipse(sp.x,sp.y,T.leo.ringR*1.75+22,(T.leo.ringR*1.75+22)*0.52,0,0,7);
-      cx.stroke();cx.restore();}
+      cx.beginPath();cx.ellipse(sp.x,sp.y,leoRx,leoRy,0,0,7);
+      cx.stroke();cx.restore();
+    }
   });
   [...S.players].sort((a,b)=>a.y-b.y).forEach(p=>{
     drawChar(cx,p.x,p.y,p.ch,0.95,{name:p.isMe?"나":p.no,phase:p.ph,run:p.run,dir:p.dir});
