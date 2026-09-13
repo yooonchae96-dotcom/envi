@@ -959,9 +959,28 @@ function resize(){cvs.width=cvs.clientWidth*devicePixelRatio;cvs.height=460*devi
   cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);}
 addEventListener("resize",resize);
 const keys={};
-addEventListener("keydown",e=>{if(S.tab!==2 && S.tab!==3)return;
-  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){e.preventDefault();keys[e.key]=1;}});
-addEventListener("keyup",e=>{keys[e.key]=0;});
+function handleKey(e, isDown) {
+  if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
+  const k = e.key;
+  const c = e.code;
+  let keyName = null;
+  if (k === "ArrowUp" || c === "ArrowUp" || k === "w" || k === "W" || c === "KeyW") keyName = "ArrowUp";
+  else if (k === "ArrowDown" || c === "ArrowDown" || k === "s" || k === "S" || c === "KeyS") keyName = "ArrowDown";
+  else if (k === "ArrowLeft" || c === "ArrowLeft" || k === "a" || k === "A" || c === "KeyA") keyName = "ArrowLeft";
+  else if (k === "ArrowRight" || c === "ArrowRight" || k === "d" || k === "D" || c === "KeyD") keyName = "ArrowRight";
+
+  if (keyName) {
+    if (S.tab === 2 || S.tab === 3) {
+      if (isDown) e.preventDefault();
+    }
+    keys[keyName] = isDown ? 1 : 0;
+  }
+}
+
+addEventListener("keydown", e => handleKey(e, true));
+addEventListener("keyup", e => handleKey(e, false));
+addEventListener("blur", () => { Object.keys(keys).forEach(k => keys[k] = 0); });
+
 $$(".dpad button").forEach(b=>{
   const k={u:"ArrowUp",d:"ArrowDown",l:"ArrowLeft",r:"ArrowRight"}[b.dataset.mv];
   const on=e=>{e.preventDefault();keys[k]=1;},off=()=>keys[k]=0;
@@ -1027,10 +1046,12 @@ addEventListener("pointercancel", () => isDragging = false);
 function blocked(p,nx,ny){
   for(const sp of S.spots){
     const dist = Math.hypot(nx - sp.x, ny - sp.y);
+    const currDist = Math.hypot(p.x - sp.x, p.y - sp.y);
+
     if(sp.done){
       if(p.spot === sp.id && p.frozen) continue;
       const barrierR = T.leo.ringR * 1.6 + 35;
-      if(dist < barrierR){
+      if(dist < barrierR && dist < currDist){
         if(p.isMe && performance.now() - S.warnAt > 1200){
           S.warnAt = performance.now();
           toast("완성된 모둠입니다. 결계가 쳐져 있어 들어갈 수 없습니다.");
@@ -1038,7 +1059,8 @@ function blocked(p,nx,ny){
         return true;
       }
     } else {
-      if(dist < 260){
+      if(p.spot === sp.id) continue;
+      if(dist < 260 && dist < currDist){
         const occupantsInZone = S.players.filter(other => other.id !== p.id && (other.spot === sp.id || Math.hypot(other.x - sp.x, other.y - sp.y) < 260));
         const hasSameThinker = occupantsInZone.some(other => other.thinkerId === p.thinkerId);
         if(hasSameThinker){
