@@ -105,9 +105,92 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .app-footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);text-align:center;font-size:12px;color:var(--sub)}
 .btn-legal-link{color:var(--accent);text-decoration:none;font-weight:600;background:none;border:none;padding:0 6px;cursor:pointer;font-size:13px}
 .btn-legal-link:hover{text-decoration:underline}
+
+/* 오른쪽 위 접속 끊김(튕김) 위젯 */
+.disconnect-widget {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-family: inherit;
+}
+.disconnect-badge {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.disconnect-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.5);
+}
+.disconnect-list {
+  background: #ffffff;
+  border: 1px solid #fee2e2;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+  width: 230px;
+  max-height: 250px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.disconnect-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #1f2937;
+  background: #fef2f2;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border-left: 3px solid #ef4444;
+}
+.disconnect-item-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-sim-reconnect {
+  font-size: 11px;
+  padding: 3px 8px;
+  background: #0f6e63;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.btn-sim-reconnect:hover {
+  background: #15b097;
+}
 </style>
 </head>
 <body>
+<!-- 오른쪽 위 튕긴 학생 표시 위젯 -->
+<div id="disconnectWidget" class="disconnect-widget hide">
+  <div id="disconnectBadge" class="disconnect-badge">
+    <span>⚠️</span> <span id="disconnectCnt">접속 끊김 0명</span> <span>▼</span>
+  </div>
+  <div id="disconnectList" class="disconnect-list hide"></div>
+</div>
+
 <div class="wrap">
 <header>
   <div id="qrbox"><div class="ph">배포 후<br>URL QR</div><small>다시 접속</small></div>
@@ -188,7 +271,11 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
       <h2 style="margin:0">우리 반 <span class="muted">학번 내림차순, 가로 10명</span></h2>
       <button id="startTab2BtnRoster" class="btn-start-tab2">🚀 출발! (2번 탭 벤다이어그램으로 이동)</button>
     </div>
-    <div class="row" style="margin-bottom:8px"><button class="ghost" id="simBtn">나머지 27명 모의 접속</button><span class="muted" id="cnt"></span></div>
+    <div class="row" style="margin-bottom:8px">
+      <button class="ghost" id="simBtn">나머지 27명 모의 접속</button>
+      <button class="ghost" id="simDisconnectBtn" style="color:#dc2626;border-color:#fca5a5">⚡ 모의 튕김 테스트</button>
+      <span class="muted" id="cnt"></span>
+    </div>
     <div class="roster" id="roster"></div>
   </div>
 </section>
@@ -700,15 +787,90 @@ function renderRoster(){
   $("#cnt").textContent=`${list.length}명 접속`;
   const r=$("#roster");r.innerHTML="";
   list.forEach(p=>{
-    const d=document.createElement("div");d.className="rc";
+    const d=document.createElement("div");d.className="rc"+(p.disconnected?" disconnected":"");
     const cv=document.createElement("canvas");cv.width=62;cv.height=68;d.appendChild(cv);
     const googleId = p.email || p.name || (p.no + "번");
-    d.insertAdjacentHTML("beforeend",`<b style="font-size:9px;color:#1a73e8;word-break:break-all;display:block;margin-bottom:2px" title="${googleId}">${googleId}</b><span style="color:${p.ch.color}">${p.ch.scholar.slice(0,3)}</span>`);
+    const statusText = p.disconnected ? `<span style="color:#ef4444;font-weight:700;font-size:9px;display:block">🔴 튕김</span>` : "";
+    d.insertAdjacentHTML("beforeend",`<b style="font-size:9px;color:#1a73e8;word-break:break-all;display:block;margin-bottom:2px" title="${googleId}">${googleId}</b><span style="color:${p.ch.color}">${p.ch.scholar.slice(0,3)}</span>${statusText}`);
     if(p.isMe)d.style.outline="2px solid var(--accent)";
+    if(p.disconnected)d.style.opacity="0.5";
     drawChar(cv.getContext("2d"),31,62,p.ch,0.46,{dir:1});
     r.appendChild(d);
   });
 }
+
+/* ===== 접속 끊김(튕김) 및 재접속 관리 ===== */
+function updateDisconnectWidget() {
+  const disconnected = S.players.filter(p => p.disconnected);
+  const widget = $("#disconnectWidget");
+  const cntSpan = $("#disconnectCnt");
+  const listDiv = $("#disconnectList");
+
+  if (!widget || !cntSpan || !listDiv) return;
+
+  if (!disconnected.length) {
+    widget.classList.add("hide");
+    listDiv.classList.add("hide");
+    return;
+  }
+
+  widget.classList.remove("hide");
+  cntSpan.textContent = `접속 끊김 ${disconnected.length}명`;
+
+  listDiv.innerHTML = disconnected.map(p => {
+    const th = T[p.thinkerId];
+    return `<div class="disconnect-item">
+      <div class="disconnect-item-info">
+        <span style="color:#ef4444">🔴</span>
+        <b>${p.isMe ? "나(" + p.no + "번)" : p.no + "번"}</b>
+        <span style="color:${th ? th.color : '#333'}">${th ? th.scholar : ''}</span>
+      </div>
+      <button class="btn-sim-reconnect" onclick="reconnectPlayer('${p.id}')">재접속</button>
+    </div>`;
+  }).join("");
+}
+
+function disconnectPlayer(p) {
+  if (!p) return;
+  p.disconnected = true;
+  updateDisconnectWidget();
+  renderRoster();
+  toast(`⚠️ [${p.no}번 ${T[p.thinkerId]?.scholar || ""}] 학생의 접속이 끊어졌습니다.`);
+}
+
+function reconnectPlayer(idOrPlayer) {
+  const p = typeof idOrPlayer === "object" ? idOrPlayer : S.players.find(x => x.id === idOrPlayer);
+  if (!p) return;
+  p.disconnected = false;
+  updateDisconnectWidget();
+  renderRoster();
+  toast(`✅ [${p.no}번 ${T[p.thinkerId]?.scholar || ""}] 학생이 다시 접속되었습니다!`);
+}
+
+function simToggleDisconnect() {
+  if (!S.players.length) {
+    toast("먼저 캐릭터 접속을 진행하세요.");
+    return;
+  }
+  const connected = S.players.filter(p => !p.disconnected);
+  if (!connected.length) {
+    toast("모든 학생이 이미 접속 끊김 상태입니다.");
+    return;
+  }
+  const target = connected[Math.floor(Math.random() * connected.length)];
+  disconnectPlayer(target);
+}
+
+setTimeout(() => {
+  if ($("#disconnectBadge")) {
+    $("#disconnectBadge").onclick = () => {
+      $("#disconnectList").classList.toggle("hide");
+    };
+  }
+  if ($("#simDisconnectBtn")) {
+    $("#simDisconnectBtn").onclick = simToggleDisconnect;
+  }
+}, 100);
 
 /* ===== 2번 탭 ===== */
 function setNewRoamTarget(p) {
@@ -1088,7 +1250,7 @@ function render(ts){
     if(t && !p.frozen){
       const Rx = t.ringR * 1.6, Ry = Rx * 0.56;
       cx.save();
-      cx.globalAlpha = p.isMe ? 0.65 : 0.42;
+      cx.globalAlpha = p.disconnected ? 0.35 : (p.isMe ? 0.65 : 0.42);
       cx.fillStyle = t.color + "28";
       cx.strokeStyle = t.color;
       cx.lineWidth = p.isMe ? 4.5 : 3.2;
@@ -1102,6 +1264,15 @@ function render(ts){
       cx.font = "700 12px sans-serif";
       cx.textAlign = "center";
       cx.fillText(t.scholar + " (" + PETNAME[t.pets[t.pets.length-1]] + ")", p.x, p.y + 10 - Ry + 16);
+      cx.restore();
+    }
+
+    if (p.disconnected) {
+      cx.save();
+      cx.fillStyle = "#EF4444";
+      cx.font = "bold 11px sans-serif";
+      cx.textAlign = "center";
+      cx.fillText("🔴 접속 끊김", p.x, p.y - 55);
       cx.restore();
     }
 
