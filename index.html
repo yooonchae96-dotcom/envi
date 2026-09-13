@@ -93,6 +93,9 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .modal-body input:focus{border-color:#1a73e8;outline:none}
 .btn-gsubmit{background:#1a73e8;color:#fff;border:none;padding:12px;font-size:15px;font-weight:600;border-radius:8px;cursor:pointer;transition:background .15s}
 .btn-gsubmit:hover{background:#1557b0}
+/* 출발 버튼 */
+.btn-start-tab2{background:linear-gradient(135deg,#0f6e63,#15b097);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(15,110,99,.35);transition:transform .15s,box-shadow .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-start-tab2:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(15,110,99,.45)}
 @media(max-width:700px){.grid28{grid-template-columns:repeat(4,1fr)}.roster,.lotto{grid-template-columns:repeat(5,1fr)}}
 </style>
 </head>
@@ -164,12 +167,22 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
       </div>
     </div>
   </div>
-  <div class="card hide" id="pickCard"><h2>캐릭터 고르기 <span class="muted">선착순 · 사상가 4명 × 스타일 7개</span></h2>
-    <div class="grid28" id="grid28"></div></div>
+  <div class="card hide" id="pickCard">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+      <h2 style="margin:0">캐릭터 고르기 <span class="muted">선착순 · 사상가 4명 × 스타일 7개</span></h2>
+      <button id="startTab2Btn" class="btn-start-tab2">🚀 출발! (2번 탭 벤다이어그램으로 이동)</button>
+    </div>
+    <div class="grid28" id="grid28"></div>
+  </div>
   <div class="card hide" id="myCard"><h2>내 입장</h2><div id="mine"></div></div>
-  <div class="card hide" id="rosterCard"><h2>우리 반 <span class="muted">학번 내림차순, 가로 10명</span></h2>
+  <div class="card hide" id="rosterCard">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+      <h2 style="margin:0">우리 반 <span class="muted">학번 내림차순, 가로 10명</span></h2>
+      <button id="startTab2BtnRoster" class="btn-start-tab2">🚀 출발! (2번 탭 벤다이어그램으로 이동)</button>
+    </div>
     <div class="row" style="margin-bottom:8px"><button class="ghost" id="simBtn">나머지 27명 모의 접속</button><span class="muted" id="cnt"></span></div>
-    <div class="roster" id="roster"></div></div>
+    <div class="roster" id="roster"></div>
+  </div>
 </section>
 
 <section id="t2" class="hide">
@@ -381,15 +394,67 @@ function drawCarried(ctx,x,y,ch,sc,ph){
   ctx.beginPath();ctx.ellipse(x,cy,R,R*0.36,Math.sin(ph)*0.05,0,7);ctx.fill();ctx.stroke();ctx.restore();
 }
 
-/* ===== 탭 ===== */
-$$("nav button").forEach(b=>b.onclick=()=>{
-  if(!S.me||!S.me.charId){toast("먼저 로그인하고 캐릭터를 고르세요");return;}
-  S.tab=+b.dataset.tab;
-  $$("nav button").forEach(x=>x.classList.toggle("on",x===b));
-  [1,2,3,4].forEach(i=>$("#t"+i).classList.toggle("hide",i!==S.tab));
-  if(S.tab===2)resize();
-  if(S.tab===3)renderLotto();
+/* ===== 탭 및 출발 로직 ===== */
+function populateNPCs(){
+  if(S.players.length >= 28) return;
+  const used = new Set(S.players.map(p=>p.charId));
+  const base = S.me ? S.me.no-14 : 20301;
+  let k = 0;
+  CHARACTERS.filter(c=>!used.has(c.charId)).forEach((ch,i)=>{
+    let n = base + k++;
+    if(S.me && n === S.me.no) n = base + k++;
+    const mockEmail = "student" + n + "@school.sen.go.kr";
+    S.players.push({
+      id: "n" + i,
+      no: n,
+      name: mockEmail.split("@")[0],
+      email: mockEmail,
+      charId: ch.charId,
+      thinkerId: ch.thinkerId,
+      ch: ch,
+      isNPC: true
+    });
+  });
+  renderGrid();
+  renderRoster();
+}
+
+function goToTab(tabIndex){
+  if(!S.me || !S.me.charId) {
+    const availableCh = CHARACTERS.find(c => !S.players.some(p => p.charId === c.charId)) || CHARACTERS[0];
+    confirmPick(availableCh.charId);
+  }
+  if(tabIndex === 2) {
+    populateNPCs();
+  }
+  S.tab = tabIndex;
+  $$("nav button").forEach(x => x.classList.toggle("on", +x.dataset.tab === tabIndex));
+  [1,2,3,4].forEach(i => $("#t" + i).classList.toggle("hide", i !== tabIndex));
+  if(S.tab === 2) {
+    resize();
+    seatAll();
+  }
+  if(S.tab === 3) renderLotto();
+}
+
+$$("nav button").forEach(b => b.onclick = () => {
+  goToTab(+b.dataset.tab);
 });
+
+function startDeparture(){
+  if(!S.me || !S.me.charId) {
+    const availableCh = CHARACTERS.find(c => !S.players.some(p => p.charId === c.charId)) || CHARACTERS[0];
+    confirmPick(availableCh.charId);
+  }
+  populateNPCs();
+  goToTab(2);
+  toast("🚀 벤다이어그램 탭으로 이동했습니다! 27명의 사상가가 출발합니다.");
+}
+
+setTimeout(()=>{
+  if($("#startTab2Btn")) $("#startTab2Btn").onclick = startDeparture;
+  if($("#startTab2BtnRoster")) $("#startTab2BtnRoster").onclick = startDeparture;
+}, 100);
 
 /* ===== 1번 탭 ===== */
 /* --- Google 로그인 및 Client ID 설정 --- */
@@ -672,8 +737,14 @@ function loop(ts){
   me.run=step(me,dx,dy,dt);
   S.players.forEach(p=>{
     if(p.isMe||p.frozen){if(!p.isMe)p.run=false;return;}
-    const ax=p.tx-p.x,ay=p.ty-p.y;
-    p.run=Math.hypot(ax,ay)>6?step(p,ax,ay,dt*0.6):false;
+    let ax=p.tx-p.x, ay=p.ty-p.y;
+    const dist=Math.hypot(ax,ay);
+    if(dist > 15) {
+      const wiggle = Math.sin((ts||0)*0.003 + (p.no||0)*7.3)*22;
+      ax += Math.cos((p.no||1)*2.5)*wiggle;
+      ay += Math.sin((p.no||1)*2.5)*wiggle;
+    }
+    p.run = dist > 6 ? step(p, ax, ay, dt * 0.7) : false;
   });
   S.players.forEach(p=>{
     const sp=S.spots[p.spot],d=Math.hypot(p.x-sp.x,p.y-sp.y);
