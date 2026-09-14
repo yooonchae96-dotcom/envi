@@ -619,14 +619,25 @@ nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-weight:
   align-items: center;
   gap: 12px;
   width: 100%;
-  max-width: 500px;
+  max-width: 520px;
   margin: 6px auto 14px;
+}
+.start-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+@media (max-width: 480px) {
+  .start-btn-row {
+    grid-template-columns: 1fr;
+  }
 }
 .start-btn {
   width: 100%;
   height: 52px;
   min-height: 52px;
-  padding: 0 20px;
+  padding: 0 16px;
   font-size: 15px;
   font-weight: 700;
   border-radius: 10px;
@@ -634,11 +645,12 @@ nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-weight:
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   box-sizing: border-box;
   text-decoration: none;
   transition: all 0.18s ease;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 .start-btn-primary {
   background: #1e3a8a;
@@ -1121,15 +1133,20 @@ nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-weight:
     </div>
     <div class="start-btn-group">
       <div id="googleSignInDiv"></div>
-      <button class="start-btn start-btn-primary" id="directPracticeBtn">
-        <span style="font-size:18px">🎯</span> <span>4. 수행평가 연습하기 바로가기 (로그인 불필요)</span>
-      </button>
-      <button class="start-btn start-btn-outline" id="quick4TestBtn">
-        <span style="font-size:18px">⚡</span> <span>4명 즉시 참석 테스트 (2번 탭 이동)</span>
-      </button>
-      <button class="start-btn start-btn-outline" id="gLoginBtn">
+      <!-- 가장 긴 버튼 (상단 전체 너비): 구글 계정으로 로그인 -->
+      <button class="start-btn start-btn-primary" id="gLoginBtn">
         <span style="font-size:18px">🔑</span> <span>Google 계정으로 로그인</span>
       </button>
+
+      <!-- 그 아래 반으로 갈라: 왼쪽 '테스트하기', 오른쪽 '연습 바로가기' -->
+      <div class="start-btn-row">
+        <button class="start-btn start-btn-outline" id="quick4TestBtn">
+          <span>⚡</span> <span>테스트하기</span>
+        </button>
+        <button class="start-btn start-btn-outline" id="directPracticeBtn">
+          <span>🎯</span> <span>연습 바로가기</span>
+        </button>
+      </div>
     </div>
   </div>
 
