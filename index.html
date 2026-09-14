@@ -46,10 +46,10 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 }
 #stage{width:100%;height:clamp(560px,70vh,780px);background:#458428;border-radius:16px;display:block;touch-action:none;border:1px solid var(--line)}
 .dpad{display:none!important}
-.mini{position:absolute;bottom:16px;left:16px;z-index:100;display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:0;background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);padding:8px 16px;border-radius:22px;border:1.5px solid rgba(255,255,255,0.9);box-shadow:0 8px 24px rgba(0,0,0,0.18);user-select:none}
-.mini i{width:32px;height:32px;border-radius:10px;border:1.5px solid #CBD5E1;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:800;background:#F8FAFC;color:#94A3B8;box-shadow:inset 0 1px 2px rgba(0,0,0,0.06);transition:all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
-.mini i.done{background:linear-gradient(135deg,#10B981,#059669);border-color:#34D399;color:#FFFFFF;font-weight:900;transform:scale(1.15);box-shadow:0 0 14px #10B981, 0 0 28px rgba(16,185,129,0.55);animation:lightUpPulse 1.5s infinite alternate}
-@keyframes lightUpPulse{0%{transform:scale(1.12);box-shadow:0 0 10px #10B981, 0 0 20px rgba(16,185,129,0.4)}100%{transform:scale(1.22);box-shadow:0 0 18px #34D399, 0 0 34px rgba(52,211,153,0.75)}}
+.mini{position:absolute;bottom:16px;left:16px;z-index:100;display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);padding:8px 16px;border-radius:22px;border:1.5px solid rgba(255,255,255,0.9);box-shadow:0 8px 24px rgba(0,0,0,0.2);user-select:none}
+.mini i{width:34px;height:34px;border-radius:10px;border:1.5px solid #CBD5E1;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:800;background:#F8FAFC;color:#94A3B8;box-shadow:inset 0 1px 2px rgba(0,0,0,0.06);transition:all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
+.mini i.done{background:linear-gradient(135deg,#10B981,#047857);border:2px solid #34D399;color:#FFFFFF;font-weight:900;transform:scale(1.18);box-shadow:0 0 16px #10B981, 0 0 32px rgba(16,185,129,0.8), inset 0 0 6px #A7F3D0;animation:lightUpPulse 1.2s infinite alternate}
+@keyframes lightUpPulse{0%{transform:scale(1.15);box-shadow:0 0 12px #10B981, 0 0 22px rgba(16,185,129,0.5)}100%{transform:scale(1.25);box-shadow:0 0 20px #34D399, 0 0 40px rgba(52,211,153,0.9)}}
 /* 추첨판 */
 .lotto{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-top:10px}
 .lc{border:1px solid var(--line);border-radius:9px;background:#fff;text-align:center;padding:3px 1px 2px;
@@ -452,6 +452,8 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
       <!-- 오른쪽 아래 4단계 맵 확대/축소 위젯 및 BGM 버튼 -->
       <div class="zoom-controls">
         <button id="bgmToggleBtn" title="신나는 게임 BGM 켜기/끄기" style="background:#10B981;color:#fff;font-weight:700">🎵 BGM ON</button>
+        <button id="simRunBtn" title="학생들이 자리로 달려가는 시뮬레이션" style="background:#0F6E63;color:#fff;font-weight:700">🏃 모의 달리기</button>
+        <button id="simCompleteAllBtn" title="모둠 차례로 완성 & 불 켜기 테스트" style="background:#2563EB;color:#fff;font-weight:700">⚡ 모의 완성</button>
         <button id="zoomOutBtn" title="축소 (-)">−</button>
         <span id="zoomLabel">1단계 (100%)</span>
         <button id="zoomInBtn" title="확대 (+)">+</button>
@@ -1383,25 +1385,54 @@ function setNewRoamTarget(p) {
 }
 
 function seatAll(){
-  S.spots=SPOTPOS.map((p,i)=>({id:i,x:p[0],y:p[1],done:false,t0:0}));
-  
-  // 27명 교사/NPC 캐릭터는 맵 자유 배회(Roamer)로 시작
-  S.players.forEach(p => {
-    p.spot = null;
-    p.isRoamer = !p.isMe;
-    p.ph = Math.random() * 6;
-    p.dir = 1;
-    p.ringT = 0;
-    p.frozen = false;
-    p.run = false;
+  S.spots = SPOTPOS.map((p, i) => ({ id: i, x: p[0], y: p[1], done: false, t0: 0 }));
 
-    if (p.isMe) {
-      p.x = 1600;
-      p.y = 1350;
-    } else {
-      p.x = Math.random() * (W - 300) + 150;
-      p.y = Math.random() * (H - 300) + 150;
-      setNewRoamTarget(p);
+  // 7개 모둠(0~6) × 4개 사상가 슬롯 = 총 28개 자리 매핑
+  const thinkerIds = ["ari", "sin", "sch", "leo"];
+  const pools = {
+    ari: S.players.filter(p => p.thinkerId === "ari"),
+    sin: S.players.filter(p => p.thinkerId === "sin"),
+    sch: S.players.filter(p => p.thinkerId === "sch"),
+    leo: S.players.filter(p => p.thinkerId === "leo")
+  };
+
+  const mySpot = 6;
+  if (S.me) {
+    S.me.assignedSpot = mySpot;
+    S.me.assignedSlot = S.me.thinkerId;
+    S.me.spot = null;
+    S.me.frozen = false;
+    S.me.run = false;
+    S.me.x = 1600;
+    S.me.y = 1350;
+    const idx = pools[S.me.thinkerId] ? pools[S.me.thinkerId].findIndex(p => p.isMe) : -1;
+    if (idx !== -1) pools[S.me.thinkerId].splice(idx, 1);
+  }
+
+  thinkerIds.forEach(thId => {
+    const pool = pools[thId] || [];
+    for (let spId = 0; spId < 7; spId++) {
+      if (S.me && spId === mySpot && S.me.thinkerId === thId) continue;
+      const p = pool.shift();
+      if (p) {
+        p.assignedSpot = spId;
+        p.assignedSlot = thId;
+        const slot = THINKER_SLOTS.find(s => s.id === thId);
+        const sp = S.spots[spId];
+        p.targetX = sp.x + slot.offsetX;
+        p.targetY = sp.y + slot.offsetY;
+        p.spot = null;
+        p.frozen = false;
+        p.isRoamer = false;
+        p.dir = 1;
+        p.ph = Math.random() * 6;
+        // 스팟 주변 180~280px 거리에서 시작하여 슬롯으로 달려오도록 스폰
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 180 + Math.random() * 100;
+        p.x = p.targetX + Math.cos(angle) * dist;
+        p.y = p.targetY + Math.sin(angle) * dist;
+        p.run = true;
+      }
     }
   });
 
@@ -1582,9 +1613,9 @@ function blocked(p, nx, ny) {
       // 결계 완성된 모둠의 멤버는 내부 이동 허용
       if (p.spot === sp.id && p.frozen) continue;
 
-      // 결계 대형 직사각형 범위 (가로 900+30px, 세로 440+30px)
-      const halfW = 465;
-      const halfH = 235;
+      // 결계 대형 직사각형 범위 (가로 940px, 세로 610px)
+      const halfW = 475;
+      const halfH = 310;
       const inRect = Math.abs(nx - sp.x) < halfW && Math.abs(ny - sp.y) < halfH;
       const wasInRect = Math.abs(p.x - sp.x) < halfW && Math.abs(p.y - sp.y) < halfH;
 
@@ -1597,13 +1628,15 @@ function blocked(p, nx, ny) {
         return true;
       }
     } else {
-      if (p.spot === sp.id) continue;
+      // 결계 전: 자기 지정 스팟이거나 슬롯으로 이동 중인 NPC는 통과 허용
+      if (p.assignedSpot === sp.id || p.spot === sp.id || p.isNPC) continue;
+
       const halfW = 480;
-      const halfH = 250;
+      const halfH = 310;
       const inRect = Math.abs(nx - sp.x) < halfW && Math.abs(ny - sp.y) < halfH;
       const wasInRect = Math.abs(p.x - sp.x) < halfW && Math.abs(p.y - sp.y) < halfH;
 
-      // 모둠 구역 진입 시 동일 사상가 중복 검사
+      // 플레이어가 모둠 구역 진입 시 동일 사상가 중복 검사
       if (inRect && !wasInRect) {
         const occupantsInZone = S.players.filter(other => other.id !== p.id && (other.spot === sp.id || (Math.abs(other.x - sp.x) < halfW && Math.abs(other.y - sp.y) < halfH)));
         const hasSameThinker = occupantsInZone.some(other => other.thinkerId === p.thinkerId);
@@ -1648,15 +1681,15 @@ function alignSpotThinkersInLine(sp) {
 function checkSpots() {
   S.spots.forEach(sp => {
     if (sp.done) return;
-    const inZone = S.players.filter(p => Math.abs(p.x - sp.x) < 480 && Math.abs(p.y - sp.y) < 250);
+    const inZone = S.players.filter(p => Math.abs(p.x - sp.x) < 500 && Math.abs(p.y - sp.y) < 320);
     if (S.me && sp.id === S.me.spot && !inZone.some(p => p.isMe)) return;
 
-    // 4개 슬롯 각각에 알맞은 사상가가 슬롯 원 근처(반경 60px)에 도달했는지 확인
+    // 4개 슬롯 각각에 알맞은 사상가가 슬롯 원 근처(반경 50px)에 도달했는지 확인
     const matched = [];
     THINKER_SLOTS.forEach(slot => {
       const slotX = sp.x + slot.offsetX;
       const slotY = sp.y + slot.offsetY;
-      const cand = inZone.find(p => p.thinkerId === slot.id && Math.hypot(p.x - slotX, p.y - slotY) < 60);
+      const cand = inZone.find(p => p.thinkerId === slot.id && Math.hypot(p.x - slotX, p.y - slotY) < 50);
       if (cand) {
         matched.push({ slot, player: cand });
       }
@@ -1679,8 +1712,10 @@ function checkSpots() {
         p.run = false;
       });
 
-      toast(`⚡ 모둠 ${sp.id + 1} 벤다이어그램 완성! 결계가 활성화되었습니다.`);
+      const doneCount = S.spots.filter(s => s.done).length;
+      toast(`⚡ [모둠 ${sp.id + 1}] 벤다이어그램 완성! 불이 켜졌습니다! 💡 (${doneCount}/7)`);
       playMiniLightUpSound(sp.id);
+
       if (matched.some(m => m.player.isMe)) {
         $("#mapMsg").textContent = "🎉 우리 모둠 완성! 결계가 쳐져 안전합니다. (화면 드래그/방향키로 다른 모둠을 둘러보세요)";
         toast("우리 모둠 결계 발동! 🛡️ 네 사상가가 모두 모였습니다! 🚀");
@@ -1702,14 +1737,18 @@ function checkSpots() {
 
 let _lastMiniDoneCount = -1;
 function drawMini() {
+  if (!S.spots || !S.spots.length) return;
   const doneCount = S.spots.filter(s => s.done).length;
-  if (doneCount !== _lastMiniDoneCount) {
-    _lastMiniDoneCount = doneCount;
-  }
-  $("#mini").innerHTML = S.spots.map(s => `<i class="${s.done ? "done" : ""}" title="모둠 ${s.id + 1} ${s.done ? "완성 ✅" : "진행중"}">` +
-    `${s.done ? "✅" : s.id + 1}</i>`).join("") +
-    `<span style="font-size:12px;font-weight:700;color:${doneCount === S.spots.length ? "#10B981" : "#475569"};margin-left:4px">` +
-    `${doneCount === S.spots.length ? "✨ 전원 완성! ✨" : `완성 ${doneCount} / ${S.spots.length}`}</span>`;
+  _lastMiniDoneCount = doneCount;
+  const miniEl = $("#mini");
+  if (!miniEl) return;
+  miniEl.innerHTML = S.spots.map(s => {
+    const isDone = s.done;
+    return `<i class="${isDone ? "done" : ""}" title="모둠 ${s.id + 1} ${isDone ? "완성 (불 켜짐) 💡" : "진행중"}">` +
+      `${isDone ? "💡" : s.id + 1}</i>`;
+  }).join("") +
+  `<span style="font-size:12px;font-weight:800;color:${doneCount === S.spots.length ? "#10B981" : "#0F6E63"};margin-left:6px;letter-spacing:-0.2px">` +
+  `${doneCount === S.spots.length ? "✨ 전원 완성! (7/7 불 켜짐) ✨" : `🔥 불 켜짐: ${doneCount} / ${S.spots.length}`}</span>`;
 }
 
 let prev = 0;
@@ -1778,22 +1817,38 @@ function loop(ts) {
   S.players.forEach(p => {
     if (p.isMe || p.frozen) { if (!p.isMe) p.run = false; return; }
 
-    if (p.spot !== null && p.spot !== undefined) {
+    if (p.assignedSpot !== undefined && p.assignedSpot !== null) {
+      const dx = p.targetX - p.x;
+      const dy = p.targetY - p.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist <= 22) {
+        p.x = p.targetX;
+        p.y = p.targetY;
+        p.frozen = true;
+        p.spot = p.assignedSpot;
+        p.run = false;
+        p.dir = 1;
+      } else {
+        step(p, dx, dy, dt * 0.82);
+        p.run = true;
+        if (dx !== 0) p.dir = dx > 0 ? 1 : -1;
+      }
+    } else if (p.spot !== null && p.spot !== undefined) {
       let ax = p.tx - p.x, ay = p.ty - p.y;
       const dist = Math.hypot(ax, ay);
-      if (dist > 15) {
-        const wiggle = Math.sin((ts || 0) * 0.002 + (p.no || 0) * 7.3) * 15;
-        ax += Math.cos((p.no || 1) * 2.5) * wiggle;
-        ay += Math.sin((p.no || 1) * 2.5) * wiggle;
+      if (dist <= 15) {
+        p.x = p.tx; p.y = p.ty; p.frozen = true; p.run = false;
+      } else {
+        p.run = step(p, ax, ay, dt * 0.7);
       }
-      p.run = dist > 5 ? step(p, ax, ay, dt * 0.28) : false;
     } else {
       let ax = p.tx - p.x, ay = p.ty - p.y;
       const dist = Math.hypot(ax, ay);
       if (dist < 35) {
         setNewRoamTarget(p);
       } else {
-        p.run = step(p, ax, ay, dt * 0.32);
+        p.run = step(p, ax, ay, dt * 0.5);
       }
     }
   });
@@ -2142,119 +2197,119 @@ function render(ts) {
     // 계층 구조: 생태(전체 700) ⊃ 생명(525) ⊃ 동물(365) ⊃ 인간(195)
     // 슬롯 위치: ari(-210), sin(-70), sch(+70), leo(+210), offsetY: 28
 
-    // 2-1. [가. 생태 중심] 레오폴드 - 최외곽 플랫폼 (가로 900, 세로 440, 4명 전체 포괄)
+    // 2-1. [가. 생태 중심] 레오폴드 - 최외곽 플랫폼 (가로 900, 세로 580, 4명 전체 포괄)
     cx.save();
     cx.shadowColor = "rgba(18, 56, 36, 0.24)";
-    cx.shadowBlur = 22;
+    cx.shadowBlur = 24;
     cx.shadowOffsetY = 8;
-    drawRoundRect(cx, sp.x - 450, sp.y - 200, 900, 440, 32);
+    drawRoundRect(cx, sp.x - 450, sp.y - 280, 900, 580, 36);
     cx.fillStyle = "#F3FAF5"; // 100% 불투명 세이지 유백색
     cx.fill();
     cx.shadowColor = "transparent";
     cx.strokeStyle = isCompleted ? "#1B4D3E" : "#2D6A4F";
-    cx.lineWidth = isCompleted ? 4.0 : 3.4;
+    cx.lineWidth = isCompleted ? 4.2 : 3.4;
     cx.stroke();
 
     // 생태 중심 라벨 뱃지 (우측 상단 레오폴드 고유 구역에 단독 배치)
-    drawRoundRect(cx, sp.x + 170, sp.y - 188, 260, 30, 10);
+    drawRoundRect(cx, sp.x + 165, sp.y - 268, 265, 30, 10);
     cx.fillStyle = "#2D6A4F";
     cx.fill();
     cx.fillStyle = "#FFFFFF";
     cx.font = "bold 13px sans-serif";
     cx.textAlign = "center";
     cx.textBaseline = "middle";
-    cx.fillText("가. 생태 중심 (생태계 전체)", sp.x + 300, sp.y - 173);
+    cx.fillText("가. 생태 중심 (생태계 전체)", sp.x + 297, sp.y - 253);
     cx.restore();
 
-    // 2-2. [나. 생명 중심] 슈바이처 - 2단계 플랫폼 (가로 680, 세로 385, 슈바이처·싱어·아리 포괄)
+    // 2-2. [나. 생명 중심] 슈바이처 - 2단계 플랫폼 (가로 680, 세로 510, 슈바이처·싱어·아리 포괄)
     cx.save();
     cx.shadowColor = "rgba(20, 60, 25, 0.12)";
-    cx.shadowBlur = 12;
-    cx.shadowOffsetY = 5;
-    drawRoundRect(cx, sp.x - 430, sp.y - 175, 680, 385, 28);
+    cx.shadowBlur = 14;
+    cx.shadowOffsetY = 6;
+    drawRoundRect(cx, sp.x - 430, sp.y - 245, 680, 510, 32);
     cx.fillStyle = "#EBF7EE"; // 100% 불투명 싱그러운 페일 민트 그린
     cx.fill();
     cx.shadowColor = "transparent";
     cx.strokeStyle = "#388E3C";
-    cx.lineWidth = 3.0;
+    cx.lineWidth = 3.2;
     cx.stroke();
 
     // 생명 중심 라벨 뱃지 (상단 슈바이처 고유 구역에 단독 배치)
-    drawRoundRect(cx, sp.x - 20, sp.y - 163, 190, 28, 9);
+    drawRoundRect(cx, sp.x - 20, sp.y - 233, 195, 28, 9);
     cx.fillStyle = "#388E3C";
     cx.fill();
     cx.fillStyle = "#FFFFFF";
     cx.font = "bold 12px sans-serif";
     cx.textAlign = "center";
     cx.textBaseline = "middle";
-    cx.fillText("나. 생명 중심 (모든 생명체)", sp.x + 75, sp.y - 149);
+    cx.fillText("나. 생명 중심 (모든 생명체)", sp.x + 77, sp.y - 219);
     cx.restore();
 
-    // 2-3. [다. 동물 중심] 피터 싱어 - 3단계 플랫폼 (가로 470, 세로 330, 싱어·아리 포괄)
+    // 2-3. [다. 동물 중심] 피터 싱어 - 3단계 플랫폼 (가로 470, 세로 440, 싱어·아리 포괄)
     cx.save();
     cx.shadowColor = "rgba(60, 35, 10, 0.12)";
-    cx.shadowBlur = 10;
-    cx.shadowOffsetY = 4;
-    drawRoundRect(cx, sp.x - 415, sp.y - 145, 470, 330, 24);
+    cx.shadowBlur = 12;
+    cx.shadowOffsetY = 5;
+    drawRoundRect(cx, sp.x - 415, sp.y - 210, 470, 440, 28);
     cx.fillStyle = "#FFF8EE"; // 100% 불투명 따뜻한 웜 앰버 크림
     cx.fill();
     cx.shadowColor = "transparent";
     cx.strokeStyle = "#D97706";
-    cx.lineWidth = 3.0;
+    cx.lineWidth = 3.2;
     cx.stroke();
 
     // 동물 중심 라벨 뱃지 (상단 싱어 고유 구역에 단독 배치)
-    drawRoundRect(cx, sp.x - 185, sp.y - 133, 175, 28, 9);
+    drawRoundRect(cx, sp.x - 185, sp.y - 198, 180, 28, 9);
     cx.fillStyle = "#D97706";
     cx.fill();
     cx.fillStyle = "#FFFFFF";
     cx.font = "bold 12px sans-serif";
     cx.textAlign = "center";
     cx.textBaseline = "middle";
-    cx.fillText("다. 동물 중심 (감각 동물)", sp.x - 97, sp.y - 119);
+    cx.fillText("다. 동물 중심 (감각 동물)", sp.x - 95, sp.y - 184);
     cx.restore();
 
-    // 2-4. [라. 인간 중심] 아리스토텔레스 - 최내곽 플랫폼 (가로 250, 세로 270, 아리스토텔레스 단독 포괄)
+    // 2-4. [라. 인간 중심] 아리스토텔레스 - 최내곽 플랫폼 (가로 250, 세로 370, 아리스토텔레스 단독 포괄)
     cx.save();
     cx.shadowColor = "rgba(35, 25, 75, 0.12)";
-    cx.shadowBlur = 10;
-    cx.shadowOffsetY = 4;
-    drawRoundRect(cx, sp.x - 390, sp.y - 115, 250, 270, 22);
+    cx.shadowBlur = 12;
+    cx.shadowOffsetY = 5;
+    drawRoundRect(cx, sp.x - 390, sp.y - 175, 250, 370, 24);
     cx.fillStyle = "#F6F4FE"; // 100% 불투명 기품 있는 로열 라벤더
     cx.fill();
     cx.shadowColor = "transparent";
     cx.strokeStyle = "#5B4FCF";
-    cx.lineWidth = 3.0;
+    cx.lineWidth = 3.2;
     cx.stroke();
 
     // 인간 중심 라벨 뱃지 (상단 아리스토텔레스 고유 구역에 단독 배치)
-    drawRoundRect(cx, sp.x - 380, sp.y - 103, 165, 28, 9);
+    drawRoundRect(cx, sp.x - 380, sp.y - 163, 175, 28, 9);
     cx.fillStyle = "#5B4FCF";
     cx.fill();
     cx.fillStyle = "#FFFFFF";
     cx.font = "bold 12px sans-serif";
     cx.textAlign = "center";
     cx.textBaseline = "middle";
-    cx.fillText("라. 인간 중심 (이성적 존재)", sp.x - 297, sp.y - 89);
+    cx.fillText("라. 인간 중심 (이성적 존재)", sp.x - 292, sp.y - 149);
     cx.restore();
 
     // 3. 모둠 번호 및 상태 상단 배너 (상단 넉넉하게 띄워 배치)
     cx.save();
-    const bannerY = sp.y - 220;
-    const bannerText = isCompleted ? `🛡️ 모둠 ${sp.id + 1} 벤다이어그램 결계 활성화 (완성)` : `📍 모둠 ${sp.id + 1} 벤다이어그램 (${occupants.length}/4명 모임)`;
+    const bannerY = sp.y - 305;
+    const bannerText = isCompleted ? `🛡️ 모둠 ${sp.id + 1} 벤다이어그램 결계 활성화 (완성 💡)` : `📍 모둠 ${sp.id + 1} 벤다이어그램 (${occupants.length}/4명 모임)`;
     cx.font = "bold 14px sans-serif";
-    const bw = cx.measureText(bannerText).width + 28;
+    const bw = cx.measureText(bannerText).width + 30;
     cx.fillStyle = isCompleted ? "#134E4A" : "#FFFFFF";
     cx.strokeStyle = isCompleted ? "#34D399" : "#6EE7B7";
-    cx.lineWidth = 2.4;
-    cx.shadowColor = "rgba(0, 0, 0, 0.18)";
-    cx.shadowBlur = 12;
+    cx.lineWidth = isCompleted ? 3.0 : 2.4;
+    cx.shadowColor = isCompleted ? "rgba(52, 211, 153, 0.45)" : "rgba(0, 0, 0, 0.18)";
+    cx.shadowBlur = isCompleted ? 18 : 12;
     cx.shadowOffsetY = 5;
-    drawRoundRect(cx, sp.x - bw / 2, bannerY - 15, bw, 30, 15);
+    drawRoundRect(cx, sp.x - bw / 2, bannerY - 16, bw, 32, 16);
     cx.fill();
     cx.shadowColor = "transparent";
     cx.stroke();
-    cx.fillStyle = isCompleted ? "#FFFFFF" : "#0F5132";
+    cx.fillStyle = isCompleted ? "#34D399" : "#0F5132";
     cx.textAlign = "center";
     cx.textBaseline = "middle";
     cx.fillText(bannerText, sp.x, bannerY);
@@ -2324,10 +2379,10 @@ function render(ts) {
     // 5. 결계 (Barrier) 발동 효과
     if (isCompleted) {
       const k = (ts - (sp.t0 || 0)) / 1000;
-      const barrierW = 930;
-      const barrierH = 465;
+      const barrierW = 940;
+      const barrierH = 610;
       const barrierX = sp.x - barrierW / 2;
-      const barrierY = sp.y - barrierH / 2;
+      const barrierY = sp.y - 295;
 
       cx.save();
       // 은은한 에너지 쉴드 돔
@@ -2718,6 +2773,57 @@ if($("#closeLegalModalBtn")) $("#closeLegalModalBtn").onclick = () => $("#legalM
 if($("#confirmLegalModalBtn")) $("#confirmLegalModalBtn").onclick = () => $("#legalModal").classList.add("hide");
 
 resize();
+
+/* ===== 모의 시뮬레이션 버튼 핸들러 (달리기 & 완성 테스트) ===== */
+function simRunAllToSeats() {
+  if (S.players.length < 28) populateNPCs();
+  seatAll();
+  toast("🏃 모든 학생들이 자기 모둠 자리를 향해 달려갑니다!");
+}
+
+function simCompleteAllSpots() {
+  if (S.players.length < 28) populateNPCs();
+  if (!S.spots || !S.spots.length) seatAll();
+
+  toast("⚡ 모둠별 순차 완성 및 불 켜기 시뮬레이션 시작!");
+  S.spots.forEach((sp, idx) => {
+    setTimeout(() => {
+      if (sp.done) return;
+      THINKER_SLOTS.forEach(slot => {
+        let p = S.players.find(x => x.spot === sp.id && x.thinkerId === slot.id);
+        if (!p) p = S.players.find(x => x.assignedSpot === sp.id && x.thinkerId === slot.id);
+        if (!p) p = S.players.find(x => !x.frozen && x.thinkerId === slot.id && !x.isMe);
+        if (p) {
+          p.spot = sp.id;
+          p.frozen = true;
+          p.x = sp.x + slot.offsetX;
+          p.y = sp.y + slot.offsetY;
+          p.run = false;
+          p.dir = 1;
+        }
+      });
+      sp.done = true;
+      sp.t0 = performance.now();
+      playMiniLightUpSound(sp.id);
+      playBarrierSound();
+      drawMini();
+      const doneCount = S.spots.filter(s => s.done).length;
+      toast(`💡 [모둠 ${sp.id + 1}] 벤다이어그램 완성! 불이 켜졌습니다! (${doneCount}/7)`);
+      if (doneCount === 7) {
+        playAllCompletedVictoryFanfare();
+        toast("🏆 축하합니다! 모든 7개 모둠의 벤다이어그램 결계가 완성되었습니다! 🎊");
+      }
+    }, idx * 450);
+  });
+}
+
+setTimeout(() => {
+  const simRunBtn = $("#simRunBtn");
+  if (simRunBtn) simRunBtn.onclick = simRunAllToSeats;
+  const simCompBtn = $("#simCompleteAllBtn");
+  if (simCompBtn) simCompBtn.onclick = simCompleteAllSpots;
+}, 200);
+
 </script>
 </body>
 </html>
