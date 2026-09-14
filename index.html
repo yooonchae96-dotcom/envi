@@ -44,7 +44,7 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   overflow: hidden;
   box-shadow: 0 8px 30px rgba(0,0,0,0.12);
 }
-#stage{width:100%;height:clamp(560px,70vh,780px);background:#BFE3D8;border-radius:16px;display:block;touch-action:none;border:1px solid var(--line)}
+#stage{width:100%;height:clamp(560px,70vh,780px);background:#458428;border-radius:16px;display:block;touch-action:none;border:1px solid var(--line)}
 .dpad{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:100;display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,38px);gap:4px;justify-content:center;margin-top:0;background:rgba(255,255,255,0.85);backdrop-filter:blur(10px);padding:6px;border-radius:18px;border:1px solid rgba(255,255,255,0.8);box-shadow:0 6px 20px rgba(0,0,0,0.18);user-select:none}
 .dpad button{background:#fff;border:1px solid #d1d5db;border-radius:10px;color:var(--ink);font-size:16px;font-weight:700;padding:0;user-select:none;box-shadow:0 2px 4px rgba(0,0,0,0.06);cursor:pointer;transition:all .12s}
 .dpad button:active{background:var(--accent);color:#fff;border-color:var(--accent);transform:scale(0.94)}
@@ -649,10 +649,10 @@ const SPOTPOS=[[500,420],[1600,420],[2700,420],[500,1580],[1600,1580],[2700,1580
 
 /* ===== 사상가 일렬 슬롯 정의 ===== */
 const THINKER_SLOTS = [
-  { id: "ari", num: 1, scholar: "아리스토텔레스", label: "인간", color: "#5B4FCF", offsetX: -165, offsetY: 0 },
-  { id: "sin", num: 2, scholar: "피터 싱어", label: "동물", color: "#E03E52", offsetX: -55, offsetY: 0 },
-  { id: "sch", num: 3, scholar: "슈바이처", label: "생명", color: "#2FA36B", offsetX: 55, offsetY: 0 },
-  { id: "leo", num: 4, scholar: "레오폴드", label: "생태", color: "#8A6A3B", offsetX: 165, offsetY: 0 }
+  { id: "ari", num: 1, scholar: "아리스토텔레스", label: "인간", color: "#5B4FCF", offsetX: -165, offsetY: 12 },
+  { id: "sin", num: 2, scholar: "피터 싱어", label: "동물", color: "#D97706", offsetX: -55, offsetY: 12 },
+  { id: "sch", num: 3, scholar: "슈바이처", label: "생명", color: "#2E7D32", offsetX: 55, offsetY: 12 },
+  { id: "leo", num: 4, scholar: "레오폴드", label: "생태", color: "#2D6A4F", offsetX: 165, offsetY: 12 }
 ];
 
 
@@ -1365,14 +1365,14 @@ function blocked(p, nx, ny) {
       // 결계 완성된 모둠의 멤버는 내부 이동 허용
       if (p.spot === sp.id && p.frozen) continue;
 
-      // 결계 타원 범위 (레오폴드 생태 외곽 타원 + 여유 20px)
-      const Rx = 265 + 20;
-      const Ry = 140 + 15;
-      const normDist = Math.pow((nx - sp.x) / Rx, 2) + Math.pow((ny - sp.y) / Ry, 2);
-      const currNormDist = Math.pow((p.x - sp.x) / Rx, 2) + Math.pow((p.y - sp.y) / Ry, 2);
+      // 결계 직사각형 범위 (가로 530+20px, 세로 270+20px)
+      const halfW = 275;
+      const halfH = 145;
+      const inRect = Math.abs(nx - sp.x) < halfW && Math.abs(ny - sp.y) < halfH;
+      const wasInRect = Math.abs(p.x - sp.x) < halfW && Math.abs(p.y - sp.y) < halfH;
 
       // 결계 내부로 진입하려 할 때 차단
-      if (normDist < 1.0 && normDist < currNormDist) {
+      if (inRect && !wasInRect) {
         if (p.isMe && performance.now() - S.warnAt > 1200) {
           S.warnAt = performance.now();
           toast("🛡️ 완성된 모둠입니다. 결계가 쳐져 있어 들어갈 수 없습니다.");
@@ -1381,12 +1381,14 @@ function blocked(p, nx, ny) {
       }
     } else {
       if (p.spot === sp.id) continue;
-      const dist = Math.hypot(nx - sp.x, ny - sp.y);
-      const currDist = Math.hypot(p.x - sp.x, p.y - sp.y);
+      const halfW = 290;
+      const halfH = 160;
+      const inRect = Math.abs(nx - sp.x) < halfW && Math.abs(ny - sp.y) < halfH;
+      const wasInRect = Math.abs(p.x - sp.x) < halfW && Math.abs(p.y - sp.y) < halfH;
 
       // 모둠 구역 진입 시 동일 사상가 중복 검사
-      if (dist < 290 && dist < currDist) {
-        const occupantsInZone = S.players.filter(other => other.id !== p.id && (other.spot === sp.id || Math.hypot(other.x - sp.x, other.y - sp.y) < 290));
+      if (inRect && !wasInRect) {
+        const occupantsInZone = S.players.filter(other => other.id !== p.id && (other.spot === sp.id || (Math.abs(other.x - sp.x) < halfW && Math.abs(other.y - sp.y) < halfH)));
         const hasSameThinker = occupantsInZone.some(other => other.thinkerId === p.thinkerId);
         if (hasSameThinker) {
           if (p.isMe && performance.now() - S.warnAt > 1200) {
@@ -1429,7 +1431,7 @@ function alignSpotThinkersInLine(sp) {
 function checkSpots() {
   S.spots.forEach(sp => {
     if (sp.done) return;
-    const inZone = S.players.filter(p => Math.hypot(p.x - sp.x, p.y - sp.y) < 300);
+    const inZone = S.players.filter(p => Math.abs(p.x - sp.x) < 300 && Math.abs(p.y - sp.y) < 180);
     if (S.me && sp.id === S.me.spot && !inZone.some(p => p.isMe)) return;
 
     // 4개 슬롯 각각에 알맞은 사상가가 슬롯 원 근처(반경 52px)에 도달했는지 확인
@@ -1670,6 +1672,127 @@ function drawSpeechBubble(cx, x, y, claim) {
   cx.restore();
 }
 
+/* ===== 지브리 애니 감성 초원 텍스처 및 햇살 스파클 효과 & 둥근 직사각형 헬퍼 ===== */
+function drawRoundRect(ctx, x, y, w, h, r) {
+  if (ctx.roundRect) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+}
+
+let grassPattern = null;
+function initGrassPattern() {
+  const pc = document.createElement("canvas");
+  pc.width = 400; pc.height = 400;
+  const pctx = pc.getContext("2d");
+
+  // 1. 화사하고 싱그러운 지브리 에메랄드-라임 그라데이션
+  const g = pctx.createLinearGradient(0, 0, 400, 400);
+  g.addColorStop(0, "#4EA832");
+  g.addColorStop(0.5, "#429828");
+  g.addColorStop(1, "#368820");
+  pctx.fillStyle = g;
+  pctx.fillRect(0, 0, 400, 400);
+
+  // 2. 부드러운 햇살 빛무리 톤
+  pctx.fillStyle = "rgba(148, 225, 75, 0.18)";
+  for (let i = 0; i < 20; i++) {
+    pctx.beginPath();
+    pctx.ellipse((i * 97) % 400, (i * 149) % 400, 60, 30, (i * 0.4), 0, Math.PI * 2);
+    pctx.fill();
+  }
+
+  // 3. 바람에 흔들리는 풍성한 풀잎 다발 텍스처
+  const grassColors = ["#62B83E", "#72C648", "#387D1E", "#2D6816", "#8AD655"];
+  for (let i = 0; i < 750; i++) {
+    const gx = ((i * 47) + (i % 13) * 17) % 400;
+    const gy = ((i * 83) + (i % 7) * 23) % 400;
+    const bladeH = 6 + (i % 8);
+    const col = grassColors[i % grassColors.length];
+    pctx.strokeStyle = col;
+    pctx.lineWidth = 1.2 + ((i % 4) * 0.4);
+    pctx.beginPath();
+    pctx.moveTo(gx, gy);
+    pctx.quadraticCurveTo(gx + 3 + (i % 3), gy - bladeH * 0.6, gx + 5 + (i % 4), gy - bladeH);
+    pctx.stroke();
+  }
+
+  // 4. 귀여운 들꽃(데이지/버터컵) 및 토끼풀 점묘
+  const flowerCols = ["#FFFFFF", "#FFF9A6", "#FFE4E6", "#D9F99D"];
+  for (let i = 0; i < 35; i++) {
+    const fx = ((i * 113) + 27) % 400;
+    const fy = ((i * 157) + 53) % 400;
+    pctx.fillStyle = flowerCols[i % flowerCols.length];
+    pctx.beginPath();
+    pctx.arc(fx, fy, 1.8, 0, Math.PI * 2);
+    pctx.fill();
+    // 꽃술
+    pctx.fillStyle = "#F59E0B";
+    pctx.beginPath();
+    pctx.arc(fx, fy, 0.8, 0, Math.PI * 2);
+    pctx.fill();
+  }
+
+  grassPattern = cx.createPattern(pc, "repeat");
+}
+
+// 70개의 공중 부유 햇살 스파클 입자
+const SUN_SPARKLES = Array.from({ length: 70 }, (_, i) => ({
+  baseX: ((i * 173) % W),
+  baseY: ((i * 241) % H),
+  size: 2.0 + (i % 4) * 0.9,
+  speed: 12 + (i % 5) * 4,
+  phase: (i * 0.7) % (Math.PI * 2),
+  twinkleSpeed: 1.5 + (i % 3) * 0.8
+}));
+
+function drawSparkles(ctx, ts) {
+  const t = (ts || 0) / 1000;
+  ctx.save();
+  SUN_SPARKLES.forEach(s => {
+    const curX = (s.baseX + t * s.speed) % W;
+    const curY = (s.baseY + Math.sin(t * 1.2 + s.phase) * 25) % H;
+    const alpha = 0.35 + Math.sin(t * s.twinkleSpeed + s.phase) * 0.35;
+    if (alpha <= 0.05) return;
+
+    ctx.save();
+    ctx.translate(curX, curY);
+    ctx.fillStyle = `rgba(255, 255, 255, ${alpha.toFixed(2)})`;
+    ctx.shadowColor = "#FEF08A";
+    ctx.shadowBlur = 8;
+
+    // 반짝이는 4각 다이아몬드 별 모양
+    const sz = s.size;
+    ctx.beginPath();
+    ctx.moveTo(0, -sz * 1.8);
+    ctx.quadraticCurveTo(0, 0, sz * 1.8, 0);
+    ctx.quadraticCurveTo(0, 0, 0, sz * 1.8);
+    ctx.quadraticCurveTo(0, 0, -sz * 1.8, 0);
+    ctx.quadraticCurveTo(0, 0, 0, -sz * 1.8);
+    ctx.fill();
+
+    // 중심 코어
+    ctx.fillStyle = `rgba(254, 240, 138, ${(alpha * 0.9).toFixed(2)})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, sz * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+  ctx.restore();
+}
+
 function render(ts) {
   const scale = S.zoomScale || 1.0;
   const stageH = cvs.clientHeight || 640;
@@ -1688,100 +1811,159 @@ function render(ts) {
   cx.save();
   cx.scale(scale, scale);
   cx.translate(-camx, -camy);
-  cx.fillStyle = "#BFE3D8"; cx.fillRect(0, 0, W, H);
-  cx.fillStyle = "#A9D79A"; cx.fillRect(0, 90, W, H - 170);
-  cx.fillStyle = "#E6D9B4"; cx.fillRect(0, H - 80, W, 80);
-  cx.strokeStyle = "rgba(255,255,255,.22)"; cx.lineWidth = 2;
-  for (let x = 0; x < W; x += 120) { cx.beginPath(); cx.moveTo(x, 90); cx.lineTo(x, H - 80); cx.stroke(); }
-  for (let y = 90; y < H - 80; y += 120) { cx.beginPath(); cx.moveTo(0, y); cx.lineTo(W, y); cx.stroke(); }
+
+  // 1. 지브리 애니 감성 화사하고 싱그러운 초원 배경 렌더링
+  if (!grassPattern) initGrassPattern();
+  cx.fillStyle = grassPattern || "#429828";
+  cx.fillRect(0, 0, W, H);
+
+  // 유기적인 초원 언덕 능선과 은은한 햇살/그늘 레이어
+  cx.save();
+  const sunGlow = cx.createRadialGradient(W * 0.5, 0, 100, W * 0.5, H * 0.5, W * 0.7);
+  sunGlow.addColorStop(0, "rgba(255, 255, 210, 0.16)");
+  sunGlow.addColorStop(0.6, "rgba(255, 255, 255, 0.04)");
+  sunGlow.addColorStop(1, "rgba(20, 60, 25, 0.14)");
+  cx.fillStyle = sunGlow;
+  cx.fillRect(0, 0, W, H);
+
+  // 초원 길목의 부드러운 산책로 뉘앙스
+  cx.fillStyle = "rgba(245, 240, 215, 0.10)";
+  cx.beginPath();
+  cx.ellipse(W / 2, H / 2, W * 0.46, H * 0.38, -0.05, 0, Math.PI * 2);
+  cx.fill();
+  cx.restore();
+
+  // 바람에 부유하며 반짝이는 햇살 스파클 입자
+  drawSparkles(cx, ts);
 
   // 7개 벤다이어그램 모둠 스팟 상시 사전 렌더링 + 일렬 사상가 슬롯
   S.spots.forEach(sp => {
     const isCompleted = sp.done;
     const occupants = S.players.filter(p => p.spot === sp.id);
 
-    // 1. 4중 벤다이어그램 (대지/생태 ⊃ 생명 ⊃ 동물 ⊃ 인간)
-    // 1-1. 레오폴드 (생태계 전체 - 가장 큰 외곽 타원)
-    cx.save();
-    cx.beginPath();
-    cx.ellipse(sp.x, sp.y, 265, 140, 0, 0, Math.PI * 2);
-    cx.fillStyle = isCompleted ? "rgba(138, 106, 59, 0.16)" : "rgba(138, 106, 59, 0.08)";
-    cx.fill();
-    cx.strokeStyle = isCompleted ? "#8A6A3B" : "rgba(138, 106, 59, 0.55)";
-    cx.lineWidth = isCompleted ? 3.5 : 2.2;
-    cx.stroke();
-    cx.fillStyle = "#6E542C";
-    cx.font = "bold 11px sans-serif";
-    cx.textAlign = "right";
-    cx.fillText("가. 생태 중심 (생태계 전체)", sp.x + 252, sp.y - 105);
-    cx.restore();
+    // 2. 4중 둥근 직사각형 벤다이어그램 (100% 불투명 솔리드 테라스 플랫폼)
+    // 수학적 계층: 생태(전체) ⊃ 생명(슈바이처+싱어+아리) ⊃ 동물(싱어+아리) ⊃ 인간(아리)
+    // 외곽부터 내곽 순으로 불투명하게 덮어 그려서 4단계 영역이 깔끔하고 뚜렷하게 분할됨
 
-    // 1-2. 슈바이처 (생명 중심 - 모든 생명)
+    // 2-1. [가. 생태 중심] 레오폴드 - 최외곽 플랫폼 (4명 전체 포괄)
     cx.save();
-    cx.beginPath();
-    cx.ellipse(sp.x - 55, sp.y, 195, 112, 0, 0, Math.PI * 2);
-    cx.fillStyle = isCompleted ? "rgba(47, 163, 107, 0.15)" : "rgba(47, 163, 107, 0.08)";
+    cx.shadowColor = "rgba(18, 56, 36, 0.22)";
+    cx.shadowBlur = 18;
+    cx.shadowOffsetY = 7;
+    drawRoundRect(cx, sp.x - 265, sp.y - 135, 530, 270, 22);
+    cx.fillStyle = "#F3FAF5"; // 100% 불투명 세이지 유백색
     cx.fill();
-    cx.strokeStyle = isCompleted ? "#2FA36B" : "rgba(47, 163, 107, 0.55)";
-    cx.lineWidth = isCompleted ? 3.5 : 2.2;
+    cx.shadowColor = "transparent";
+    cx.strokeStyle = isCompleted ? "#1B4D3E" : "#2D6A4F";
+    cx.lineWidth = isCompleted ? 3.8 : 3.2;
     cx.stroke();
-    cx.fillStyle = "#1E754B";
-    cx.font = "bold 11px sans-serif";
-    cx.textAlign = "right";
-    cx.fillText("나. 생명 중심 (동식물)", sp.x + 128, sp.y - 82);
-    cx.restore();
 
-    // 1-3. 피터 싱어 (동물 중심 - 동물까지)
-    cx.save();
-    cx.beginPath();
-    cx.ellipse(sp.x - 110, sp.y, 130, 84, 0, 0, Math.PI * 2);
-    cx.fillStyle = isCompleted ? "rgba(224, 62, 82, 0.15)" : "rgba(224, 62, 82, 0.08)";
+    // 생태 중심 라벨 뱃지 (우측 상단)
+    drawRoundRect(cx, sp.x + 85, sp.y - 126, 170, 22, 6);
+    cx.fillStyle = "#2D6A4F";
     cx.fill();
-    cx.strokeStyle = isCompleted ? "#E03E52" : "rgba(224, 62, 82, 0.55)";
-    cx.lineWidth = isCompleted ? 3.5 : 2.2;
-    cx.stroke();
-    cx.fillStyle = "#B32637";
-    cx.font = "bold 11px sans-serif";
-    cx.textAlign = "right";
-    cx.fillText("다. 동물 중심 (인간+동물)", sp.x + 8, sp.y - 60);
-    cx.restore();
-
-    // 1-4. 아리스토텔레스 (인간 중심 - 오직 인간)
-    cx.save();
-    cx.beginPath();
-    cx.ellipse(sp.x - 165, sp.y, 65, 56, 0, 0, Math.PI * 2);
-    cx.fillStyle = isCompleted ? "rgba(91, 79, 207, 0.18)" : "rgba(91, 79, 207, 0.10)";
-    cx.fill();
-    cx.strokeStyle = isCompleted ? "#5B4FCF" : "rgba(91, 79, 207, 0.55)";
-    cx.lineWidth = isCompleted ? 3.5 : 2.2;
-    cx.stroke();
-    cx.fillStyle = "#4338A8";
+    cx.fillStyle = "#FFFFFF";
     cx.font = "bold 11px sans-serif";
     cx.textAlign = "center";
-    cx.fillText("라. 인간 중심", sp.x - 165, sp.y - 40);
+    cx.textBaseline = "middle";
+    cx.fillText("가. 생태 중심 (생태계 전체)", sp.x + 170, sp.y - 115);
     cx.restore();
 
-    // 2. 모둠 번호 및 상태 배너 상단 렌더링
+    // 2-2. [나. 생명 중심] 슈바이처 - 2단계 플랫폼 (슈바이처·싱어·아리스토텔레스 포괄)
     cx.save();
-    const bannerY = sp.y - 150;
-    const bannerText = isCompleted ? `🛡️ 모둠 ${sp.id + 1} 벤다이어그램 결계 활성화 (완성)` : `📍 모둠 ${sp.id + 1} 벤다이어그램 (${occupants.length}/4명 모임)`;
-    cx.font = "bold 14px sans-serif";
-    const bw = cx.measureText(bannerText).width + 24;
-    cx.fillStyle = isCompleted ? "rgba(15, 110, 99, 0.95)" : "rgba(255, 255, 255, 0.92)";
-    cx.strokeStyle = isCompleted ? "#3FC4B0" : "#94A3B8";
-    cx.lineWidth = 2;
-    cx.beginPath();
-    if (cx.roundRect) cx.roundRect(sp.x - bw / 2, bannerY - 14, bw, 28, 14);
-    else cx.rect(sp.x - bw / 2, bannerY - 14, bw, 28);
+    cx.shadowColor = "rgba(20, 60, 25, 0.10)";
+    cx.shadowBlur = 10;
+    cx.shadowOffsetY = 4;
+    drawRoundRect(cx, sp.x - 250, sp.y - 118, 400, 236, 18);
+    cx.fillStyle = "#EBF7EE"; // 100% 불투명 싱그러운 페일 민트 그린
     cx.fill();
+    cx.shadowColor = "transparent";
+    cx.strokeStyle = "#388E3C";
+    cx.lineWidth = 2.8;
     cx.stroke();
-    cx.fillStyle = isCompleted ? "#FFFFFF" : "#1E293B";
+
+    // 생명 중심 라벨 뱃지 (상단 중앙우측)
+    drawRoundRect(cx, sp.x - 25, sp.y - 110, 160, 20, 6);
+    cx.fillStyle = "#388E3C";
+    cx.fill();
+    cx.fillStyle = "#FFFFFF";
+    cx.font = "bold 10.5px sans-serif";
+    cx.textAlign = "center";
+    cx.textBaseline = "middle";
+    cx.fillText("나. 생명 중심 (모든 생명체)", sp.x + 55, sp.y - 100);
+    cx.restore();
+
+    // 2-3. [다. 동물 중심] 피터 싱어 - 3단계 플랫폼 (싱어·아리스토텔레스 포괄)
+    cx.save();
+    cx.shadowColor = "rgba(60, 35, 10, 0.10)";
+    cx.shadowBlur = 8;
+    cx.shadowOffsetY = 3;
+    drawRoundRect(cx, sp.x - 240, sp.y - 100, 280, 200, 16);
+    cx.fillStyle = "#FFF8EE"; // 100% 불투명 따뜻한 웜 앰버 크림
+    cx.fill();
+    cx.shadowColor = "transparent";
+    cx.strokeStyle = "#D97706";
+    cx.lineWidth = 2.8;
+    cx.stroke();
+
+    // 동물 중심 라벨 뱃지 (상단 중앙)
+    drawRoundRect(cx, sp.x - 130, sp.y - 92, 150, 20, 6);
+    cx.fillStyle = "#D97706";
+    cx.fill();
+    cx.fillStyle = "#FFFFFF";
+    cx.font = "bold 10.5px sans-serif";
+    cx.textAlign = "center";
+    cx.textBaseline = "middle";
+    cx.fillText("다. 동물 중심 (감각 동물)", sp.x - 55, sp.y - 82);
+    cx.restore();
+
+    // 2-4. [라. 인간 중심] 아리스토텔레스 - 최내곽 플랫폼 (오직 아리스토텔레스만 포괄)
+    cx.save();
+    cx.shadowColor = "rgba(35, 25, 75, 0.10)";
+    cx.shadowBlur = 8;
+    cx.shadowOffsetY = 3;
+    drawRoundRect(cx, sp.x - 230, sp.y - 82, 150, 164, 14);
+    cx.fillStyle = "#F6F4FE"; // 100% 불투명 기품 있는 로열 라벤더
+    cx.fill();
+    cx.shadowColor = "transparent";
+    cx.strokeStyle = "#5B4FCF";
+    cx.lineWidth = 2.8;
+    cx.stroke();
+
+    // 인간 중심 라벨 뱃지 (상단 중앙)
+    drawRoundRect(cx, sp.x - 220, sp.y - 74, 110, 20, 6);
+    cx.fillStyle = "#5B4FCF";
+    cx.fill();
+    cx.fillStyle = "#FFFFFF";
+    cx.font = "bold 10.5px sans-serif";
+    cx.textAlign = "center";
+    cx.textBaseline = "middle";
+    cx.fillText("라. 인간 중심", sp.x - 165, sp.y - 64);
+    cx.restore();
+
+    // 3. 모둠 번호 및 상태 상단 배너
+    cx.save();
+    const bannerY = sp.y - 152;
+    const bannerText = isCompleted ? `🛡️ 모둠 ${sp.id + 1} 벤다이어그램 결계 활성화 (완성)` : `📍 모둠 ${sp.id + 1} 벤다이어그램 (${occupants.length}/4명 모임)`;
+    cx.font = "bold 13.5px sans-serif";
+    const bw = cx.measureText(bannerText).width + 26;
+    cx.fillStyle = isCompleted ? "#134E4A" : "#FFFFFF";
+    cx.strokeStyle = isCompleted ? "#34D399" : "#6EE7B7";
+    cx.lineWidth = 2.2;
+    cx.shadowColor = "rgba(0, 0, 0, 0.16)";
+    cx.shadowBlur = 10;
+    cx.shadowOffsetY = 4;
+    drawRoundRect(cx, sp.x - bw / 2, bannerY - 14, bw, 28, 14);
+    cx.fill();
+    cx.shadowColor = "transparent";
+    cx.stroke();
+    cx.fillStyle = isCompleted ? "#FFFFFF" : "#0F5132";
     cx.textAlign = "center";
     cx.textBaseline = "middle";
     cx.fillText(bannerText, sp.x, bannerY);
     cx.restore();
 
-    // 3. 네 사상가 원형 칸(슬롯) 일렬 렌더링
+    // 4. 네 사상가 원형 칸(슬롯) 일렬 렌더링
     THINKER_SLOTS.forEach(slot => {
       const slotX = sp.x + slot.offsetX;
       const slotY = sp.y + slot.offsetY;
@@ -1791,42 +1973,42 @@ function render(ts) {
       const slotR = 36 + pulse;
 
       cx.save();
-      // 바닥 원 그림자
-      cx.fillStyle = "rgba(0, 0, 0, 0.08)";
+      // 바닥 스톤 페데스탈 입체 그림자
+      cx.fillStyle = "rgba(0, 0, 0, 0.09)";
       cx.beginPath();
-      cx.ellipse(slotX, slotY + 2, slotR + 2, (slotR + 2) * 0.5, 0, 0, Math.PI * 2);
+      cx.ellipse(slotX, slotY + 3, slotR + 3, (slotR + 3) * 0.48, 0, 0, Math.PI * 2);
       cx.fill();
 
-      // 원 모양 칸 본체
+      // 원 모양 칸 본체 (화이트 스톤 베이스)
       cx.beginPath();
       cx.arc(slotX, slotY, slotR, 0, Math.PI * 2);
-      cx.fillStyle = occupant ? slot.color + "28" : (isMyTargetSlot ? slot.color + "20" : "rgba(255, 255, 255, 0.78)");
+      cx.fillStyle = occupant ? slot.color + "22" : (isMyTargetSlot ? slot.color + "18" : "#FFFFFF");
       cx.fill();
 
       cx.strokeStyle = slot.color;
-      cx.lineWidth = occupant ? 3.5 : (isMyTargetSlot ? 3.5 : 2.2);
+      cx.lineWidth = occupant ? 3.6 : (isMyTargetSlot ? 3.6 : 2.4);
       if (!occupant && !isCompleted) {
         cx.setLineDash([6, 4]);
       }
       cx.stroke();
 
-      // 내 타겟 슬롯일 경우 밝은 안내 이펙트
+      // 내 타겟 슬롯일 경우 밝은 황금빛 안내 이펙트
       if (isMyTargetSlot) {
         cx.save();
         cx.setLineDash([]);
-        cx.strokeStyle = "#FFD700";
-        cx.lineWidth = 2.5;
+        cx.strokeStyle = "#F59E0B";
+        cx.lineWidth = 3;
         cx.beginPath();
         cx.arc(slotX, slotY, slotR + 7, 0, Math.PI * 2);
         cx.stroke();
-        cx.fillStyle = "#D97706";
+        cx.fillStyle = "#B45309";
         cx.font = "bold 12px sans-serif";
         cx.textAlign = "center";
         cx.fillText("👇 내 자리!", slotX, slotY - slotR - 18);
         cx.restore();
       }
 
-      // 슬롯 상단: 사상가 라벨
+      // 슬롯 상단: 번호 및 사상가 라벨
       cx.save();
       cx.font = "bold 11px sans-serif";
       cx.fillStyle = slot.color;
@@ -1834,44 +2016,43 @@ function render(ts) {
       cx.fillText(`${slot.num}. ${slot.scholar}`, slotX, slotY - slotR - 6);
 
       // 슬롯 하단: 도덕적 고려 범위 라벨
-      cx.font = "10px sans-serif";
-      cx.fillStyle = "#475569";
+      cx.font = "bold 10px sans-serif";
+      cx.fillStyle = "#4B5563";
       cx.fillText(`[${slot.label}]`, slotX, slotY + slotR + 14);
       cx.restore();
 
       cx.restore();
     });
 
-    // 4. 결계 (Barrier) 발동 효과
+    // 5. 결계 (Barrier) 발동 효과
     if (isCompleted) {
       const k = (ts - (sp.t0 || 0)) / 1000;
-      const barrierRx = 265 + 18;
-      const barrierRy = 140 + 12;
+      const barrierW = 550;
+      const barrierH = 290;
+      const barrierX = sp.x - barrierW / 2;
+      const barrierY = sp.y - barrierH / 2;
 
       cx.save();
       // 은은한 에너지 쉴드 돔
-      cx.fillStyle = "rgba(63, 196, 176, 0.08)";
-      cx.beginPath();
-      cx.ellipse(sp.x, sp.y, barrierRx, barrierRy, 0, 0, Math.PI * 2);
+      cx.fillStyle = "rgba(16, 185, 129, 0.08)";
+      drawRoundRect(cx, barrierX, barrierY, barrierW, barrierH, 28);
       cx.fill();
 
-      // 회전하는 굵은 점선 결계 링
-      cx.strokeStyle = "#3FC4B0";
+      // 회전하는 굵은 점선 결계 빔
+      cx.strokeStyle = "#10B981";
       cx.lineWidth = 5;
-      cx.globalAlpha = 0.88;
-      cx.setLineDash([18, 12]);
-      cx.lineDashOffset = -k * 50;
-      cx.beginPath();
-      cx.ellipse(sp.x, sp.y, barrierRx, barrierRy, 0, 0, Math.PI * 2);
+      cx.globalAlpha = 0.9;
+      cx.setLineDash([20, 14]);
+      cx.lineDashOffset = -k * 55;
+      drawRoundRect(cx, barrierX, barrierY, barrierW, barrierH, 28);
       cx.stroke();
 
-      // 바깥쪽 반짝이는 얇은 링
-      cx.strokeStyle = "rgba(255, 255, 255, 0.75)";
-      cx.lineWidth = 2;
-      cx.setLineDash([8, 8]);
-      cx.lineDashOffset = k * 30;
-      cx.beginPath();
-      cx.ellipse(sp.x, sp.y, barrierRx + 6, barrierRy + 4, 0, 0, Math.PI * 2);
+      // 바깥쪽 반짝이는 얇은 골드 오라 링
+      cx.strokeStyle = "#FBBF24";
+      cx.lineWidth = 2.5;
+      cx.setLineDash([10, 10]);
+      cx.lineDashOffset = k * 35;
+      drawRoundRect(cx, barrierX - 5, barrierY - 5, barrierW + 10, barrierH + 10, 32);
       cx.stroke();
       cx.restore();
     }
