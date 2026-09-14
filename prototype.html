@@ -61,13 +61,159 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 }
 #stage{width:100%;height:clamp(560px,70vh,780px);background:#458428;border-radius:16px;display:block;touch-action:none;border:1px solid var(--line)}
 .dpad{display:none!important}
-.mini{position:absolute;bottom:16px;left:16px;z-index:100;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:0;background:rgba(255,255,255,0.96);backdrop-filter:blur(14px);padding:8px 16px;border-radius:22px;border:1.5px solid rgba(255,255,255,0.92);box-shadow:0 10px 28px rgba(0,0,0,0.22);user-select:none}
-.mini .mini-tag{font-size:12.5px;font-weight:800;color:#065F46;margin-right:2px;display:flex;align-items:center;gap:4px}
-.mini .mini-lamp{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;border:1.5px solid #CBD5E1;font-size:12px;font-weight:800;background:#F8FAFC;color:#64748B;box-shadow:inset 0 1px 2px rgba(0,0,0,0.05);transition:all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);cursor:pointer}
-.mini .mini-lamp:hover{transform:translateY(-2px);border-color:#94A3B8;background:#FFFFFF}
-.mini .mini-lamp.lit{background:linear-gradient(135deg,#10B981,#047857);border:2px solid #FDE047;color:#FFFFFF;font-weight:900;transform:scale(1.12);box-shadow:0 0 14px #10B981, 0 0 28px rgba(16,185,129,0.75), inset 0 0 6px #A7F3D0;animation:lightUpPulse 1.2s infinite alternate}
-.mini .mini-status{font-size:12px;font-weight:800;margin-left:6px;letter-spacing:-0.2px}
-@keyframes lightUpPulse{0%{transform:scale(1.08);box-shadow:0 0 12px #10B981, 0 0 20px rgba(16,185,129,0.5)}100%{transform:scale(1.18);box-shadow:0 0 22px #34D399, 0 0 38px rgba(52,211,153,0.9)}}
+/* 통합 하단 컨트롤 툴바 (불 켜짐 현황 + 달리기/완성 + BGM + 줌 조절) */
+.stage-unified-bar {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  user-select: none;
+  flex-wrap: wrap;
+}
+.bar-lights-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+}
+.bar-lights-group .mini-tag {
+  font-size: 13px;
+  font-weight: 800;
+  color: #065F46;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.bar-lights-group .mini-lamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 9px;
+  border-radius: 10px;
+  border: 1.5px solid #CBD5E1;
+  font-size: 11.5px;
+  font-weight: 800;
+  background: #F8FAFC;
+  color: #64748B;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bar-lights-group .mini-lamp:hover {
+  transform: translateY(-2px);
+  border-color: #0F6E63;
+  background: #FFFFFF;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+.bar-lights-group .mini-lamp.lit {
+  background: linear-gradient(135deg, #10B981, #047857);
+  border: 2px solid #FDE047;
+  color: #FFFFFF;
+  font-weight: 900;
+  transform: scale(1.08);
+  box-shadow: 0 0 14px #10B981, 0 0 28px rgba(16,185,129,0.75), inset 0 0 6px #A7F3D0;
+  animation: lightUpPulse 1.2s infinite alternate;
+}
+.bar-lights-group .mini-status {
+  font-size: 12px;
+  font-weight: 800;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+@keyframes lightUpPulse {
+  0% { transform: scale(1.04); box-shadow: 0 0 10px #10B981, 0 0 18px rgba(16,185,129,0.5); }
+  100% { transform: scale(1.12); box-shadow: 0 0 20px #34D399, 0 0 35px rgba(52,211,153,0.9); }
+}
+.bar-divider {
+  width: 1.5px;
+  height: 26px;
+  background: #CBD5E1;
+  flex: 0 0 1.5px;
+}
+.bar-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.bar-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.bar-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+.btn-run {
+  background: linear-gradient(135deg, #0F6E63, #047857);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 110, 99, 0.35);
+}
+.btn-complete {
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+.btn-bgm {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+}
+.bar-zoom-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  border-radius: 12px;
+  padding: 2px 6px;
+}
+.bar-zoom-pill button {
+  background: #ffffff;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #1F2937;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.bar-zoom-pill button:hover {
+  background: #0F6E63;
+  color: #ffffff;
+  border-color: #0F6E63;
+}
+.bar-zoom-pill span {
+  font-size: 11px;
+  font-weight: 800;
+  color: #334155;
+  min-width: 68px;
+  text-align: center;
+}
 /* 추첨판 */
 .lotto{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-top:10px}
 .lc{border:1px solid var(--line);border-radius:9px;background:#fff;text-align:center;padding:3px 1px 2px;
@@ -278,46 +424,6 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   background: #15b097;
 }
 
-/* 오른쪽 아래 4단계 맵 확대/축소 위젯 */
-.zoom-controls {
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 20px;
-  padding: 4px 8px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  user-select: none;
-}
-.zoom-controls button {
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 14px;
-  padding: 3px 9px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #1f2937;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.zoom-controls button:hover {
-  background: #0f6e63;
-  color: #ffffff;
-  border-color: #0f6e63;
-}
-.zoom-controls span {
-  font-size: 11px;
-  font-weight: 700;
-  color: #374151;
-  min-width: 78px;
-  text-align: center;
-}
 #mapMsg {
   position: absolute;
   top: 14px;
@@ -340,22 +446,24 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 #mapMsg:empty {
   display: none;
 }
-@media (max-width: 768px) {
-  .mini {
-    top: 14px;
-    bottom: auto;
-    left: 14px;
-    padding: 5px 8px;
+@media (max-width: 900px) {
+  .stage-unified-bar {
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    padding: 8px 10px;
+    gap: 8px;
   }
-  .zoom-controls {
-    top: 14px;
-    bottom: auto;
-    right: 14px;
-    padding: 4px 8px;
+  .bar-divider {
+    display: none;
+  }
+  .bar-lights-group, .bar-controls-group {
+    width: 100%;
+    justify-content: center;
   }
   #mapMsg {
-    top: 56px;
-    font-size: 11px;
+    top: 10px;
+    font-size: 11.5px;
     padding: 4px 12px;
   }
 }
@@ -467,17 +575,22 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
     <p class="muted">맵에 7개의 대형 벤다이어그램 구역이 미리 준비되어 있습니다. 내 사상가(아리스토텔레스·싱어·슈바이처·레오폴드)에 맞는 원형 칸으로 이동하세요. 네 사상가가 모두 모이면 결계가 쳐져 보호됩니다. (결계 완성 후에도 방향키/화면 드래그로 전체 맵을 자유롭게 둘러보실 수 있습니다)</p>
     <div id="stageContainer" style="position:relative">
       <canvas id="stage"></canvas>
-      <!-- 오른쪽 아래 4단계 맵 확대/축소 위젯 및 BGM 버튼 -->
-      <div class="zoom-controls">
-        <button id="bgmToggleBtn" title="신나는 게임 BGM 켜기/끄기" style="background:#10B981;color:#fff;font-weight:700">🎵 BGM ON</button>
-        <button id="simRunBtn" title="학생들이 자리로 달려가는 시뮬레이션" style="background:#0F6E63;color:#fff;font-weight:700">🏃 모의 달리기</button>
-        <button id="simCompleteAllBtn" title="모둠 차례로 완성 & 불 켜기 테스트" style="background:#2563EB;color:#fff;font-weight:700">⚡ 모의 완성</button>
-        <button id="zoomOutBtn" title="축소 (-)">−</button>
-        <span id="zoomLabel">1단계 (100%)</span>
-        <button id="zoomInBtn" title="확대 (+)">+</button>
-        <button id="zoomFullBtn" title="전체 맵 보기">🗺️ 전체</button>
+      <!-- 통합 하단 툴바: 불 켜짐 현황 + 시뮬레이션 + BGM + 줌 컨트롤 -->
+      <div class="stage-unified-bar" id="stageUnifiedBar">
+        <div class="bar-lights-group" id="mini"></div>
+        <div class="bar-divider"></div>
+        <div class="bar-controls-group">
+          <button id="simRunBtn" class="bar-btn btn-run" title="학생들이 자리로 달려가는 시뮬레이션">🏃 모의 달리기</button>
+          <button id="simCompleteAllBtn" class="bar-btn btn-complete" title="1번부터 7번 모둠까지 순서대로 완성 & 불 켜기">⚡ 모의 완성</button>
+          <button id="bgmToggleBtn" class="bar-btn btn-bgm" title="신나는 게임 BGM 켜기/끄기">🎵 BGM ON</button>
+          <div class="bar-zoom-pill">
+            <button id="zoomOutBtn" title="축소 (−)">−</button>
+            <span id="zoomLabel">1단계 (100%)</span>
+            <button id="zoomInBtn" title="확대 (+)">+</button>
+            <button id="zoomFullBtn" title="전체 맵 보기">🗺️ 전체</button>
+          </div>
+        </div>
       </div>
-      <div class="mini" id="mini"></div>
       <p class="muted" id="mapMsg" style="margin-top:8px"></p>
     </div>
   </div>
@@ -1448,7 +1561,7 @@ function seatAll(){
     S.me.frozen = false;
     S.me.run = false;
     S.me.x = S.spots[mySpot].x;
-    S.me.y = S.spots[mySpot].y + 240;
+    S.me.y = S.spots[mySpot].y + 180;
     if (!S.cam) S.cam = { x: S.me.x, y: S.me.y };
     else { S.cam.x = S.me.x; S.cam.y = S.me.y; }
     const idx = pools[S.me.thinkerId] ? pools[S.me.thinkerId].findIndex(p => p.isMe) : -1;
@@ -1472,12 +1585,15 @@ function seatAll(){
         p.isRoamer = false;
         p.dir = 1;
         p.ph = Math.random() * 6;
-        // 1번 모둠부터 2, 3, 4, 5, 6, 7번 순서대로 완성되도록 스폰 거리 단계별 차등 조절!
-        // spId가 작을수록 가까이 스폰되어 1 -> 2 -> 3 순서대로 불이 켜집니다.
-        const baseArrivalDist = (spId === mySpot) ? 220 : (140 + spId * 150);
+
+        // 각 모둠 주변 (150~210px)에서 자연스럽게 스폰하여 출발
         const angle = Math.random() * Math.PI * 2;
-        p.x = p.targetX + Math.cos(angle) * baseArrivalDist;
-        p.y = p.targetY + Math.sin(angle) * baseArrivalDist;
+        const dist = 150 + Math.random() * 60;
+        p.x = p.targetX + Math.cos(angle) * dist;
+        p.y = p.targetY + Math.sin(angle) * dist;
+
+        // 1번 모둠부터 2, 3, 4, 5, 6 순서대로 달려가서 완성되도록 출발 지연(딜레이) 설정
+        p.startDelay = (spId === mySpot) ? 0 : (spId * 0.95);
         p.run = true;
       }
     }
@@ -1655,6 +1771,7 @@ addEventListener("pointerup", e => {
 addEventListener("pointercancel", () => isDragging = false);
 
 function blocked(p, nx, ny) {
+  if (p.isNPC) return false; // NPC는 배정된 모둠 슬롯으로 거침없이 이동
   for (const sp of S.spots) {
     if (sp.done) {
       // 결계 완성된 모둠의 멤버는 내부 이동 허용
@@ -1670,14 +1787,11 @@ function blocked(p, nx, ny) {
       if (inRect && !wasInRect) {
         if (p.isMe && performance.now() - S.warnAt > 1200) {
           S.warnAt = performance.now();
-          toast("🛡️ 완성된 모둠입니다. 결계가 쳐져 있어 들어갈 수 없습니다.");
+          toast("🛡️ 완성된 결계 구역입니다. 다른 모둠으로 이동하세요.");
         }
         return true;
       }
     } else {
-      // 결계 전: 자기 지정 스팟이거나 슬롯으로 이동 중인 NPC는 통과 허용
-      if (p.assignedSpot === sp.id || p.spot === sp.id || p.isNPC) continue;
-
       const halfW = 480;
       const halfH = 345;
       const inRect = Math.abs(nx - sp.x) < halfW && Math.abs(ny - sp.y) < halfH;
@@ -1725,59 +1839,68 @@ function alignSpotThinkersInLine(sp) {
   });
 }
 
+function completeSpot(spotId) {
+  if (!S.spots || !S.spots.length) seatAll();
+  const sp = S.spots.find(s => s.id === spotId);
+  if (!sp || sp.done) return;
+
+  if (S.players.length < 28) populateNPCs();
+
+  THINKER_SLOTS.forEach(slot => {
+    let p = S.players.find(x => x.spot === sp.id && x.thinkerId === slot.id);
+    if (!p) p = S.players.find(x => x.assignedSpot === sp.id && x.thinkerId === slot.id);
+    if (!p) p = S.players.find(x => !x.frozen && x.thinkerId === slot.id);
+    if (p) {
+      p.spot = sp.id;
+      p.frozen = true;
+      p.x = sp.x + slot.offsetX;
+      p.y = sp.y + slot.offsetY;
+      p.targetX = p.x;
+      p.targetY = p.y;
+      p.run = false;
+      p.dir = 1;
+    }
+  });
+
+  sp.done = true;
+  sp.t0 = performance.now();
+  playMiniLightUpSound(sp.id);
+  playBarrierSound();
+  drawMini();
+
+  const doneCount = S.spots.filter(s => s.done).length;
+  toast(`💡 [모둠 ${sp.id + 1}] 벤다이어그램 완성! ${sp.id + 1}번 불이 켜졌습니다! (${doneCount}/7)`);
+
+  if (S.me && S.me.spot === sp.id) {
+    $("#mapMsg").textContent = "🎉 우리 모둠 완성! 결계가 쳐져 안전합니다. (화면 드래그/방향키로 다른 모둠을 둘러보세요)";
+    toast("우리 모둠 결계 발동! 🛡️ 네 사상가가 모두 모였습니다! 🚀");
+  }
+
+  if (doneCount === S.spots.length) {
+    playAllCompletedVictoryFanfare();
+    toast("🏆 축하합니다! 모든 7개 모둠의 벤다이어그램 결계가 완성되었습니다! 🎊");
+  }
+}
+
 function checkSpots() {
   S.spots.forEach(sp => {
     if (sp.done) return;
-    const inZone = S.players.filter(p => Math.abs(p.x - sp.x) < 500 && Math.abs(p.y - sp.y) < 350);
+    const inZone = S.players.filter(p => Math.abs(p.x - sp.x) < 550 && Math.abs(p.y - sp.y) < 400);
     if (S.me && sp.id === S.me.spot && !inZone.some(p => p.isMe)) return;
 
-    // 4개 슬롯 각각에 알맞은 사상가가 슬롯 원 근처(반경 50px)에 도달했는지 확인
+    // 4개 슬롯 각각에 알맞은 사상가가 슬롯 원 근처(반경 55px)에 도달했는지 확인
     const matched = [];
     THINKER_SLOTS.forEach(slot => {
       const slotX = sp.x + slot.offsetX;
       const slotY = sp.y + slot.offsetY;
-      const cand = inZone.find(p => p.thinkerId === slot.id && Math.hypot(p.x - slotX, p.y - slotY) < 50);
+      const cand = inZone.find(p => p.thinkerId === slot.id && Math.hypot(p.x - slotX, p.y - slotY) < 55);
       if (cand) {
         matched.push({ slot, player: cand });
       }
     });
 
     if (matched.length === 4) {
-      sp.done = true;
-      sp.t0 = performance.now();
-      matched.forEach(m => {
-        const p = m.player;
-        const slot = m.slot;
-        p.spot = sp.id;
-        p.frozen = true;
-        p.isRoamer = false;
-        p.x = sp.x + slot.offsetX;
-        p.y = sp.y + slot.offsetY;
-        p.tx = p.x;
-        p.ty = p.y;
-        p.dir = 1;
-        p.run = false;
-      });
-
-      const doneCount = S.spots.filter(s => s.done).length;
-      toast(`⚡ [모둠 ${sp.id + 1}] 벤다이어그램 완성! ${sp.id + 1}번 불이 켜졌습니다! 💡 (${doneCount}/7)`);
-      playMiniLightUpSound(sp.id);
-
-      if (matched.some(m => m.player.isMe)) {
-        $("#mapMsg").textContent = "🎉 우리 모둠 완성! 결계가 쳐져 안전합니다. (화면 드래그/방향키로 다른 모둠을 둘러보세요)";
-        toast("우리 모둠 결계 발동! 🛡️ 네 사상가가 모두 모였습니다! 🚀");
-        if (S.me) S.cam = { x: S.me.x, y: S.me.y };
-      }
-
-      const allDone = S.spots.every(s => s.done);
-      if (allDone) {
-        playAllCompletedVictoryFanfare();
-        toast("🏆 축하합니다! 모든 7개 모둠의 벤다이어그램 결계가 완성되었습니다! 🎊");
-      } else {
-        playBarrierSound();
-      }
-
-      drawMini();
+      completeSpot(sp.id);
     }
   });
 }
@@ -1786,8 +1909,18 @@ function focusSpot(spotId) {
   const sp = S.spots.find(s => s.id === spotId);
   if (sp) {
     S.cam = { x: sp.x, y: sp.y };
-    toast(`📍 [모둠 ${spotId + 1}] 벤다이어그램으로 시점 이동!`);
     beep(620, 0.08, "triangle", 0.1);
+  }
+}
+
+function onMiniLampClick(spotId) {
+  const sp = S.spots.find(s => s.id === spotId);
+  if (!sp) return;
+  focusSpot(spotId);
+  if (!sp.done) {
+    completeSpot(spotId);
+  } else {
+    toast(`📍 [모둠 ${spotId + 1}] 벤다이어그램 완료 구역입니다.`);
   }
 }
 
@@ -1798,14 +1931,14 @@ function drawMini() {
   _lastMiniDoneCount = doneCount;
   const miniEl = $("#mini");
   if (!miniEl) return;
-  miniEl.innerHTML = `<span class="mini-tag">💡 불 켜짐:</span>` +
+  miniEl.innerHTML = `<span class="mini-tag">💡 불 켜짐 현황:</span>` +
     S.spots.map(s => {
       const isDone = s.done;
-      return `<div class="mini-lamp ${isDone ? "lit" : ""}" onclick="focusSpot(${s.id})" title="모둠 ${s.id + 1}: ${isDone ? "완성 (불 켜짐 💡)" : "진행중 (클릭하여 시점 이동)"}">` +
+      return `<div class="mini-lamp ${isDone ? "lit" : ""}" onclick="onMiniLampClick(${s.id})" title="모둠 ${s.id + 1}: ${isDone ? "완성 (불 켜짐 💡, 클릭 시 이동)" : "미완성 (클릭 시 이동 & 불 켜기 💡)"}">` +
         `<span style="font-size:12px">${isDone ? "💡" : "⚪"}</span><span>${s.id + 1}번</span></div>`;
     }).join("") +
     `<span class="mini-status" style="color:${doneCount === S.spots.length ? "#10B981" : "#0F6E63"}">` +
-    `${doneCount === S.spots.length ? "✨ 전원 완성! (7/7 불 켜짐) ✨" : `🔥 ${doneCount} / ${S.spots.length} 모둠 켜짐`}</span>`;
+    `${doneCount === S.spots.length ? "✨ 전원 완성! (7/7 켜짐) ✨" : `🔥 ${doneCount} / ${S.spots.length} 켜짐`}</span>`;
 }
 
 let prev = 0;
@@ -1875,11 +2008,17 @@ function loop(ts) {
     if (p.isMe || p.frozen) { if (!p.isMe) p.run = false; return; }
 
     if (p.assignedSpot !== undefined && p.assignedSpot !== null) {
+      if (p.startDelay > 0) {
+        p.startDelay -= dt;
+        p.run = false;
+        return;
+      }
+
       const dx = p.targetX - p.x;
       const dy = p.targetY - p.y;
       const dist = Math.hypot(dx, dy);
 
-      if (dist <= 22) {
+      if (dist <= 26) {
         p.x = p.targetX;
         p.y = p.targetY;
         p.frozen = true;
@@ -1887,7 +2026,7 @@ function loop(ts) {
         p.run = false;
         p.dir = 1;
       } else {
-        step(p, dx, dy, dt * 0.82);
+        step(p, dx, dy, dt * 0.95);
         p.run = true;
         if (dx !== 0) p.dir = dx > 0 ? 1 : -1;
       }
@@ -2951,7 +3090,7 @@ resize();
 function simRunAllToSeats() {
   if (S.players.length < 28) populateNPCs();
   seatAll();
-  toast("🏃 모든 학생들이 자기 모둠 자리를 향해 달려갑니다!");
+  toast("🏃 모든 학생들이 자기 모둠 자리를 향해 순서대로 달려갑니다!");
 }
 
 function simCompleteAllSpots() {
@@ -2961,32 +3100,8 @@ function simCompleteAllSpots() {
   toast("⚡ 1, 2, 3 순서대로 벤다이어그램 완성 & 불 켜기 시뮬레이션 시작!");
   S.spots.forEach((sp, idx) => {
     setTimeout(() => {
-      if (sp.done) return;
-      THINKER_SLOTS.forEach(slot => {
-        let p = S.players.find(x => x.spot === sp.id && x.thinkerId === slot.id);
-        if (!p) p = S.players.find(x => x.assignedSpot === sp.id && x.thinkerId === slot.id);
-        if (!p) p = S.players.find(x => !x.frozen && x.thinkerId === slot.id && !x.isMe);
-        if (p) {
-          p.spot = sp.id;
-          p.frozen = true;
-          p.x = sp.x + slot.offsetX;
-          p.y = sp.y + slot.offsetY;
-          p.run = false;
-          p.dir = 1;
-        }
-      });
-      sp.done = true;
-      sp.t0 = performance.now();
-      playMiniLightUpSound(sp.id);
-      playBarrierSound();
-      drawMini();
-      const doneCount = S.spots.filter(s => s.done).length;
-      toast(`💡 [모둠 ${sp.id + 1}] 벤다이어그램 완성! ${sp.id + 1}번 불이 켜졌습니다! (${doneCount}/7)`);
-      if (doneCount === 7) {
-        playAllCompletedVictoryFanfare();
-        toast("🏆 축하합니다! 모든 7개 모둠의 벤다이어그램 결계가 완성되었습니다! 🎊");
-      }
-    }, idx * 550);
+      completeSpot(sp.id);
+    }, idx * 450);
   });
 }
 
