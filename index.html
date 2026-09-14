@@ -647,10 +647,10 @@ const SPOTPOS=[[500,420],[1600,420],[2700,420],[500,1580],[1600,1580],[2700,1580
 
 /* ===== 사상가 일렬 슬롯 정의 ===== */
 const THINKER_SLOTS = [
-  { id: "ari", num: 1, scholar: "아리스토텔레스", label: "인간", color: "#5B4FCF", offsetX: -210, offsetY: 28 },
-  { id: "sin", num: 2, scholar: "피터 싱어", label: "동물", color: "#D97706", offsetX: -70, offsetY: 28 },
-  { id: "sch", num: 3, scholar: "슈바이처", label: "생명", color: "#2E7D32", offsetX: 70, offsetY: 28 },
-  { id: "leo", num: 4, scholar: "레오폴드", label: "생태", color: "#2D6A4F", offsetX: 210, offsetY: 28 }
+  { id: "ari", num: 1, scholar: "아리스토텔레스", label: "인간", color: "#5B4FCF", offsetX: -270, offsetY: 40 },
+  { id: "sin", num: 2, scholar: "피터 싱어", label: "동물", color: "#D97706", offsetX: -90, offsetY: 40 },
+  { id: "sch", num: 3, scholar: "슈바이처", label: "생명", color: "#2E7D32", offsetX: 90, offsetY: 40 },
+  { id: "leo", num: 4, scholar: "레오폴드", label: "생태", color: "#2D6A4F", offsetX: 270, offsetY: 40 }
 ];
 
 
@@ -750,6 +750,63 @@ function playAllCompletedVictoryFanfare(){
 }
 
 function fanfare(){ playBarrierSound(); }
+
+// 4. 기타 UI 효과음
+function playCellSelectSound() {
+  if(!S.sound)return;
+  try{ const ctx=getAudioCtx();if(!ctx)return;
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type="sine";o.frequency.setValueAtTime(660,ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(880,ctx.currentTime+0.06);
+    g.gain.setValueAtTime(0.001,ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.12,ctx.currentTime+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.09);
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+0.11);
+  }catch(e){}
+}
+function playPickConfirmSound() {
+  if(!S.sound)return;
+  try{ const ctx=getAudioCtx();if(!ctx)return;
+    // 청명한 4음 상승 아르페지오 (사상가 최종 선택 확인)
+    [{f:523,t:0},{f:659,t:70},{f:784,t:140},{f:1047,t:210}].forEach(n=>{
+      setTimeout(()=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type="triangle";o.frequency.setValueAtTime(n.f,ctx.currentTime);
+        g.gain.setValueAtTime(0.001,ctx.currentTime);
+        g.gain.linearRampToValueAtTime(0.15,ctx.currentTime+0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.14);
+        o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+0.16);
+      },n.t);
+    });
+  }catch(e){}
+}
+function playTabClickSound() {
+  if(!S.sound)return;
+  try{ const ctx=getAudioCtx();if(!ctx)return;
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type="square";o.frequency.setValueAtTime(440,ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(520,ctx.currentTime+0.04);
+    g.gain.setValueAtTime(0.001,ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.07,ctx.currentTime+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.06);
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+0.08);
+  }catch(e){}
+}
+function playMiniLightUpSound(spotIdx) {
+  if(!S.sound)return;
+  // 완성된 번호에 따라 조금씩 다른 피치로 불빛 켜짐 효과음
+  try{ const ctx=getAudioCtx();if(!ctx)return;
+    const baseFreqs=[523,587,659,698,784,880,988];
+    const freq=baseFreqs[spotIdx%7];
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type="sine";o.frequency.setValueAtTime(freq,ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(freq*1.5,ctx.currentTime+0.12);
+    g.gain.setValueAtTime(0.001,ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.13,ctx.currentTime+0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.16);
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+0.18);
+  }catch(e){}
+}
 
 // 3. 신나는 아케이드 게임 BGM 엔진 (134 BPM, 100% 저작권 프리 칩튠 루프)
 const BGM_ENGINE={
@@ -957,6 +1014,7 @@ function goToTab(tabIndex){
 }
 
 $$("nav button").forEach(b => b.onclick = () => {
+  playTabClickSound();
   goToTab(+b.dataset.tab);
 });
 
@@ -1161,6 +1219,7 @@ function renderGrid(){
     if(!taken && (!S.me || !S.me.charId)) {
       d.onclick=()=>{
         selectedCharId = (selectedCharId === ch.charId) ? null : ch.charId;
+        playCellSelectSound();
         renderGrid();
       };
     }
@@ -1188,7 +1247,7 @@ function pick(ch){
   }
   Object.assign(S.me,{charId:ch.charId,thinkerId:ch.thinkerId,ch});
   S.players.push(S.me);
-  beep(880,0.08,"triangle",0.1);
+  playPickConfirmSound();
   renderGrid();
   showMine();
   $("#rosterCard").classList.remove("hide");
@@ -1523,9 +1582,9 @@ function blocked(p, nx, ny) {
       // 결계 완성된 모둠의 멤버는 내부 이동 허용
       if (p.spot === sp.id && p.frozen) continue;
 
-      // 결계 대형 직사각형 범위 (가로 700+30px, 세로 340+30px)
-      const halfW = 365;
-      const halfH = 185;
+      // 결계 대형 직사각형 범위 (가로 900+30px, 세로 440+30px)
+      const halfW = 465;
+      const halfH = 235;
       const inRect = Math.abs(nx - sp.x) < halfW && Math.abs(ny - sp.y) < halfH;
       const wasInRect = Math.abs(p.x - sp.x) < halfW && Math.abs(p.y - sp.y) < halfH;
 
@@ -1539,8 +1598,8 @@ function blocked(p, nx, ny) {
       }
     } else {
       if (p.spot === sp.id) continue;
-      const halfW = 380;
-      const halfH = 200;
+      const halfW = 480;
+      const halfH = 250;
       const inRect = Math.abs(nx - sp.x) < halfW && Math.abs(ny - sp.y) < halfH;
       const wasInRect = Math.abs(p.x - sp.x) < halfW && Math.abs(p.y - sp.y) < halfH;
 
@@ -1589,7 +1648,7 @@ function alignSpotThinkersInLine(sp) {
 function checkSpots() {
   S.spots.forEach(sp => {
     if (sp.done) return;
-    const inZone = S.players.filter(p => Math.abs(p.x - sp.x) < 380 && Math.abs(p.y - sp.y) < 200);
+    const inZone = S.players.filter(p => Math.abs(p.x - sp.x) < 480 && Math.abs(p.y - sp.y) < 250);
     if (S.me && sp.id === S.me.spot && !inZone.some(p => p.isMe)) return;
 
     // 4개 슬롯 각각에 알맞은 사상가가 슬롯 원 근처(반경 60px)에 도달했는지 확인
@@ -1621,6 +1680,7 @@ function checkSpots() {
       });
 
       toast(`⚡ 모둠 ${sp.id + 1} 벤다이어그램 완성! 결계가 활성화되었습니다.`);
+      playMiniLightUpSound(sp.id);
       if (matched.some(m => m.player.isMe)) {
         $("#mapMsg").textContent = "🎉 우리 모둠 완성! 결계가 쳐져 안전합니다. (화면 드래그/방향키로 다른 모둠을 둘러보세요)";
         toast("우리 모둠 결계 발동! 🛡️ 네 사상가가 모두 모였습니다! 🚀");
@@ -1640,9 +1700,14 @@ function checkSpots() {
   });
 }
 
+let _lastMiniDoneCount = -1;
 function drawMini() {
   const doneCount = S.spots.filter(s => s.done).length;
-  $("#mini").innerHTML = S.spots.map(s => `<i class="${s.done ? "done" : ""}" title="모둠 ${s.id + 1} ${s.done ? "완성 (결계 활성화)" : "진행중"}">${s.id + 1}</i>`).join("") +
+  if (doneCount !== _lastMiniDoneCount) {
+    _lastMiniDoneCount = doneCount;
+  }
+  $("#mini").innerHTML = S.spots.map(s => `<i class="${s.done ? "done" : ""}" title="모둠 ${s.id + 1} ${s.done ? "완성 ✅" : "진행중"}">` +
+    `${s.done ? "✅" : s.id + 1}</i>`).join("") +
     `<span style="font-size:12px;font-weight:700;color:${doneCount === S.spots.length ? "#10B981" : "#475569"};margin-left:4px">` +
     `${doneCount === S.spots.length ? "✨ 전원 완성! ✨" : `완성 ${doneCount} / ${S.spots.length}`}</span>`;
 }
@@ -2077,12 +2142,12 @@ function render(ts) {
     // 계층 구조: 생태(전체 700) ⊃ 생명(525) ⊃ 동물(365) ⊃ 인간(195)
     // 슬롯 위치: ari(-210), sin(-70), sch(+70), leo(+210), offsetY: 28
 
-    // 2-1. [가. 생태 중심] 레오폴드 - 최외곽 플랫폼 (가로 700, 세로 340, 4명 전체 포괄)
+    // 2-1. [가. 생태 중심] 레오폴드 - 최외곽 플랫폼 (가로 900, 세로 440, 4명 전체 포괄)
     cx.save();
     cx.shadowColor = "rgba(18, 56, 36, 0.24)";
     cx.shadowBlur = 22;
     cx.shadowOffsetY = 8;
-    drawRoundRect(cx, sp.x - 350, sp.y - 150, 700, 340, 28);
+    drawRoundRect(cx, sp.x - 450, sp.y - 200, 900, 440, 32);
     cx.fillStyle = "#F3FAF5"; // 100% 불투명 세이지 유백색
     cx.fill();
     cx.shadowColor = "transparent";
@@ -2090,23 +2155,23 @@ function render(ts) {
     cx.lineWidth = isCompleted ? 4.0 : 3.4;
     cx.stroke();
 
-    // 생태 중심 라벨 뱃지 (우측 상단 레오폴드 고유 구역에 단독 배치 - 절대 가려지지 않음)
-    drawRoundRect(cx, sp.x + 130, sp.y - 138, 200, 26, 8);
+    // 생태 중심 라벨 뱃지 (우측 상단 레오폴드 고유 구역에 단독 배치)
+    drawRoundRect(cx, sp.x + 170, sp.y - 188, 260, 30, 10);
     cx.fillStyle = "#2D6A4F";
     cx.fill();
     cx.fillStyle = "#FFFFFF";
-    cx.font = "bold 12px sans-serif";
+    cx.font = "bold 13px sans-serif";
     cx.textAlign = "center";
     cx.textBaseline = "middle";
-    cx.fillText("가. 생태 중심 (생태계 전체)", sp.x + 230, sp.y - 125);
+    cx.fillText("가. 생태 중심 (생태계 전체)", sp.x + 300, sp.y - 173);
     cx.restore();
 
-    // 2-2. [나. 생명 중심] 슈바이처 - 2단계 플랫폼 (가로 525, 세로 295, 슈바이처·싱어·아리 포괄)
+    // 2-2. [나. 생명 중심] 슈바이처 - 2단계 플랫폼 (가로 680, 세로 385, 슈바이처·싱어·아리 포괄)
     cx.save();
     cx.shadowColor = "rgba(20, 60, 25, 0.12)";
     cx.shadowBlur = 12;
     cx.shadowOffsetY = 5;
-    drawRoundRect(cx, sp.x - 335, sp.y - 128, 525, 295, 24);
+    drawRoundRect(cx, sp.x - 430, sp.y - 175, 680, 385, 28);
     cx.fillStyle = "#EBF7EE"; // 100% 불투명 싱그러운 페일 민트 그린
     cx.fill();
     cx.shadowColor = "transparent";
@@ -2115,22 +2180,22 @@ function render(ts) {
     cx.stroke();
 
     // 생명 중심 라벨 뱃지 (상단 슈바이처 고유 구역에 단독 배치)
-    drawRoundRect(cx, sp.x - 10, sp.y - 116, 160, 24, 8);
+    drawRoundRect(cx, sp.x - 20, sp.y - 163, 190, 28, 9);
     cx.fillStyle = "#388E3C";
     cx.fill();
     cx.fillStyle = "#FFFFFF";
-    cx.font = "bold 11px sans-serif";
+    cx.font = "bold 12px sans-serif";
     cx.textAlign = "center";
     cx.textBaseline = "middle";
-    cx.fillText("나. 생명 중심 (모든 생명체)", sp.x + 70, sp.y - 104);
+    cx.fillText("나. 생명 중심 (모든 생명체)", sp.x + 75, sp.y - 149);
     cx.restore();
 
-    // 2-3. [다. 동물 중심] 피터 싱어 - 3단계 플랫폼 (가로 365, 세로 250, 싱어·아리 포괄)
+    // 2-3. [다. 동물 중심] 피터 싱어 - 3단계 플랫폼 (가로 470, 세로 330, 싱어·아리 포괄)
     cx.save();
     cx.shadowColor = "rgba(60, 35, 10, 0.12)";
     cx.shadowBlur = 10;
     cx.shadowOffsetY = 4;
-    drawRoundRect(cx, sp.x - 320, sp.y - 105, 365, 250, 20);
+    drawRoundRect(cx, sp.x - 415, sp.y - 145, 470, 330, 24);
     cx.fillStyle = "#FFF8EE"; // 100% 불투명 따뜻한 웜 앰버 크림
     cx.fill();
     cx.shadowColor = "transparent";
@@ -2139,22 +2204,22 @@ function render(ts) {
     cx.stroke();
 
     // 동물 중심 라벨 뱃지 (상단 싱어 고유 구역에 단독 배치)
-    drawRoundRect(cx, sp.x - 145, sp.y - 94, 150, 24, 8);
+    drawRoundRect(cx, sp.x - 185, sp.y - 133, 175, 28, 9);
     cx.fillStyle = "#D97706";
     cx.fill();
     cx.fillStyle = "#FFFFFF";
-    cx.font = "bold 11px sans-serif";
+    cx.font = "bold 12px sans-serif";
     cx.textAlign = "center";
     cx.textBaseline = "middle";
-    cx.fillText("다. 동물 중심 (감각 동물)", sp.x - 70, sp.y - 82);
+    cx.fillText("다. 동물 중심 (감각 동물)", sp.x - 97, sp.y - 119);
     cx.restore();
 
-    // 2-4. [라. 인간 중심] 아리스토텔레스 - 최내곽 플랫폼 (가로 195, 세로 205, 아리스토텔레스 단독 포괄)
+    // 2-4. [라. 인간 중심] 아리스토텔레스 - 최내곽 플랫폼 (가로 250, 세로 270, 아리스토텔레스 단독 포괄)
     cx.save();
     cx.shadowColor = "rgba(35, 25, 75, 0.12)";
     cx.shadowBlur = 10;
     cx.shadowOffsetY = 4;
-    drawRoundRect(cx, sp.x - 305, sp.y - 82, 195, 205, 18);
+    drawRoundRect(cx, sp.x - 390, sp.y - 115, 250, 270, 22);
     cx.fillStyle = "#F6F4FE"; // 100% 불투명 기품 있는 로열 라벤더
     cx.fill();
     cx.shadowColor = "transparent";
@@ -2163,19 +2228,19 @@ function render(ts) {
     cx.stroke();
 
     // 인간 중심 라벨 뱃지 (상단 아리스토텔레스 고유 구역에 단독 배치)
-    drawRoundRect(cx, sp.x - 275, sp.y - 72, 135, 24, 8);
+    drawRoundRect(cx, sp.x - 380, sp.y - 103, 165, 28, 9);
     cx.fillStyle = "#5B4FCF";
     cx.fill();
     cx.fillStyle = "#FFFFFF";
-    cx.font = "bold 11px sans-serif";
+    cx.font = "bold 12px sans-serif";
     cx.textAlign = "center";
     cx.textBaseline = "middle";
-    cx.fillText("라. 인간 중심", sp.x - 210, sp.y - 60);
+    cx.fillText("라. 인간 중심 (이성적 존재)", sp.x - 297, sp.y - 89);
     cx.restore();
 
     // 3. 모둠 번호 및 상태 상단 배너 (상단 넉넉하게 띄워 배치)
     cx.save();
-    const bannerY = sp.y - 170;
+    const bannerY = sp.y - 220;
     const bannerText = isCompleted ? `🛡️ 모둠 ${sp.id + 1} 벤다이어그램 결계 활성화 (완성)` : `📍 모둠 ${sp.id + 1} 벤다이어그램 (${occupants.length}/4명 모임)`;
     cx.font = "bold 14px sans-serif";
     const bw = cx.measureText(bannerText).width + 28;
@@ -2259,15 +2324,15 @@ function render(ts) {
     // 5. 결계 (Barrier) 발동 효과
     if (isCompleted) {
       const k = (ts - (sp.t0 || 0)) / 1000;
-      const barrierW = 730;
-      const barrierH = 365;
+      const barrierW = 930;
+      const barrierH = 465;
       const barrierX = sp.x - barrierW / 2;
       const barrierY = sp.y - barrierH / 2;
 
       cx.save();
       // 은은한 에너지 쉴드 돔
       cx.fillStyle = "rgba(16, 185, 129, 0.08)";
-      drawRoundRect(cx, barrierX, barrierY, barrierW, barrierH, 32);
+      drawRoundRect(cx, barrierX, barrierY, barrierW, barrierH, 36);
       cx.fill();
 
       // 회전하는 굵은 점선 결계 빔
@@ -2276,7 +2341,7 @@ function render(ts) {
       cx.globalAlpha = 0.9;
       cx.setLineDash([22, 14]);
       cx.lineDashOffset = -k * 55;
-      drawRoundRect(cx, barrierX, barrierY, barrierW, barrierH, 32);
+      drawRoundRect(cx, barrierX, barrierY, barrierW, barrierH, 36);
       cx.stroke();
 
       // 바깥쪽 반짝이는 얇은 골드 오라 링
@@ -2284,7 +2349,7 @@ function render(ts) {
       cx.lineWidth = 2.6;
       cx.setLineDash([12, 10]);
       cx.lineDashOffset = k * 35;
-      drawRoundRect(cx, barrierX - 6, barrierY - 6, barrierW + 12, barrierH + 12, 36);
+      drawRoundRect(cx, barrierX - 6, barrierY - 6, barrierW + 12, barrierH + 12, 40);
       cx.stroke();
       cx.restore();
     }
