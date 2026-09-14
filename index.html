@@ -929,9 +929,61 @@ function playBarrierSound(){
   }catch(e){}
 }
 
-// 2. 7개 전원 완성 대망의 승리 팡파르 (웅장한 피날레 오케스트라 팡파르)
+// 2. 7개 전원 완성 대망의 승리 팡파르 및 열렬한 박수 갈채 사운드
+function playApplauseSound() {
+  if (!S.sound) return;
+  try {
+    const ctx = getAudioCtx(); if (!ctx) return;
+    const dur = 3.6;
+    const bufferSize = Math.floor(ctx.sampleRate * dur);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    // 수백 번의 손뼉 펄스를 불규칙하게 흩뿌려 생생한 관중 박수 갈채 합성
+    const clapCount = 280;
+    for (let c = 0; c < clapCount; c++) {
+      const t = Math.pow(Math.random(), 1.25) * (dur - 0.45);
+      const startIdx = Math.floor(t * ctx.sampleRate);
+      const clapLen = Math.floor((0.015 + Math.random() * 0.035) * ctx.sampleRate);
+      const vol = (0.25 + Math.random() * 0.65) * Math.sin((t / dur) * Math.PI);
+
+      for (let i = 0; i < clapLen && startIdx + i < bufferSize; i++) {
+        const decay = Math.exp(-i / (clapLen * 0.22));
+        data[startIdx + i] += (Math.random() * 2 - 1) * decay * vol * 0.15;
+      }
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    // 손뼉의 울림 대역 (1350Hz 밴드패스 필터)
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = "bandpass";
+    bandpass.frequency.setValueAtTime(1350, ctx.currentTime);
+    bandpass.Q.setValueAtTime(1.1, ctx.currentTime);
+
+    const lowpass = ctx.createBiquadFilter();
+    lowpass.type = "lowpass";
+    lowpass.frequency.setValueAtTime(3600, ctx.currentTime);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.01, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.9, ctx.currentTime + 0.35);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+
+    noise.connect(bandpass);
+    bandpass.connect(lowpass);
+    lowpass.connect(gain);
+    gain.connect(ctx.destination);
+
+    noise.start();
+    noise.stop(ctx.currentTime + dur + 0.1);
+  } catch(e) {}
+}
+
 function playAllCompletedVictoryFanfare(){
   if(!S.sound)return;
+  playApplauseSound(); // 환호와 박수갈채 즉시 동시 발동!
   try{
     const ctx=getAudioCtx();if(!ctx)return;
     const melody=[
@@ -1114,6 +1166,89 @@ const BGM_ENGINE={
   }
 };
 
+// 3-2. 3번 탭 추첨 전용 경쾌한 게임쇼 카니발 BGM 엔진 (156 BPM, 벤다이어그램과 완전히 다른 통통 튀는 테마)
+const LOTTO_BGM_ENGINE = {
+  isPlaying: false,
+  stepTimer: null,
+  step: 0,
+  bpm: 156,
+  melody: [
+    784, 0, 880, 0, 988, 1046, 1175, 0,
+    1318, 0, 1175, 1046, 988, 0, 880, 784,
+    880, 0, 988, 0, 1046, 1175, 1318, 0,
+    1568, 0, 1318, 1175, 1046, 988, 880, 0
+  ],
+  bass: [
+    130.8, 196.0, 130.8, 196.0, 174.6, 261.6, 174.6, 261.6,
+    146.8, 220.0, 146.8, 220.0, 196.0, 293.7, 196.0, 293.7
+  ],
+  start() {
+    if (this.isPlaying || !S.sound) return;
+    this.isPlaying = true;
+    this.step = 0;
+    this.scheduleNext();
+    this.updateUI();
+  },
+  stop() {
+    this.isPlaying = false;
+    clearTimeout(this.stepTimer);
+    this.updateUI();
+  },
+  toggle() {
+    if (this.isPlaying) {
+      this.stop();
+      S.sound = false;
+      toast("🔇 추첨 BGM 꺼짐");
+    } else {
+      S.sound = true;
+      this.start();
+      toast("🎪 경쾌한 추첨 카니발 BGM 켜짐!");
+    }
+  },
+  updateUI() {
+    const btn = $("#bgmToggleBtn");
+    if (btn && S.tab === 3) {
+      btn.textContent = this.isPlaying ? "🎪 추첨 BGM ON" : "🔇 BGM OFF";
+      btn.style.backgroundColor = this.isPlaying ? "#F59E0B" : "#64748B";
+    }
+  },
+  scheduleNext() {
+    if (!this.isPlaying) return;
+    const ctx = getAudioCtx(); if (!ctx) return;
+    const interval = (60 / this.bpm / 2) * 1000;
+
+    const melFreq = this.melody[this.step % this.melody.length];
+    const bassFreq = this.bass[this.step % this.bass.length];
+
+    // 경쾌한 마림바/실로폰 톤 (triangle)
+    if (melFreq > 0) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(melFreq, ctx.currentTime);
+      g.gain.setValueAtTime(0.001, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.10);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.11);
+    }
+
+    // 퐁퐁 튀는 통통한 베이스 (sine)
+    if (bassFreq > 0) {
+      const bo = ctx.createOscillator(), bg = ctx.createGain();
+      bo.type = "sine";
+      bo.frequency.setValueAtTime(bassFreq, ctx.currentTime);
+      bg.gain.setValueAtTime(0.001, ctx.currentTime);
+      bg.gain.linearRampToValueAtTime(0.075, ctx.currentTime + 0.012);
+      bg.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.14);
+      bo.connect(bg); bg.connect(ctx.destination);
+      bo.start(); bo.stop(ctx.currentTime + 0.15);
+    }
+
+    this.step++;
+    this.stepTimer = setTimeout(() => this.scheduleNext(), interval);
+  }
+};
+
 /* ===== 캐릭터 그리기 ===== */
 function drawChar(ctx,x,y,ch,sc,opt){
   opt=opt||{};
@@ -1237,6 +1372,7 @@ function goToTab(tabIndex){
       if(typeof setZoomPercent === "function") setZoomPercent(55);
       S._initialZoomSet = true;
     }
+    LOTTO_BGM_ENGINE.stop();
     BGM_ENGINE.start();
   } else {
     BGM_ENGINE.stop();
@@ -1245,6 +1381,10 @@ function goToTab(tabIndex){
     if(stageWrap && $("#t3StageSlot")) $("#t3StageSlot").appendChild(stageWrap);
     resize();
     renderLotto();
+    BGM_ENGINE.stop();
+    LOTTO_BGM_ENGINE.start();
+  } else {
+    LOTTO_BGM_ENGINE.stop();
   }
   if(S.tab === 4) {
     if(stageWrap && $("#t4StageSlot")) $("#t4StageSlot").appendChild(stageWrap);
@@ -1722,7 +1862,10 @@ addEventListener("blur", () => { Object.keys(keys).forEach(k => keys[k] = 0); })
 
 const bgmBtn = $("#bgmToggleBtn");
 if (bgmBtn) {
-  bgmBtn.onclick = () => BGM_ENGINE.toggle();
+  bgmBtn.onclick = () => {
+    if (S.tab === 3) LOTTO_BGM_ENGINE.toggle();
+    else BGM_ENGINE.toggle();
+  };
 }
 
 // 좌측 세로 줌 스크롤/슬라이더 위젯 및 마우스 휠 줌 제어
@@ -1859,7 +2002,7 @@ addEventListener("pointerup", e => {
     const targetPlayer = S.players.find(p => {
       const activeClaim = p.claim || (S.drawn?.id === p.id ? S.claim : null);
       if (!activeClaim) return false;
-      return Math.hypot(worldX - p.x, worldY - (p.y - 90)) < 130;
+      return Math.abs(worldX - p.x) < 400 && worldY >= (p.y - 340) && worldY <= (p.y - 40);
     });
 
     if (targetPlayer) {
@@ -2153,24 +2296,30 @@ function loop(ts) {
   render(ts);
 }
 
-// 2D 캔버스 메타버스 말풍선 렌더링 함수
+// 2D 캔버스 메타버스 대형 말풍선 렌더링 함수 (맵 화면에 시원하게 꽉 차는 최고 가독성 디자인)
 function drawSpeechBubble(cx, x, y, claim) {
   if (!claim) return;
   cx.save();
   const stanceText = claim.stance || "찬성";
-  const stanceColor = stanceText === "찬성" ? "#0F6E63" : "#E64A19";
+  const stanceColor = stanceText === "찬성" ? "#0F6E63" : (stanceText === "반대" ? "#DC2626" : "#2563EB");
   const reasonText = claim.reason || "";
   const th = T[claim.thinkerId];
 
-  cx.font = "12px sans-serif";
-  const maxWidth = 230;
+  // 맵 폭에 맞추어 화면에 시원하게 꽉 차도록 대형 말풍선 너비 계산
+  const stageW = (cvs && cvs.clientWidth) ? cvs.clientWidth : 960;
+  const currentScale = S.zoomScale || 1.0;
+  const screenFittedWidth = (stageW / currentScale) * 0.84;
+  const maxWidth = Math.max(560, Math.min(840, screenFittedWidth));
 
+  cx.font = "bold 20px 'Pretendard', -apple-system, sans-serif";
+  
+  // 긴 문장을 시원시원하게 줄바꿈 처리
   const words = reasonText.split("");
   let lines = [];
   let currentLine = "";
   for (let i = 0; i < words.length; i++) {
     const testLine = currentLine + words[i];
-    if (cx.measureText(testLine).width > maxWidth - 24 && i > 0) {
+    if (cx.measureText(testLine).width > maxWidth - 56 && i > 0) {
       lines.push(currentLine);
       currentLine = words[i];
     } else {
@@ -2178,36 +2327,41 @@ function drawSpeechBubble(cx, x, y, claim) {
     }
   }
   lines.push(currentLine);
-  if (lines.length > 4) lines = lines.slice(0, 4);
+  if (lines.length > 5) lines = lines.slice(0, 5);
 
-  const lineHeight = 16;
-  const paddingH = 12;
-  const paddingV = 10;
-  const headerHeight = 22;
-  const bubbleWidth = Math.max(180, Math.min(maxWidth, Math.max(...lines.map(l => cx.measureText(l).width)) + paddingH * 2));
+  const lineHeight = 32;
+  const paddingH = 26;
+  const paddingV = 20;
+  const headerHeight = 38;
+  const contentWidth = Math.max(...lines.map(l => cx.measureText(l).width));
+  const bubbleWidth = Math.max(480, Math.min(maxWidth, contentWidth + paddingH * 2));
   const bubbleHeight = headerHeight + lines.length * lineHeight + paddingV * 2;
 
   const bx = x - bubbleWidth / 2;
-  const by = y - bubbleHeight - 128;
+  const by = y - bubbleHeight - 136;
 
-  cx.shadowColor = "rgba(0, 0, 0, 0.28)";
-  cx.shadowBlur = 12;
-  cx.shadowOffsetY = 4;
+  // 깊이감 있는 프리미엄 드롭 섀도우
+  cx.shadowColor = "rgba(15, 23, 42, 0.28)";
+  cx.shadowBlur = 22;
+  cx.shadowOffsetY = 8;
 
+  // 말풍선 본체 (부드러운 곡선 둥근 직사각형 + 하단 꼬리)
   cx.fillStyle = "#FFFFFF";
   cx.strokeStyle = stanceColor;
-  cx.lineWidth = 2.8;
+  cx.lineWidth = 3.6;
   cx.beginPath();
-  const r = 10;
+  const r = 20;
   cx.moveTo(bx + r, by);
   cx.lineTo(bx + bubbleWidth - r, by);
   cx.quadraticCurveTo(bx + bubbleWidth, by, bx + bubbleWidth, by + r);
   cx.lineTo(bx + bubbleWidth, by + bubbleHeight - r);
   cx.quadraticCurveTo(bx + bubbleWidth, by + bubbleHeight, bx + bubbleWidth - r, by + bubbleHeight);
 
-  cx.lineTo(x + 10, by + bubbleHeight);
-  cx.lineTo(x, by + bubbleHeight + 12);
-  cx.lineTo(x - 10, by + bubbleHeight);
+  // 하단 사상가 캐릭터 머리를 가리키는 꼬리 화살표
+  const tailX = Math.max(bx + 50, Math.min(bx + bubbleWidth - 50, x));
+  cx.lineTo(tailX + 18, by + bubbleHeight);
+  cx.lineTo(tailX, by + bubbleHeight + 20);
+  cx.lineTo(tailX - 18, by + bubbleHeight);
   cx.lineTo(bx + r, by + bubbleHeight);
   cx.quadraticCurveTo(bx, by + bubbleHeight, bx, by + bubbleHeight - r);
   cx.lineTo(bx, by + r);
@@ -2218,40 +2372,59 @@ function drawSpeechBubble(cx, x, y, claim) {
 
   cx.shadowColor = "transparent";
 
+  // 상단 헤더 영역 1: 입장 뱃지 (찬성/반대)
   cx.fillStyle = stanceColor;
   cx.beginPath();
-  if (cx.roundRect) cx.roundRect(bx + 10, by + 8, 44, 18, 4); else cx.rect(bx + 10, by + 8, 44, 18);
+  if (cx.roundRect) cx.roundRect(bx + 20, by + 14, 64, 28, 8);
+  else cx.rect(bx + 20, by + 14, 64, 28);
   cx.fill();
 
   cx.fillStyle = "#FFFFFF";
-  cx.font = "700 11px sans-serif";
+  cx.font = "bold 15px 'Pretendard', sans-serif";
   cx.textAlign = "center";
-  cx.fillText(stanceText, bx + 32, by + 21);
+  cx.fillText(stanceText, bx + 52, by + 33);
 
-  cx.fillStyle = "#1F2937";
-  cx.font = "700 12px sans-serif";
+  // 상단 헤더 영역 2: 사상가 및 학생 정보
+  const thinkerName = th ? `[${th.scholar}] ${th.name}` : "";
+  const whoPrefix = claim.who ? `${claim.who}번 · ` : "";
+  cx.fillStyle = "#0F172A";
+  cx.font = "bold 17px 'Pretendard', sans-serif";
   cx.textAlign = "left";
-  cx.fillText((claim.who ? claim.who + "번 " : "") + (th ? th.scholar : ""), bx + 60, by + 21);
+  cx.fillText(whoPrefix + thinkerName, bx + 96, by + 34);
 
-  cx.fillStyle = "#111827";
-  cx.font = "12px sans-serif";
-  lines.forEach((line, idx) => {
-    cx.fillText(line, bx + 12, by + headerHeight + paddingV + 12 + idx * lineHeight);
-  });
-
-  // 10배 확대 힌트 뱃지 렌더링
-  cx.fillStyle = "#FFD700";
-  cx.strokeStyle = "#D97706";
+  // 상단 헤더 영역 3: 우측 10배 확대 힌트 뱃지
+  const hintW = 146, hintH = 26;
+  const hintX = bx + bubbleWidth - hintW - 20;
+  const hintY = by + 15;
+  cx.fillStyle = "rgba(243, 244, 246, 0.95)";
+  cx.strokeStyle = "#CBD5E1";
   cx.lineWidth = 1.2;
   cx.beginPath();
-  if (cx.roundRect) cx.roundRect(bx + bubbleWidth - 75, by - 12, 70, 18, 9);
-  else cx.rect(bx + bubbleWidth - 75, by - 12, 70, 18);
-  cx.fill(); cx.stroke();
+  if (cx.roundRect) cx.roundRect(hintX, hintY, hintW, hintH, 13);
+  else cx.rect(hintX, hintY, hintW, hintH);
+  cx.fill();
+  cx.stroke();
 
-  cx.fillStyle = "#92400E";
-  cx.font = "bold 10px sans-serif";
+  cx.fillStyle = "#475569";
+  cx.font = "bold 12px 'Pretendard', sans-serif";
   cx.textAlign = "center";
-  cx.fillText("🔍 10배 확대", bx + bubbleWidth - 40, by + 1);
+  cx.fillText("🔍 클릭하여 10배 확대", hintX + hintW / 2, hintY + 18);
+
+  // 구분선
+  cx.strokeStyle = "#E2E8F0";
+  cx.lineWidth = 1.2;
+  cx.beginPath();
+  cx.moveTo(bx + 20, by + headerHeight + 14);
+  cx.lineTo(bx + bubbleWidth - 20, by + headerHeight + 14);
+  cx.stroke();
+
+  // 본문 근거 텍스트 렌더링 (대형 20px 굵은 글씨로 선명하게 표시)
+  cx.fillStyle = "#0F172A";
+  cx.font = "bold 20px 'Pretendard', sans-serif";
+  cx.textAlign = "left";
+  lines.forEach((line, idx) => {
+    cx.fillText(line, bx + 24, by + headerHeight + 36 + idx * lineHeight);
+  });
 
   cx.restore();
 }
@@ -2887,23 +3060,37 @@ function render(ts) {
       cx.restore();
     }
 
-    // 당첨 발표자 축하 이펙트
+    // 당첨 발표자 축하 화려한 황금빛 오라 및 스팟라이트 이펙트
     if (S.winnerId === p.id) {
       cx.save();
-      const pulse = 1 + Math.sin((ts || 0) * 0.008) * 0.12;
-      cx.fillStyle = "rgba(255, 223, 0, 0.42)";
-      cx.strokeStyle = "#F59E0B";
-      cx.lineWidth = 5;
+      const pulse = 1 + Math.sin((ts || 0) * 0.007) * 0.15;
+      
+      // 바닥 황금빛 광륜 (오라)
+      const grad = cx.createRadialGradient(p.x, p.y + 10, 8, p.x, p.y + 10, 75 * pulse);
+      grad.addColorStop(0, "rgba(255, 235, 59, 0.65)");
+      grad.addColorStop(0.5, "rgba(245, 158, 11, 0.35)");
+      grad.addColorStop(1, "rgba(245, 158, 11, 0)");
+      cx.fillStyle = grad;
       cx.beginPath();
-      cx.ellipse(p.x, p.y + 10, 52 * pulse, 30 * pulse, 0, 0, 7);
-      cx.fill(); cx.stroke();
+      cx.ellipse(p.x, p.y + 10, 75 * pulse, 40 * pulse, 0, 0, Math.PI * 2);
+      cx.fill();
+
+      // 외곽 황금 링
+      cx.strokeStyle = "#F59E0B";
+      cx.lineWidth = 4;
+      cx.shadowColor = "#FDE047";
+      cx.shadowBlur = 14;
+      cx.beginPath();
+      cx.ellipse(p.x, p.y + 10, 52 * pulse, 28 * pulse, 0, 0, Math.PI * 2);
+      cx.stroke();
+
       cx.fillStyle = "#B45309";
-      cx.font = "bold 14px sans-serif";
+      cx.font = "bold 15px sans-serif";
       cx.textAlign = "center";
       cx.lineWidth = 3.5;
       cx.strokeStyle = "#ffffff";
-      cx.strokeText("✨ 당첨 발표자 ✨", p.x, p.y - 132);
-      cx.fillText("✨ 당첨 발표자 ✨", p.x, p.y - 132);
+      cx.strokeText("👑 오늘의 당첨 발표자! 👑", p.x, p.y - 138);
+      cx.fillText("👑 오늘의 당첨 발표자! 👑", p.x, p.y - 138);
       cx.restore();
     }
 
@@ -2932,8 +3119,17 @@ function render(ts) {
       }
     }
 
-    // 메타버스 2D 캔버스 말풍선 렌더링
-    const activeClaim = p.claim || (S.drawn?.id === p.id ? S.claim : null);
+    // 메타버스 2D 캔버스 말풍선 렌더링 (당첨자 발표 즉시 대형 말풍선 표시)
+    let activeClaim = p.claim || (S.drawn?.id === p.id ? S.claim : null);
+    if (!activeClaim && S.winnerId === p.id) {
+      const th = T[p.thinkerId];
+      activeClaim = {
+        thinkerId: p.thinkerId,
+        stance: "선정",
+        reason: `🎉 축하합니다! ${p.no}번 [${th ? th.scholar : "사상가"}] 오늘의 발표자로 선정되었습니다! 아래에서 주장을 작성해 보세요! 👏`,
+        who: p.no
+      };
+    }
     if (activeClaim) {
       drawSpeechBubble(cx, p.x, p.y, activeClaim);
     }
@@ -2945,7 +3141,17 @@ requestAnimationFrame(loop);
 
 /* ===== 3번 탭 — 추첨 ===== */
 $("#caseTitle").textContent=CASE.title;$("#caseQ").textContent=CASE.q;$("#caseSit").textContent=CASE.situation;
-$("#soundBtn").onclick=()=>{S.sound=!S.sound;$("#soundBtn").textContent=S.sound?"소리 끄기":"소리 켜기";};
+$("#soundBtn").onclick=()=>{
+  S.sound = !S.sound;
+  $("#soundBtn").textContent = S.sound ? "소리 끄기" : "소리 켜기";
+  if (S.sound) {
+    if (S.tab === 2) BGM_ENGINE.start();
+    else if (S.tab === 3) LOTTO_BGM_ENGINE.start();
+  } else {
+    BGM_ENGINE.stop();
+    LOTTO_BGM_ENGINE.stop();
+  }
+};
 function lottoList(){return [...S.players].sort((a,b)=>b.no-a.no);}
 function renderLotto(){
   const box=$("#lotto");box.innerHTML="";
@@ -2961,6 +3167,7 @@ $("#drawBtn").onclick=()=>{
   const list=lottoList();
   if(!list.length){toast("먼저 캐릭터를 고르세요");return;}
   if(!S.pool.length)S.pool=[...list];
+  if(S.sound) LOTTO_BGM_ENGINE.start();
   renderLotto();$("#winArea").innerHTML="";
   $("#claimCard").classList.add("hide");$("#voteCard").classList.add("hide");$("#gradeCard").classList.add("hide");
   $("#drawBtn").disabled=true;$("#drawMsg").textContent="메타버스 맵에서 실시간 추첨 진행 중… 🎯";
@@ -2975,7 +3182,7 @@ $("#drawBtn").onclick=()=>{
     const i=(i0+n)%L;
     const currentCandidate = list[i];
     S.lottoCandidateId = currentCandidate.id;
-    S.cam = { x: currentCandidate.x, y: currentCandidate.y };
+    S.cam = { x: currentCandidate.x, y: currentCandidate.y - 40 };
 
     cells.forEach(c=>c.classList.remove("hot"));
     cells[i].classList.add("hot");
@@ -2984,9 +3191,14 @@ $("#drawBtn").onclick=()=>{
     if(n>=N){
       S.lottoCandidateId = null;
       S.winnerId = winner.id;
-      S.cam = { x: winner.x, y: winner.y };
+      // 1. 당첨된 사상가로 카메라 중심 이동 (말풍선과 함께 보이도록 y 보정)
+      S.cam = { x: winner.x, y: winner.y - 140 };
+      // 2. 95% 클로즈업 줌 적용
+      if(typeof setZoomPercent === "function") setZoomPercent(95, false);
       cells[i].classList.remove("hot");cells[i].classList.add("win");
-      fanfare();S.drawn=winner;S.pool=S.pool.filter(x=>x!==winner);
+      fanfare();
+      playApplauseSound(); // 축하 박수 효과음!
+      S.drawn=winner;S.pool=S.pool.filter(x=>x!==winner);
       $("#drawBtn").disabled=false;$("#drawMsg").textContent="✨ 발표자가 선정되었습니다! 주장을 작성하세요.";
       const th=T[winner.thinkerId];
       $("#winArea").innerHTML='<p class="winline">'+winner.no+' · <span style="color:'+th.color+'">'+th.scholar+'</span> — '+th.name+'</p><p class="muted">'+th.scope+'</p>';
@@ -3010,8 +3222,12 @@ function openClaim(p){
     const claimObj = {thinkerId:p.thinkerId,stance:$("#stanceIn").value,reason:r,who:p.no};
     S.claim = claimObj;
     p.claim = claimObj;
-    S.cam = { x: p.x, y: p.y };
-    beep(660,0.1,"triangle",0.12);showBubble();
+    // 거대한 말풍선과 사상가가 맵에 시원하게 꽉 차도록 클로즈업 및 카메라 위치 조정
+    S.cam = { x: p.x, y: p.y - 170 };
+    if(typeof setZoomPercent === "function") setZoomPercent(92, false);
+    beep(660,0.1,"triangle",0.12);
+    playApplauseSound(); // 주장 발표 시 축하 박수 효과음!
+    showBubble();
   };
 }
 function showBubble(){
