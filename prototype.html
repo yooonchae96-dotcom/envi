@@ -45,12 +45,11 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   box-shadow: 0 8px 30px rgba(0,0,0,0.12);
 }
 #stage{width:100%;height:clamp(560px,70vh,780px);background:#458428;border-radius:16px;display:block;touch-action:none;border:1px solid var(--line)}
-.dpad{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:100;display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,38px);gap:4px;justify-content:center;margin-top:0;background:rgba(255,255,255,0.85);backdrop-filter:blur(10px);padding:6px;border-radius:18px;border:1px solid rgba(255,255,255,0.8);box-shadow:0 6px 20px rgba(0,0,0,0.18);user-select:none}
-.dpad button{background:#fff;border:1px solid #d1d5db;border-radius:10px;color:var(--ink);font-size:16px;font-weight:700;padding:0;user-select:none;box-shadow:0 2px 4px rgba(0,0,0,0.06);cursor:pointer;transition:all .12s}
-.dpad button:active{background:var(--accent);color:#fff;border-color:var(--accent);transform:scale(0.94)}
-.mini{position:absolute;bottom:16px;left:16px;z-index:100;display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:0;background:rgba(255,255,255,0.88);backdrop-filter:blur(10px);padding:7px 12px;border-radius:18px;border:1px solid rgba(255,255,255,0.8);box-shadow:0 6px 20px rgba(0,0,0,0.18);user-select:none}
-.mini i{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;background:#fff;color:var(--sub);box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-.mini i.done{background:var(--barrier);border-color:var(--barrier);color:#062E29;font-weight:700;box-shadow:0 2px 6px rgba(15,110,99,.35)}
+.dpad{display:none!important}
+.mini{position:absolute;bottom:16px;left:16px;z-index:100;display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:0;background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);padding:8px 16px;border-radius:22px;border:1.5px solid rgba(255,255,255,0.9);box-shadow:0 8px 24px rgba(0,0,0,0.18);user-select:none}
+.mini i{width:32px;height:32px;border-radius:10px;border:1.5px solid #CBD5E1;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:800;background:#F8FAFC;color:#94A3B8;box-shadow:inset 0 1px 2px rgba(0,0,0,0.06);transition:all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
+.mini i.done{background:linear-gradient(135deg,#10B981,#059669);border-color:#34D399;color:#FFFFFF;font-weight:900;transform:scale(1.15);box-shadow:0 0 14px #10B981, 0 0 28px rgba(16,185,129,0.55);animation:lightUpPulse 1.5s infinite alternate}
+@keyframes lightUpPulse{0%{transform:scale(1.12);box-shadow:0 0 10px #10B981, 0 0 20px rgba(16,185,129,0.4)}100%{transform:scale(1.22);box-shadow:0 0 18px #34D399, 0 0 34px rgba(52,211,153,0.75)}}
 /* 추첨판 */
 .lotto{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-top:10px}
 .lc{border:1px solid var(--line);border-radius:9px;background:#fff;text-align:center;padding:3px 1px 2px;
@@ -450,10 +449,9 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
     <p class="muted">맵에 7개의 대형 벤다이어그램 구역이 미리 준비되어 있습니다. 내 사상가(아리스토텔레스·싱어·슈바이처·레오폴드)에 맞는 원형 칸으로 이동하세요. 네 사상가가 모두 모이면 결계가 쳐져 보호됩니다. (결계 완성 후에도 방향키/화면 드래그로 전체 맵을 자유롭게 둘러보실 수 있습니다)</p>
     <div id="stageContainer" style="position:relative">
       <canvas id="stage"></canvas>
-      <div class="dpad"><i></i><button data-mv="u">↑</button><i></i>
-        <button data-mv="l">←</button><button data-mv="d">↓</button><button data-mv="r">→</button></div>
-      <!-- 오른쪽 아래 4단계 맵 확대/축소 위젯 -->
+      <!-- 오른쪽 아래 4단계 맵 확대/축소 위젯 및 BGM 버튼 -->
       <div class="zoom-controls">
+        <button id="bgmToggleBtn" title="신나는 게임 BGM 켜기/끄기" style="background:#10B981;color:#fff;font-weight:700">🎵 BGM ON</button>
         <button id="zoomOutBtn" title="축소 (-)">−</button>
         <span id="zoomLabel">1단계 (100%)</span>
         <button id="zoomInBtn" title="확대 (+)">+</button>
@@ -659,20 +657,179 @@ const IMG={},PIMG={};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),1500);}
 
-/* ===== 소리 ===== */
+/* ===== 소리 및 신나는 게임 BGM 엔진 ===== */
 let AC=null;
+function getAudioCtx(){
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==="suspended") AC.resume();
+  }catch(e){}
+  return AC;
+}
+
 function beep(freq,dur,type,vol){
   if(!S.sound)return;
-  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
-    const o=AC.createOscillator(),g=AC.createGain();
+  try{
+    const ctx=getAudioCtx();if(!ctx)return;
+    const o=ctx.createOscillator(),g=ctx.createGain();
     o.type=type||"square";o.frequency.value=freq;
-    g.gain.setValueAtTime(0.0001,AC.currentTime);
-    g.gain.exponentialRampToValueAtTime(vol||0.12,AC.currentTime+0.008);
-    g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+(dur||0.06));
-    o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+(dur||0.06)+0.02);
+    g.gain.setValueAtTime(0.0001,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(vol||0.12,ctx.currentTime+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+(dur||0.06));
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+(dur||0.06)+0.02);
   }catch(e){}
 }
-function fanfare(){[0,120,240,420].forEach((d,i)=>setTimeout(()=>beep([523,659,784,1047][i],i===3?0.45:0.13,"triangle",0.16),d));}
+
+// 1. 개별 모둠 결계 발동 효과음 (청명하고 신비로운 크리스탈 에너지 쉴드 사운드)
+function playBarrierSound(){
+  if(!S.sound)return;
+  try{
+    const ctx=getAudioCtx();if(!ctx)return;
+    const notes=[659.25, 830.61, 987.77, 1318.51, 1661.22];
+    notes.forEach((freq,idx)=>{
+      setTimeout(()=>{
+        const osc=ctx.createOscillator();
+        const gain=ctx.createGain();
+        osc.type="sine";
+        osc.frequency.setValueAtTime(freq,ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq*1.06,ctx.currentTime+0.22);
+        gain.gain.setValueAtTime(0.001,ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.18,ctx.currentTime+0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.28);
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.start();osc.stop(ctx.currentTime+0.3);
+      },idx*65);
+    });
+  }catch(e){}
+}
+
+// 2. 7개 전원 완성 대망의 승리 팡파르 (웅장한 피날레 오케스트라 팡파르)
+function playAllCompletedVictoryFanfare(){
+  if(!S.sound)return;
+  try{
+    const ctx=getAudioCtx();if(!ctx)return;
+    const melody=[
+      {f:523.25,d:0.14,t:0},
+      {f:659.25,d:0.14,t:140},
+      {f:783.99,d:0.16,t:280},
+      {f:1046.50,d:0.32,t:440},
+      {f:880.00,d:0.14,t:800},
+      {f:987.77,d:0.16,t:960},
+      {f:1046.50,d:0.60,t:1140}
+    ];
+    melody.forEach(n=>{
+      setTimeout(()=>{
+        const osc=ctx.createOscillator();
+        const gain=ctx.createGain();
+        osc.type="triangle";
+        osc.frequency.setValueAtTime(n.f,ctx.currentTime);
+        gain.gain.setValueAtTime(0.001,ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.24,ctx.currentTime+0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+n.d);
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.start();osc.stop(ctx.currentTime+n.d+0.05);
+      },n.t);
+    });
+
+    // 웅장한 피날레 풀 코드 화음 (C5 + E5 + G5 + C6)
+    setTimeout(()=>{
+      [523.25, 659.25, 783.99, 1046.50].forEach(freq=>{
+        const osc=ctx.createOscillator();
+        const gain=ctx.createGain();
+        osc.type="triangle";
+        osc.frequency.setValueAtTime(freq,ctx.currentTime);
+        gain.gain.setValueAtTime(0.001,ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.20,ctx.currentTime+0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+1.2);
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.start();osc.stop(ctx.currentTime+1.25);
+      });
+    },1800);
+  }catch(e){}
+}
+
+function fanfare(){ playBarrierSound(); }
+
+// 3. 신나는 아케이드 게임 BGM 엔진 (134 BPM, 100% 저작권 프리 칩튠 루프)
+const BGM_ENGINE={
+  isPlaying:false,
+  stepTimer:null,
+  step:0,
+  bpm:134,
+  melody:[
+    659,0,659,784,880,0,784,0,
+    659,587,523,0,587,659,587,0,
+    659,0,659,784,880,0,1046,0,
+    987,784,880,0,784,659,523,0
+  ],
+  bass:[
+    261,261,329,329,349,349,392,392,
+    261,261,329,329,392,392,349,349,
+    261,261,329,329,349,349,392,392,
+    440,440,392,392,349,349,261,261
+  ],
+  start(){
+    if(this.isPlaying||!S.sound)return;
+    this.isPlaying=true;
+    this.step=0;
+    this.scheduleNext();
+    this.updateUI();
+  },
+  stop(){
+    this.isPlaying=false;
+    clearTimeout(this.stepTimer);
+    this.updateUI();
+  },
+  toggle(){
+    if(this.isPlaying){
+      this.stop();
+      toast("🔇 BGM 꺼짐");
+    }else{
+      this.start();
+      toast("🎵 신나는 게임 BGM 켜짐!");
+    }
+  },
+  updateUI(){
+    const btn=$("#bgmToggleBtn");
+    if(btn){
+      btn.textContent=this.isPlaying?"🎵 BGM ON":"🔇 BGM OFF";
+      btn.style.backgroundColor=this.isPlaying?"#10B981":"#64748B";
+    }
+  },
+  scheduleNext(){
+    if(!this.isPlaying)return;
+    const ctx=getAudioCtx();if(!ctx)return;
+    const interval=(60/this.bpm/2)*1000;
+
+    const melFreq=this.melody[this.step%this.melody.length];
+    const bassFreq=this.bass[this.step%this.bass.length];
+
+    if(melFreq>0){
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type="square";
+      o.frequency.setValueAtTime(melFreq,ctx.currentTime);
+      g.gain.setValueAtTime(0.001,ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.045,ctx.currentTime+0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.12);
+      o.connect(g);g.connect(ctx.destination);
+      o.start();o.stop(ctx.currentTime+0.13);
+    }
+
+    if(bassFreq>0&&(this.step%2===0)){
+      const bo=ctx.createOscillator(),bg=ctx.createGain();
+      bo.type="triangle";
+      bo.frequency.setValueAtTime(bassFreq*0.5,ctx.currentTime);
+      bg.gain.setValueAtTime(0.001,ctx.currentTime);
+      bg.gain.linearRampToValueAtTime(0.07,ctx.currentTime+0.02);
+      bg.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.18);
+      bo.connect(bg);bg.connect(ctx.destination);
+      bo.start();bo.stop(ctx.currentTime+0.2);
+    }
+
+    this.step++;
+    this.stepTimer=setTimeout(()=>this.scheduleNext(),interval);
+  }
+};
 
 /* ===== 캐릭터 그리기 ===== */
 function drawChar(ctx,x,y,ch,sc,opt){
@@ -778,6 +935,9 @@ function goToTab(tabIndex){
   if(S.tab === 2) {
     if(stageWrap && $("#t2Card")) $("#t2Card").appendChild(stageWrap);
     resize();
+    BGM_ENGINE.start();
+  } else {
+    BGM_ENGINE.stop();
   }
   if(S.tab === 3) {
     if(stageWrap && $("#t3StageSlot")) $("#t3StageSlot").appendChild(stageWrap);
@@ -1218,12 +1378,10 @@ addEventListener("keydown", e => handleKey(e, true));
 addEventListener("keyup", e => handleKey(e, false));
 addEventListener("blur", () => { Object.keys(keys).forEach(k => keys[k] = 0); });
 
-$$(".dpad button").forEach(b=>{
-  const k={u:"ArrowUp",d:"ArrowDown",l:"ArrowLeft",r:"ArrowRight"}[b.dataset.mv];
-  const on=e=>{e.preventDefault();keys[k]=1;},off=()=>keys[k]=0;
-  b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);
-  b.addEventListener("pointerleave",off);b.addEventListener("pointercancel",off);
-});
+const bgmBtn = $("#bgmToggleBtn");
+if (bgmBtn) {
+  bgmBtn.onclick = () => BGM_ENGINE.toggle();
+}
 
 // 4단계 맵 확대/축소 관리
 const ZOOM_LEVELS = [
@@ -1464,17 +1622,27 @@ function checkSpots() {
       if (matched.some(m => m.player.isMe)) {
         $("#mapMsg").textContent = "🎉 우리 모둠 완성! 결계가 쳐져 안전합니다. (화면 드래그/방향키로 다른 모둠을 둘러보세요)";
         toast("우리 모둠 결계 발동! 🛡️ 네 사상가가 모두 모였습니다! 🚀");
-        fanfare();
         if (S.me) S.cam = { x: S.me.x, y: S.me.y };
       }
+
+      const allDone = S.spots.every(s => s.done);
+      if (allDone) {
+        playAllCompletedVictoryFanfare();
+        toast("🏆 축하합니다! 모든 7개 모둠의 벤다이어그램 결계가 완성되었습니다! 🎊");
+      } else {
+        playBarrierSound();
+      }
+
       drawMini();
     }
   });
 }
 
 function drawMini() {
-  $("#mini").innerHTML = S.spots.map(s => `<i class="${s.done ? "done" : ""}">${s.id + 1}</i>`).join("") +
-    `<span class="muted">완성 ${S.spots.filter(s => s.done).length} / ${S.spots.length}</span>`;
+  const doneCount = S.spots.filter(s => s.done).length;
+  $("#mini").innerHTML = S.spots.map(s => `<i class="${s.done ? "done" : ""}" title="모둠 ${s.id + 1} ${s.done ? "완성 (결계 활성화)" : "진행중"}">${s.id + 1}</i>`).join("") +
+    `<span style="font-size:12px;font-weight:700;color:${doneCount === S.spots.length ? "#10B981" : "#475569"};margin-left:4px">` +
+    `${doneCount === S.spots.length ? "✨ 전원 완성! ✨" : `완성 ${doneCount} / ${S.spots.length}`}</span>`;
 }
 
 let prev = 0;
