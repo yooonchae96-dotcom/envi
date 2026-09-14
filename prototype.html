@@ -46,10 +46,13 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 }
 #stage{width:100%;height:clamp(560px,70vh,780px);background:#458428;border-radius:16px;display:block;touch-action:none;border:1px solid var(--line)}
 .dpad{display:none!important}
-.mini{position:absolute;bottom:16px;left:16px;z-index:100;display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);padding:8px 16px;border-radius:22px;border:1.5px solid rgba(255,255,255,0.9);box-shadow:0 8px 24px rgba(0,0,0,0.2);user-select:none}
-.mini i{width:34px;height:34px;border-radius:10px;border:1.5px solid #CBD5E1;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:800;background:#F8FAFC;color:#94A3B8;box-shadow:inset 0 1px 2px rgba(0,0,0,0.06);transition:all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
-.mini i.done{background:linear-gradient(135deg,#10B981,#047857);border:2px solid #34D399;color:#FFFFFF;font-weight:900;transform:scale(1.18);box-shadow:0 0 16px #10B981, 0 0 32px rgba(16,185,129,0.8), inset 0 0 6px #A7F3D0;animation:lightUpPulse 1.2s infinite alternate}
-@keyframes lightUpPulse{0%{transform:scale(1.15);box-shadow:0 0 12px #10B981, 0 0 22px rgba(16,185,129,0.5)}100%{transform:scale(1.25);box-shadow:0 0 20px #34D399, 0 0 40px rgba(52,211,153,0.9)}}
+.mini{position:absolute;bottom:16px;left:16px;z-index:100;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:0;background:rgba(255,255,255,0.96);backdrop-filter:blur(14px);padding:8px 16px;border-radius:22px;border:1.5px solid rgba(255,255,255,0.92);box-shadow:0 10px 28px rgba(0,0,0,0.22);user-select:none}
+.mini .mini-tag{font-size:12.5px;font-weight:800;color:#065F46;margin-right:2px;display:flex;align-items:center;gap:4px}
+.mini .mini-lamp{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;border:1.5px solid #CBD5E1;font-size:12px;font-weight:800;background:#F8FAFC;color:#64748B;box-shadow:inset 0 1px 2px rgba(0,0,0,0.05);transition:all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);cursor:pointer}
+.mini .mini-lamp:hover{transform:translateY(-2px);border-color:#94A3B8;background:#FFFFFF}
+.mini .mini-lamp.lit{background:linear-gradient(135deg,#10B981,#047857);border:2px solid #FDE047;color:#FFFFFF;font-weight:900;transform:scale(1.12);box-shadow:0 0 14px #10B981, 0 0 28px rgba(16,185,129,0.75), inset 0 0 6px #A7F3D0;animation:lightUpPulse 1.2s infinite alternate}
+.mini .mini-status{font-size:12px;font-weight:800;margin-left:6px;letter-spacing:-0.2px}
+@keyframes lightUpPulse{0%{transform:scale(1.08);box-shadow:0 0 12px #10B981, 0 0 20px rgba(16,185,129,0.5)}100%{transform:scale(1.18);box-shadow:0 0 22px #34D399, 0 0 38px rgba(52,211,153,0.9)}}
 /* 추첨판 */
 .lotto{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-top:10px}
 .lc{border:1px solid var(--line);border-radius:9px;background:#fff;text-align:center;padding:3px 1px 2px;
@@ -644,8 +647,17 @@ function gradeClaim({thinkerId,stance,reason}){
 /* ===== 상태 ===== */
 const S={me:null,players:[],spots:[],tab:1,drawn:null,pool:[],claim:null,votes:{ok:0,no:0},
          teams:[],rot:0,warnAt:0,sound:true};
-const W=3200,H=2000,SPEED=220;
-const SPOTPOS=[[500,420],[1600,420],[2700,420],[500,1580],[1600,1580],[2700,1580],[1600,1000]];
+const W=4200,H=3200,SPEED=220;
+// 7개 벤다이어그램 위치: 가로 410px, 세로 385px 이상 충분히 넉넉하게 완벽 분리 배치
+const SPOTPOS=[
+  [750, 550],   // 1번 모둠 (1행 좌측)
+  [2100, 550],  // 2번 모둠 (1행 중앙)
+  [3450, 550],  // 3번 모둠 (1행 우측)
+  [750, 1600],  // 4번 모둠 (2행 좌측)
+  [2100, 1600], // 5번 모둠 (2행 중앙)
+  [3450, 1600], // 6번 모둠 (2행 우측)
+  [2100, 2650]  // 7번 모둠 (3행 그랜드 센트럴)
+];
 
 /* ===== 사상가 일렬 슬롯 정의 ===== */
 const THINKER_SLOTS = [
@@ -654,6 +666,7 @@ const THINKER_SLOTS = [
   { id: "sch", num: 3, scholar: "슈바이처", label: "생명", color: "#2E7D32", offsetX: 90, offsetY: 40 },
   { id: "leo", num: 4, scholar: "레오폴드", label: "생태", color: "#2D6A4F", offsetX: 270, offsetY: 40 }
 ];
+
 
 const IMG={},PIMG={};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -768,6 +781,7 @@ function playCellSelectSound() {
 function playPickConfirmSound() {
   if(!S.sound)return;
   try{ const ctx=getAudioCtx();if(!ctx)return;
+    // 청명한 4음 상승 아르페지오 (사상가 최종 선택 확인)
     [{f:523,t:0},{f:659,t:70},{f:784,t:140},{f:1047,t:210}].forEach(n=>{
       setTimeout(()=>{
         const o=ctx.createOscillator(),g=ctx.createGain();
@@ -794,6 +808,7 @@ function playTabClickSound() {
 }
 function playMiniLightUpSound(spotIdx) {
   if(!S.sound)return;
+  // 완성된 번호에 따라 조금씩 다른 피치로 불빛 켜짐 효과음
   try{ const ctx=getAudioCtx();if(!ctx)return;
     const baseFreqs=[523,587,659,698,784,880,988];
     const freq=baseFreqs[spotIdx%7];
@@ -1301,6 +1316,7 @@ function renderRoster(){
   });
 }
 
+
 /* ===== 접속 끊김(튕김) 및 재접속 관리 ===== */
 function updateDisconnectWidget() {
   const disconnected = S.players.filter(p => p.disconnected);
@@ -1399,8 +1415,10 @@ function seatAll(){
     S.me.spot = null;
     S.me.frozen = false;
     S.me.run = false;
-    S.me.x = 1600;
-    S.me.y = 1350;
+    S.me.x = S.spots[mySpot].x;
+    S.me.y = S.spots[mySpot].y + 240;
+    if (!S.cam) S.cam = { x: S.me.x, y: S.me.y };
+    else { S.cam.x = S.me.x; S.cam.y = S.me.y; }
     const idx = pools[S.me.thinkerId] ? pools[S.me.thinkerId].findIndex(p => p.isMe) : -1;
     if (idx !== -1) pools[S.me.thinkerId].splice(idx, 1);
   }
@@ -1422,11 +1440,12 @@ function seatAll(){
         p.isRoamer = false;
         p.dir = 1;
         p.ph = Math.random() * 6;
-        // 스팟 주변 180~280px 거리에서 시작하여 슬롯으로 달려오도록 스폰
+        // 1번 모둠부터 2, 3, 4, 5, 6, 7번 순서대로 완성되도록 스폰 거리 단계별 차등 조절!
+        // spId가 작을수록 가까이 스폰되어 1 -> 2 -> 3 순서대로 불이 켜집니다.
+        const baseArrivalDist = (spId === mySpot) ? 220 : (140 + spId * 150);
         const angle = Math.random() * Math.PI * 2;
-        const dist = 180 + Math.random() * 100;
-        p.x = p.targetX + Math.cos(angle) * dist;
-        p.y = p.targetY + Math.sin(angle) * dist;
+        p.x = p.targetX + Math.cos(angle) * baseArrivalDist;
+        p.y = p.targetY + Math.sin(angle) * baseArrivalDist;
         p.run = true;
       }
     }
@@ -1474,9 +1493,9 @@ if (bgmBtn) {
 // 4단계 맵 확대/축소 관리
 const ZOOM_LEVELS = [
   { scale: 1.00, label: "1단계 (100%)" },
-  { scale: 0.75, label: "2단계 (75%)" },
-  { scale: 0.55, label: "3단계 (55%)" },
-  { scale: 0.30, label: "4단계 (전체)" }
+  { scale: 0.70, label: "2단계 (70%)" },
+  { scale: 0.45, label: "3단계 (45%)" },
+  { scale: 0.22, label: "4단계 (전체)" }
 ];
 let currentZoomIdx = 0;
 
@@ -1609,9 +1628,9 @@ function blocked(p, nx, ny) {
       // 결계 완성된 모둠의 멤버는 내부 이동 허용
       if (p.spot === sp.id && p.frozen) continue;
 
-      // 결계 대형 직사각형 범위 (가로 940px, 세로 610px)
+      // 결계 대형 직사각형 범위 (가로 940px, 세로 680px)
       const halfW = 475;
-      const halfH = 310;
+      const halfH = 345;
       const inRect = Math.abs(nx - sp.x) < halfW && Math.abs(ny - sp.y) < halfH;
       const wasInRect = Math.abs(p.x - sp.x) < halfW && Math.abs(p.y - sp.y) < halfH;
 
@@ -1628,7 +1647,7 @@ function blocked(p, nx, ny) {
       if (p.assignedSpot === sp.id || p.spot === sp.id || p.isNPC) continue;
 
       const halfW = 480;
-      const halfH = 310;
+      const halfH = 345;
       const inRect = Math.abs(nx - sp.x) < halfW && Math.abs(ny - sp.y) < halfH;
       const wasInRect = Math.abs(p.x - sp.x) < halfW && Math.abs(p.y - sp.y) < halfH;
 
@@ -1677,7 +1696,7 @@ function alignSpotThinkersInLine(sp) {
 function checkSpots() {
   S.spots.forEach(sp => {
     if (sp.done) return;
-    const inZone = S.players.filter(p => Math.abs(p.x - sp.x) < 500 && Math.abs(p.y - sp.y) < 320);
+    const inZone = S.players.filter(p => Math.abs(p.x - sp.x) < 500 && Math.abs(p.y - sp.y) < 350);
     if (S.me && sp.id === S.me.spot && !inZone.some(p => p.isMe)) return;
 
     // 4개 슬롯 각각에 알맞은 사상가가 슬롯 원 근처(반경 50px)에 도달했는지 확인
@@ -1709,7 +1728,7 @@ function checkSpots() {
       });
 
       const doneCount = S.spots.filter(s => s.done).length;
-      toast(`⚡ [모둠 ${sp.id + 1}] 벤다이어그램 완성! 불이 켜졌습니다! 💡 (${doneCount}/7)`);
+      toast(`⚡ [모둠 ${sp.id + 1}] 벤다이어그램 완성! ${sp.id + 1}번 불이 켜졌습니다! 💡 (${doneCount}/7)`);
       playMiniLightUpSound(sp.id);
 
       if (matched.some(m => m.player.isMe)) {
@@ -1731,6 +1750,15 @@ function checkSpots() {
   });
 }
 
+function focusSpot(spotId) {
+  const sp = S.spots.find(s => s.id === spotId);
+  if (sp) {
+    S.cam = { x: sp.x, y: sp.y };
+    toast(`📍 [모둠 ${spotId + 1}] 벤다이어그램으로 시점 이동!`);
+    beep(620, 0.08, "triangle", 0.1);
+  }
+}
+
 let _lastMiniDoneCount = -1;
 function drawMini() {
   if (!S.spots || !S.spots.length) return;
@@ -1738,13 +1766,14 @@ function drawMini() {
   _lastMiniDoneCount = doneCount;
   const miniEl = $("#mini");
   if (!miniEl) return;
-  miniEl.innerHTML = S.spots.map(s => {
-    const isDone = s.done;
-    return `<i class="${isDone ? "done" : ""}" title="모둠 ${s.id + 1} ${isDone ? "완성 (불 켜짐) 💡" : "진행중"}">` +
-      `${isDone ? "💡" : s.id + 1}</i>`;
-  }).join("") +
-  `<span style="font-size:12px;font-weight:800;color:${doneCount === S.spots.length ? "#10B981" : "#0F6E63"};margin-left:6px;letter-spacing:-0.2px">` +
-  `${doneCount === S.spots.length ? "✨ 전원 완성! (7/7 불 켜짐) ✨" : `🔥 불 켜짐: ${doneCount} / ${S.spots.length}`}</span>`;
+  miniEl.innerHTML = `<span class="mini-tag">💡 불 켜짐:</span>` +
+    S.spots.map(s => {
+      const isDone = s.done;
+      return `<div class="mini-lamp ${isDone ? "lit" : ""}" onclick="focusSpot(${s.id})" title="모둠 ${s.id + 1}: ${isDone ? "완성 (불 켜짐 💡)" : "진행중 (클릭하여 시점 이동)"}">` +
+        `<span style="font-size:12px">${isDone ? "💡" : "⚪"}</span><span>${s.id + 1}번</span></div>`;
+    }).join("") +
+    `<span class="mini-status" style="color:${doneCount === S.spots.length ? "#10B981" : "#0F6E63"}">` +
+    `${doneCount === S.spots.length ? "✨ 전원 완성! (7/7 불 켜짐) ✨" : `🔥 ${doneCount} / ${S.spots.length} 모둠 켜짐`}</span>`;
 }
 
 let prev = 0;
@@ -1978,18 +2007,18 @@ function drawRoundRect(ctx, x, y, w, h, r) {
 
 
 // 유기적인 전역 초원 배경 디테일 (정사각형 타일링 제거, 450개 풀잎 클러스터 + 140개 들꽃 군락)
-const MEADOW_GRASS_CLUSTERS = Array.from({ length: 450 }, (_, i) => ({
-  x: ((i * 383 + 127) % 3140) + 30,
-  y: ((i * 571 + 239) % 1940) + 30,
+const MEADOW_GRASS_CLUSTERS = Array.from({ length: 550 }, (_, i) => ({
+  x: ((i * 383 + 127) % 4100) + 50,
+  y: ((i * 571 + 239) % 3100) + 50,
   blades: 3 + (i % 4),
   h: 7 + (i % 9),
   colIdx: i % 5,
   bend: ((i % 5) - 2) * 2.5
 }));
 
-const MEADOW_FLOWERS = Array.from({ length: 140 }, (_, i) => ({
-  x: ((i * 499 + 89) % 3140) + 30,
-  y: ((i * 733 + 173) % 1940) + 30,
+const MEADOW_FLOWERS = Array.from({ length: 180 }, (_, i) => ({
+  x: ((i * 499 + 89) % 4100) + 50,
+  y: ((i * 733 + 173) % 3100) + 50,
   petalColor: ["#FFFFFF", "#FFF9A6", "#FFE4E6", "#FEF08A", "#FBCFE8"][i % 5],
   size: 2.0 + (i % 3) * 0.8
 }));
@@ -2065,11 +2094,11 @@ function drawMeadowBackground(ctx, W, H, ts) {
 
   // 2. 완만한 5중 물결 언덕 능선 (부드러운 유기적 곡선미)
   const HILL_LAYERS = [
-    { y: 340,  amp: 60, freq: 0.0017, color: "rgba(165, 235, 85, 0.11)" },
-    { y: 720,  amp: 70, freq: 0.0013, color: "rgba(25, 75, 22, 0.12)" },
-    { y: 1140, amp: 80, freq: 0.0015, color: "rgba(180, 245, 95, 0.10)" },
-    { y: 1520, amp: 85, freq: 0.0012, color: "rgba(18, 65, 20, 0.13)" },
-    { y: 1880, amp: 65, freq: 0.0014, color: "rgba(150, 230, 75, 0.09)" }
+    { y: 550,  amp: 70, freq: 0.0014, color: "rgba(165, 235, 85, 0.11)" },
+    { y: 1150, amp: 80, freq: 0.0012, color: "rgba(25, 75, 22, 0.12)" },
+    { y: 1800, amp: 90, freq: 0.0013, color: "rgba(180, 245, 95, 0.10)" },
+    { y: 2450, amp: 95, freq: 0.0011, color: "rgba(18, 65, 20, 0.13)" },
+    { y: 2980, amp: 75, freq: 0.0012, color: "rgba(150, 230, 75, 0.09)" }
   ];
 
   HILL_LAYERS.forEach((hill, idx) => {
@@ -2092,19 +2121,19 @@ function drawMeadowBackground(ctx, W, H, ts) {
   ctx.save();
   ctx.fillStyle = "rgba(255, 252, 225, 0.08)";
   ctx.beginPath();
-  ctx.moveTo(0, 500);
-  ctx.bezierCurveTo(W * 0.35, 250, W * 0.65, 850, W, 600);
-  ctx.lineTo(W, 820);
-  ctx.bezierCurveTo(W * 0.65, 1070, W * 0.35, 470, 0, 720);
+  ctx.moveTo(0, 750);
+  ctx.bezierCurveTo(W * 0.35, 400, W * 0.65, 1300, W, 950);
+  ctx.lineTo(W, 1250);
+  ctx.bezierCurveTo(W * 0.65, 1600, W * 0.35, 700, 0, 1050);
   ctx.closePath();
   ctx.fill();
 
   ctx.fillStyle = "rgba(255, 250, 215, 0.06)";
   ctx.beginPath();
-  ctx.moveTo(0, 1400);
-  ctx.bezierCurveTo(W * 0.4, 1150, W * 0.7, 1750, W, 1500);
-  ctx.lineTo(W, 1700);
-  ctx.bezierCurveTo(W * 0.7, 1950, W * 0.4, 1350, 0, 1600);
+  ctx.moveTo(0, 2100);
+  ctx.bezierCurveTo(W * 0.4, 1750, W * 0.7, 2700, W, 2300);
+  ctx.lineTo(W, 2600);
+  ctx.bezierCurveTo(W * 0.7, 3000, W * 0.4, 2050, 0, 2400);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
@@ -2289,7 +2318,100 @@ function render(ts) {
     cx.fillText("라. 인간 중심 (이성적 존재)", sp.x - 292, sp.y - 149);
     cx.restore();
 
-    // 3. 모둠 번호 및 상태 상단 배너 (상단 넉넉하게 띄워 배치)
+    // ===== 3. 모둠 전등 램프 및 불 켜짐 연출 (1~7번 모둠별 완성 불빛) =====
+    const lampX = sp.x;
+    const lampY = sp.y - 355;
+
+    cx.save();
+    if (isCompleted) {
+      // 1. 방사형 황금빛 + 에메랄드 에너지 광배 (Glow Corona)
+      const glowPulse = 1 + Math.sin(ts * 0.007 + sp.id) * 0.15;
+      const glowGrad = cx.createRadialGradient(lampX, lampY, 8, lampX, lampY, 68 * glowPulse);
+      glowGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+      glowGrad.addColorStop(0.28, "rgba(254, 240, 138, 0.85)");
+      glowGrad.addColorStop(0.65, "rgba(52, 211, 153, 0.45)");
+      glowGrad.addColorStop(1, "rgba(16, 185, 129, 0)");
+      cx.fillStyle = glowGrad;
+      cx.beginPath();
+      cx.arc(lampX, lampY, 68 * glowPulse, 0, Math.PI * 2);
+      cx.fill();
+
+      // 2. 램프 본체 (빛나는 황금색 3D 구체)
+      const bulbGrad = cx.createRadialGradient(lampX - 5, lampY - 6, 2, lampX, lampY, 22);
+      bulbGrad.addColorStop(0, "#FFFFFF");
+      bulbGrad.addColorStop(0.35, "#FDE047");
+      bulbGrad.addColorStop(0.85, "#F59E0B");
+      bulbGrad.addColorStop(1, "#D97706");
+      cx.fillStyle = bulbGrad;
+      cx.beginPath();
+      cx.arc(lampX, lampY, 22, 0, Math.PI * 2);
+      cx.fill();
+      cx.strokeStyle = "#FDE047";
+      cx.lineWidth = 2.5;
+      cx.stroke();
+
+      // 3. 램프 내부 완성 번호 (예: "1")
+      cx.font = "bold 15px sans-serif";
+      cx.fillStyle = "#78350F";
+      cx.textAlign = "center";
+      cx.textBaseline = "middle";
+      cx.fillText(`${sp.id + 1}`, lampX, lampY);
+
+      // 4. 전등 갓 / 소켓 받침대
+      cx.fillStyle = "#B45309";
+      drawRoundRect(cx, lampX - 10, lampY + 18, 20, 8, 3);
+      cx.fill();
+
+      // 5. 상단 불 켜짐 안내 배너 뱃지
+      const litBadgeText = `💡 ${sp.id + 1}번 모둠 불 켜짐 완료!`;
+      cx.font = "bold 12px sans-serif";
+      const lbw = cx.measureText(litBadgeText).width + 22;
+      drawRoundRect(cx, lampX - lbw / 2, lampY - 44, lbw, 24, 12);
+      cx.fillStyle = "#065F46";
+      cx.fill();
+      cx.strokeStyle = "#34D399";
+      cx.lineWidth = 1.8;
+      cx.stroke();
+      cx.fillStyle = "#ECFDF5";
+      cx.fillText(litBadgeText, lampX, lampY - 32);
+    } else {
+      // 대기중 램프 (미완성 상태: 은은한 글래스 전구)
+      cx.fillStyle = "rgba(241, 245, 249, 0.9)";
+      cx.strokeStyle = "#94A3B8";
+      cx.lineWidth = 2;
+      cx.beginPath();
+      cx.arc(lampX, lampY, 19, 0, Math.PI * 2);
+      cx.fill();
+      cx.stroke();
+
+      // 대기중 번호
+      cx.font = "bold 14px sans-serif";
+      cx.fillStyle = "#94A3B8";
+      cx.textAlign = "center";
+      cx.textBaseline = "middle";
+      cx.fillText(`${sp.id + 1}`, lampX, lampY);
+
+      // 소켓 받침대
+      cx.fillStyle = "#64748B";
+      drawRoundRect(cx, lampX - 9, lampY + 16, 18, 7, 3);
+      cx.fill();
+
+      // 대기 뱃지
+      const waitText = `⚪ ${sp.id + 1}번 모둠 대기중`;
+      cx.font = "bold 11px sans-serif";
+      const wbw = cx.measureText(waitText).width + 16;
+      drawRoundRect(cx, lampX - wbw / 2, lampY - 38, wbw, 20, 10);
+      cx.fillStyle = "rgba(255, 255, 255, 0.92)";
+      cx.fill();
+      cx.strokeStyle = "#CBD5E1";
+      cx.lineWidth = 1.2;
+      cx.stroke();
+      cx.fillStyle = "#64748B";
+      cx.fillText(waitText, lampX, lampY - 28);
+    }
+    cx.restore();
+
+    // 4. 모둠 상태 배너
     cx.save();
     const bannerY = sp.y - 305;
     const bannerText = isCompleted ? `🛡️ 모둠 ${sp.id + 1} 벤다이어그램 결계 활성화 (완성 💡)` : `📍 모둠 ${sp.id + 1} 벤다이어그램 (${occupants.length}/4명 모임)`;
@@ -2311,7 +2433,7 @@ function render(ts) {
     cx.fillText(bannerText, sp.x, bannerY);
     cx.restore();
 
-    // 4. 네 사상가 원형 칸(슬롯) 일렬 렌더링 (간격 140px, offsetY: 28)
+    // 5. 네 사상가 원형 칸(슬롯) 일렬 렌더링 (간격 140px, offsetY: 28)
     THINKER_SLOTS.forEach(slot => {
       const slotX = sp.x + slot.offsetX;
       const slotY = sp.y + slot.offsetY;
@@ -2340,6 +2462,19 @@ function render(ts) {
       }
       cx.stroke();
 
+      // 사상가 도착 시 슬롯 불빛 링 연출
+      if (occupant) {
+        cx.save();
+        cx.strokeStyle = slot.color;
+        cx.shadowColor = slot.color;
+        cx.shadowBlur = 12;
+        cx.lineWidth = 2.4;
+        cx.beginPath();
+        cx.arc(slotX, slotY, slotR + 4, 0, Math.PI * 2);
+        cx.stroke();
+        cx.restore();
+      }
+
       // 내 타겟 슬롯일 경우 밝은 황금빛 안내 이펙트
       if (isMyTargetSlot) {
         cx.save();
@@ -2356,12 +2491,12 @@ function render(ts) {
         cx.restore();
       }
 
-      // 슬롯 상단: 번호 및 사상가 라벨 (라벨 뱃지와 50px 이상 간격 유지)
+      // 슬롯 상단: 번호 및 사상가 라벨 (도착 시 💡 표시)
       cx.save();
       cx.font = "bold 12px sans-serif";
       cx.fillStyle = slot.color;
       cx.textAlign = "center";
-      cx.fillText(`${slot.num}. ${slot.scholar}`, slotX, slotY - slotR - 8);
+      cx.fillText(`${slot.num}. ${slot.scholar}${occupant ? " 💡" : ""}`, slotX, slotY - slotR - 8);
 
       // 슬롯 하단: 도덕적 고려 범위 라벨
       cx.font = "bold 11px sans-serif";
@@ -2372,19 +2507,21 @@ function render(ts) {
       cx.restore();
     });
 
-    // 5. 결계 (Barrier) 발동 효과
+    // 6. 결계 (Barrier) 발동 효과
     if (isCompleted) {
       const k = (ts - (sp.t0 || 0)) / 1000;
       const barrierW = 940;
-      const barrierH = 610;
+      const barrierH = 680;
       const barrierX = sp.x - barrierW / 2;
-      const barrierY = sp.y - 295;
+      const barrierY = sp.y - 340;
 
       cx.save();
+      // 은은한 에너지 쉴드 돔
       cx.fillStyle = "rgba(16, 185, 129, 0.08)";
       drawRoundRect(cx, barrierX, barrierY, barrierW, barrierH, 36);
       cx.fill();
 
+      // 회전하는 굵은 점선 결계 빔
       cx.strokeStyle = "#10B981";
       cx.lineWidth = 5.5;
       cx.globalAlpha = 0.9;
@@ -2393,6 +2530,7 @@ function render(ts) {
       drawRoundRect(cx, barrierX, barrierY, barrierW, barrierH, 36);
       cx.stroke();
 
+      // 바깥쪽 반짝이는 얇은 골드 오라 링
       cx.strokeStyle = "#FBBF24";
       cx.lineWidth = 2.6;
       cx.setLineDash([12, 10]);
@@ -2521,6 +2659,7 @@ function render(ts) {
   });
   cx.restore();
 }
+
 requestAnimationFrame(loop);
 
 /* ===== 3번 탭 — 추첨 ===== */
@@ -2777,7 +2916,7 @@ function simCompleteAllSpots() {
   if (S.players.length < 28) populateNPCs();
   if (!S.spots || !S.spots.length) seatAll();
 
-  toast("⚡ 모둠별 순차 완성 및 불 켜기 시뮬레이션 시작!");
+  toast("⚡ 1, 2, 3 순서대로 벤다이어그램 완성 & 불 켜기 시뮬레이션 시작!");
   S.spots.forEach((sp, idx) => {
     setTimeout(() => {
       if (sp.done) return;
@@ -2800,12 +2939,12 @@ function simCompleteAllSpots() {
       playBarrierSound();
       drawMini();
       const doneCount = S.spots.filter(s => s.done).length;
-      toast(`💡 [모둠 ${sp.id + 1}] 벤다이어그램 완성! 불이 켜졌습니다! (${doneCount}/7)`);
+      toast(`💡 [모둠 ${sp.id + 1}] 벤다이어그램 완성! ${sp.id + 1}번 불이 켜졌습니다! (${doneCount}/7)`);
       if (doneCount === 7) {
         playAllCompletedVictoryFanfare();
         toast("🏆 축하합니다! 모든 7개 모둠의 벤다이어그램 결계가 완성되었습니다! 🎊");
       }
-    }, idx * 450);
+    }, idx * 550);
   });
 }
 
