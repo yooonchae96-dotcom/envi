@@ -966,10 +966,18 @@ function renderGrid(){
     d.className="cell"+(taken?" taken":"")+(taken&&taken.isMe?" mine":"")+(isSelected?" selected":"");
     const cv=document.createElement("canvas");cv.width=112;cv.height=104;d.appendChild(cv);
     
+function formatUserId(str) {
+  if (!str) return "";
+  if (typeof str === "string" && str.includes("@")) {
+    return str.split("@")[0];
+  }
+  return String(str);
+}
+
     let takenInfo = "";
     if(taken) {
-      const googleId = taken.email || taken.name || (taken.no ? taken.no + "번" : "");
-      takenInfo = `<div style="font-size:9px;color:#1a73e8;word-break:break-all;font-weight:700;margin-top:2px">📧 ${googleId}</div>`;
+      const googleId = formatUserId(taken.email || taken.name || (taken.no ? taken.no + "번" : ""));
+      takenInfo = `<div style="font-size:9px;color:#1a73e8;word-break:break-all;font-weight:700;margin-top:2px">👤 ${googleId}</div>`;
     }
     
     let confirmBtnHtml = "";
@@ -1009,12 +1017,12 @@ function pick(ch){
 function showMine(){
   const t=T[S.me.thinkerId],ch=S.me.ch;
   $("#myCard").classList.remove("hide");
-  const userGoogleId = S.me.email || S.me.name || (S.me.no + "번");
+  const userGoogleId = formatUserId(S.me.email || S.me.name || (S.me.no + "번"));
   $("#mine").innerHTML=`<div class="row" style="align-items:flex-start">
     <canvas id="mc" width="230" height="200"></canvas>
     <div style="flex:1;min-width:250px">
       <div style="font-size:18px;font-weight:700;color:${t.color}">${t.scholar} · ${t.name} <span class="muted">(${t.label})</span></div>
-      <p style="margin:4px 0"><b>선택자 Google 계정:</b> <span style="color:#1a73e8;font-weight:700">📧 ${userGoogleId}</span></p>
+      <p style="margin:4px 0"><b>선택자 계정 아이디:</b> <span style="color:#1a73e8;font-weight:700">👤 ${userGoogleId}</span></p>
       <p style="margin:4px 0"><b>고려 범위</b> ${t.scope}</p>
       <p style="margin:4px 0" class="muted">${t.core}</p>
       <p style="margin:4px 0">데리고 다니는 대상 ${t.pets.map(p=>PETNAME[p]).join(" · ")} · 내가 인 원은 ${["가장 작은","두 번째로 작은","세 번째로 큰","가장 큰"][t.band]} 원</p>
@@ -1042,7 +1050,7 @@ function renderRoster(){
   list.forEach(p=>{
     const d=document.createElement("div");d.className="rc"+(p.disconnected?" disconnected":"");
     const cv=document.createElement("canvas");cv.width=62;cv.height=68;d.appendChild(cv);
-    const googleId = p.email || p.name || (p.no + "번");
+    const googleId = formatUserId(p.email || p.name || (p.no + "번"));
     const statusText = p.disconnected ? `<span style="color:#ef4444;font-weight:700;font-size:9px;display:block">🔴 튕김</span>` : "";
     d.insertAdjacentHTML("beforeend",`<b style="font-size:9px;color:#1a73e8;word-break:break-all;display:block;margin-bottom:2px" title="${googleId}">${googleId}</b><span style="color:${p.ch.color}">${p.ch.scholar.slice(0,3)}</span>${statusText}`);
     if(p.isMe)d.style.outline="2px solid var(--accent)";
@@ -1051,6 +1059,7 @@ function renderRoster(){
     r.appendChild(d);
   });
 }
+
 
 /* ===== 접속 끊김(튕김) 및 재접속 관리 ===== */
 function updateDisconnectWidget() {
@@ -1889,50 +1898,37 @@ function render(ts) {
       cx.restore();
     }
 
-    // 1. 캐릭터 위: 사용자 ID / 학번
-    const userIdLabel = p.email || p.name || (p.isMe ? "나 (" + p.no + "번)" : p.no + "번");
-    cx.save();
-    cx.font = "bold 11px sans-serif";
-    const uTw = cx.measureText(userIdLabel).width + 14;
-    cx.fillStyle = p.isMe ? "rgba(15, 110, 99, 0.94)" : "rgba(31, 41, 55, 0.85)";
-    cx.strokeStyle = p.isMe ? "#3FC4B0" : "rgba(255, 255, 255, 0.6)";
-    cx.lineWidth = 1.8;
-    cx.beginPath();
-    if (cx.roundRect) cx.roundRect(p.x - uTw / 2, p.y - 62, uTw, 20, 6);
-    else cx.rect(p.x - uTw / 2, p.y - 62, uTw, 20);
-    cx.fill();
-    cx.stroke();
+    // 1. 캐릭터 머리 위: 계정 아이디 & 사상가 이름 (검은 바탕 박스 제거, 폰트만 렌더링)
+    const rawId = p.email || p.name || (p.isMe ? "나 (" + p.no + "번)" : p.no + "번");
+    const userIdText = formatUserId(rawId) + (p.isMe ? " (나)" : "");
+    const thinkerObj = T[p.thinkerId];
+    const scholarText = thinkerObj ? thinkerObj.scholar : "";
 
-    cx.fillStyle = "#FFFFFF";
+    cx.save();
     cx.textAlign = "center";
-    cx.fillText(userIdLabel, p.x, p.y - 48);
+
+    // 1-1. 상단: 계정 아이디 (이메일 도메인 없이 아이디만, 폰트만 렌더링)
+    cx.font = "bold 11px sans-serif";
+    cx.lineWidth = 3;
+    cx.strokeStyle = "rgba(255, 255, 255, 0.92)";
+    cx.fillStyle = p.isMe ? "#0F6E63" : "#334155";
+    cx.strokeText(userIdText, p.x, p.y - 66);
+    cx.fillText(userIdText, p.x, p.y - 66);
+
+    // 1-2. 머리 바로 위: 사상가 이름 (사상가 고유 컬러 폰트만 렌더링)
+    if (scholarText) {
+      cx.font = "bold 13px sans-serif";
+      cx.lineWidth = 3.5;
+      cx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+      cx.fillStyle = thinkerObj.color;
+      cx.strokeText(scholarText, p.x, p.y - 50);
+      cx.fillText(scholarText, p.x, p.y - 50);
+    }
     cx.restore();
 
     // 2. 캐릭터 본체 및 이동 모션
     drawChar(cx, p.x, p.y, p.ch, 0.95, { phase: p.ph, run: p.run, dir: p.dir });
 
-    // 3. 캐릭터 아래: 사상가 이름
-    const thinkerObj = T[p.thinkerId];
-    if (thinkerObj) {
-      cx.save();
-      cx.font = "bold 12px sans-serif";
-      const scholarText = thinkerObj.scholar;
-      const sTw = cx.measureText(scholarText).width + 14;
-
-      cx.fillStyle = "rgba(255, 255, 255, 0.92)";
-      cx.strokeStyle = thinkerObj.color;
-      cx.lineWidth = 2.2;
-      cx.beginPath();
-      if (cx.roundRect) cx.roundRect(p.x - sTw / 2, p.y + 16, sTw, 20, 5);
-      else cx.rect(p.x - sTw / 2, p.y + 16, sTw, 20);
-      cx.fill();
-      cx.stroke();
-
-      cx.fillStyle = thinkerObj.color;
-      cx.textAlign = "center";
-      cx.fillText(scholarText, p.x, p.y + 30);
-      cx.restore();
-    }
 
     // 4번 탭 역할바꿔 토론 역할 표식 렌더링
     if (S.tab === 4 && p.swappedThinkerId) {
