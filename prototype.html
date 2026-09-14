@@ -1944,23 +1944,21 @@ function playMiniLightUpSound(spotIdx) {
   }catch(e){}
 }
 
-// 3. 신나는 아케이드 게임 BGM 엔진 (134 BPM, 100% 저작권 프리 칩튠 루프)
+// 3. 벤다이어그램 탭 전용 BGM 엔진 (156 BPM, 경쾌한 마림바 & 통통 튀는 베이스 테마)
 const BGM_ENGINE={
   isPlaying:false,
   stepTimer:null,
   step:0,
-  bpm:134,
+  bpm:156,
   melody:[
-    659,0,659,784,880,0,784,0,
-    659,587,523,0,587,659,587,0,
-    659,0,659,784,880,0,1046,0,
-    987,784,880,0,784,659,523,0
+    784, 0, 880, 0, 988, 1046, 1175, 0,
+    1318, 0, 1175, 1046, 988, 0, 880, 784,
+    880, 0, 988, 0, 1046, 1175, 1318, 0,
+    1568, 0, 1318, 1175, 1046, 988, 880, 0
   ],
   bass:[
-    261,261,329,329,349,349,392,392,
-    261,261,329,329,392,392,349,349,
-    261,261,329,329,349,349,392,392,
-    440,440,392,392,349,349,261,261
+    130.8, 196.0, 130.8, 196.0, 174.6, 261.6, 174.6, 261.6,
+    146.8, 220.0, 146.8, 220.0, 196.0, 293.7, 196.0, 293.7
   ],
   start(){
     if(this.isPlaying||!S.sound)return;
@@ -1980,12 +1978,12 @@ const BGM_ENGINE={
       toast("🔇 BGM 꺼짐");
     }else{
       this.start();
-      toast("🎵 신나는 게임 BGM 켜짐!");
+      toast("🎵 벤다이어그램 BGM 켜짐!");
     }
   },
   updateUI(){
     const btn=$("#bgmToggleBtn");
-    if(btn){
+    if(btn && S.tab === 2){
       btn.textContent=this.isPlaying?"🎵 BGM ON":"🔇 BGM OFF";
       btn.style.backgroundColor=this.isPlaying?"#10B981":"#64748B";
     }
@@ -1998,26 +1996,28 @@ const BGM_ENGINE={
     const melFreq=this.melody[this.step%this.melody.length];
     const bassFreq=this.bass[this.step%this.bass.length];
 
+    // 경쾌한 마림바/실로폰 톤 (triangle)
     if(melFreq>0){
       const o=ctx.createOscillator(),g=ctx.createGain();
-      o.type="square";
+      o.type="triangle";
       o.frequency.setValueAtTime(melFreq,ctx.currentTime);
       g.gain.setValueAtTime(0.001,ctx.currentTime);
-      g.gain.linearRampToValueAtTime(0.045,ctx.currentTime+0.015);
-      g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.12);
+      g.gain.linearRampToValueAtTime(0.06,ctx.currentTime+0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.10);
       o.connect(g);g.connect(ctx.destination);
-      o.start();o.stop(ctx.currentTime+0.13);
+      o.start();o.stop(ctx.currentTime+0.11);
     }
 
-    if(bassFreq>0&&(this.step%2===0)){
+    // 퐁퐁 튀는 통통한 베이스 (sine)
+    if(bassFreq>0){
       const bo=ctx.createOscillator(),bg=ctx.createGain();
-      bo.type="triangle";
-      bo.frequency.setValueAtTime(bassFreq*0.5,ctx.currentTime);
+      bo.type="sine";
+      bo.frequency.setValueAtTime(bassFreq,ctx.currentTime);
       bg.gain.setValueAtTime(0.001,ctx.currentTime);
-      bg.gain.linearRampToValueAtTime(0.07,ctx.currentTime+0.02);
-      bg.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.18);
+      bg.gain.linearRampToValueAtTime(0.075,ctx.currentTime+0.012);
+      bg.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.14);
       bo.connect(bg);bg.connect(ctx.destination);
-      bo.start();bo.stop(ctx.currentTime+0.2);
+      bo.start();bo.stop(ctx.currentTime+0.15);
     }
 
     this.step++;
@@ -2025,21 +2025,23 @@ const BGM_ENGINE={
   }
 };
 
-// 3-2. 3번 탭 추첨 전용 경쾌한 게임쇼 카니발 BGM 엔진 (156 BPM, 벤다이어그램과 완전히 다른 통통 튀는 테마)
+// 3-2. 토론/추첨 탭 전용 BGM 엔진 (134 BPM, 신나는 8비트 아케이드 칩튠 루프)
 const LOTTO_BGM_ENGINE = {
   isPlaying: false,
   stepTimer: null,
   step: 0,
-  bpm: 156,
+  bpm: 134,
   melody: [
-    784, 0, 880, 0, 988, 1046, 1175, 0,
-    1318, 0, 1175, 1046, 988, 0, 880, 784,
-    880, 0, 988, 0, 1046, 1175, 1318, 0,
-    1568, 0, 1318, 1175, 1046, 988, 880, 0
+    659, 0, 659, 784, 880, 0, 784, 0,
+    659, 587, 523, 0, 587, 659, 587, 0,
+    659, 0, 659, 784, 880, 0, 1046, 0,
+    987, 784, 880, 0, 784, 659, 523, 0
   ],
   bass: [
-    130.8, 196.0, 130.8, 196.0, 174.6, 261.6, 174.6, 261.6,
-    146.8, 220.0, 146.8, 220.0, 196.0, 293.7, 196.0, 293.7
+    261, 261, 329, 329, 349, 349, 392, 392,
+    261, 261, 329, 329, 392, 392, 349, 349,
+    261, 261, 329, 329, 349, 349, 392, 392,
+    440, 440, 392, 392, 349, 349, 261, 261
   ],
   start() {
     if (this.isPlaying || !S.sound) return;
@@ -2057,17 +2059,17 @@ const LOTTO_BGM_ENGINE = {
     if (this.isPlaying) {
       this.stop();
       S.sound = false;
-      toast("🔇 추첨 BGM 꺼짐");
+      toast("🔇 토론 BGM 꺼짐");
     } else {
       S.sound = true;
       this.start();
-      toast("🎪 경쾌한 추첨 카니발 BGM 켜짐!");
+      toast("🎪 신나는 토론 아케이드 BGM 켜짐!");
     }
   },
   updateUI() {
     const btn = $("#bgmToggleBtn");
     if (btn && S.tab === 3) {
-      btn.textContent = this.isPlaying ? "🎪 추첨 BGM ON" : "🔇 BGM OFF";
+      btn.textContent = this.isPlaying ? "🎪 토론 BGM ON" : "🔇 BGM OFF";
       btn.style.backgroundColor = this.isPlaying ? "#F59E0B" : "#64748B";
     }
   },
@@ -2079,28 +2081,26 @@ const LOTTO_BGM_ENGINE = {
     const melFreq = this.melody[this.step % this.melody.length];
     const bassFreq = this.bass[this.step % this.bass.length];
 
-    // 경쾌한 마림바/실로폰 톤 (triangle)
     if (melFreq > 0) {
       const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = "triangle";
+      o.type = "square";
       o.frequency.setValueAtTime(melFreq, ctx.currentTime);
       g.gain.setValueAtTime(0.001, ctx.currentTime);
-      g.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.008);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.10);
+      g.gain.linearRampToValueAtTime(0.045, ctx.currentTime + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
       o.connect(g); g.connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 0.11);
+      o.start(); o.stop(ctx.currentTime + 0.13);
     }
 
-    // 퐁퐁 튀는 통통한 베이스 (sine)
-    if (bassFreq > 0) {
+    if (bassFreq > 0 && (this.step % 2 === 0)) {
       const bo = ctx.createOscillator(), bg = ctx.createGain();
-      bo.type = "sine";
-      bo.frequency.setValueAtTime(bassFreq, ctx.currentTime);
+      bo.type = "triangle";
+      bo.frequency.setValueAtTime(bassFreq * 0.5, ctx.currentTime);
       bg.gain.setValueAtTime(0.001, ctx.currentTime);
-      bg.gain.linearRampToValueAtTime(0.075, ctx.currentTime + 0.012);
-      bg.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.14);
+      bg.gain.linearRampToValueAtTime(0.07, ctx.currentTime + 0.02);
+      bg.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
       bo.connect(bg); bg.connect(ctx.destination);
-      bo.start(); bo.stop(ctx.currentTime + 0.15);
+      bo.start(); bo.stop(ctx.currentTime + 0.2);
     }
 
     this.step++;
