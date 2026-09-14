@@ -619,38 +619,26 @@ nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-weight:
   align-items: center;
   gap: 12px;
   width: 100%;
-  max-width: 520px;
+  max-width: 500px;
   margin: 6px auto 14px;
-}
-.start-btn-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  width: 100%;
-}
-@media (max-width: 500px) {
-  .start-btn-row {
-    grid-template-columns: 1fr;
-  }
 }
 .start-btn {
   width: 100%;
   height: 52px;
   min-height: 52px;
-  padding: 0 14px;
-  font-size: 14.5px;
+  padding: 0 20px;
+  font-size: 15px;
   font-weight: 700;
   border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   box-sizing: border-box;
   text-decoration: none;
   transition: all 0.18s ease;
   letter-spacing: -0.01em;
-  white-space: nowrap;
 }
 .start-btn-primary {
   background: #1e3a8a;
@@ -1133,19 +1121,15 @@ nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-weight:
     </div>
     <div class="start-btn-group">
       <div id="googleSignInDiv"></div>
-      <!-- 가장 긴 버튼 (상단 전체 가로폭): Google 계정으로 로그인 -->
-      <button class="start-btn start-btn-primary" id="gLoginBtn">
+      <button class="start-btn start-btn-primary" id="directPracticeBtn">
+        <span style="font-size:18px">🎯</span> <span>4. 수행평가 연습하기 바로가기 (로그인 불필요)</span>
+      </button>
+      <button class="start-btn start-btn-outline" id="quick4TestBtn">
+        <span style="font-size:18px">⚡</span> <span>4명 즉시 참석 테스트 (2번 탭 이동)</span>
+      </button>
+      <button class="start-btn start-btn-outline" id="gLoginBtn">
         <span style="font-size:18px">🔑</span> <span>Google 계정으로 로그인</span>
       </button>
-      <!-- 아래 반으로 갈라: 왼쪽 테스트버튼, 오른쪽 연습바로가기 버튼 -->
-      <div class="start-btn-row">
-        <button class="start-btn start-btn-outline" id="quick4TestBtn">
-          <span>⚡</span> <span>4명 즉시 참석 테스트</span>
-        </button>
-        <button class="start-btn start-btn-outline" id="directPracticeBtn">
-          <span>🎯</span> <span>4. 연습하기 바로가기</span>
-        </button>
-      </div>
     </div>
   </div>
 
@@ -1190,7 +1174,7 @@ nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-weight:
       </div>
     </div>
   </div>
-  <div class="card hide" id="pickCard">
+  <div class="card" id="pickCard">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
       <h2 style="margin:0">캐릭터 고르기 <span class="muted">선착순 · 사상가 4명 × 스타일 7개</span></h2>
       <button id="startTab2Btn" class="btn-start-tab2">🚀 출발! (2번 탭 벤다이어그램으로 이동)</button>
