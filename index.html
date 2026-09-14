@@ -182,36 +182,103 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   color: #ffffff;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
 }
-.bar-zoom-pill {
-  display: inline-flex;
+/* 좌측 세로 줌 스크롤/슬라이더 위젯 */
+.zoom-scroll-bar {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  background: #F1F5F9;
-  border: 1px solid #CBD5E1;
-  border-radius: 12px;
-  padding: 2px 6px;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  padding: 10px 8px;
+  border-radius: 22px;
+  border: 1.5px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  user-select: none;
 }
-.bar-zoom-pill button {
-  background: #ffffff;
-  border: 1px solid #CBD5E1;
-  border-radius: 8px;
-  padding: 3px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #1F2937;
+.zoom-slider-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #CBD5E1;
+  background: #FFFFFF;
+  color: #1E293B;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.12s;
+  padding: 0;
+  transition: all 0.15s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
 }
-.bar-zoom-pill button:hover {
+.zoom-slider-btn:hover {
   background: #0F6E63;
-  color: #ffffff;
+  color: #FFFFFF;
   border-color: #0F6E63;
+  transform: scale(1.1);
 }
-.bar-zoom-pill span {
+.zoom-slider-track-wrap {
+  width: 32px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.zoom-slider-track-wrap input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 126px;
+  height: 6px;
+  background: #E2E8F0;
+  border-radius: 4px;
+  outline: none;
+  transform: rotate(-90deg);
+  cursor: pointer;
+  margin: 0;
+}
+.zoom-slider-track-wrap input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0F6E63;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+.zoom-slider-track-wrap input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  background: #10B981;
+}
+.zoom-slider-track-wrap input[type=range]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0F6E63;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: pointer;
+}
+.zoom-percent-badge {
   font-size: 11px;
   font-weight: 800;
-  color: #334155;
-  min-width: 68px;
+  color: #0F6E63;
+  background: #E6F4F1;
+  border: 1px solid #A7F3D0;
+  padding: 3px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
   text-align: center;
 }
 /* 추첨판 */
@@ -461,6 +528,19 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
     width: 100%;
     justify-content: center;
   }
+  .zoom-scroll-bar {
+    left: 8px;
+    top: 35%;
+    transform: translateY(-35%);
+    padding: 6px 4px;
+    gap: 6px;
+  }
+  .zoom-slider-track-wrap {
+    height: 100px;
+  }
+  .zoom-slider-track-wrap input[type=range] {
+    width: 90px;
+  }
   #mapMsg {
     top: 10px;
     font-size: 11.5px;
@@ -575,7 +655,7 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
     <p class="muted">맵에 7개의 대형 벤다이어그램 구역이 미리 준비되어 있습니다. 내 사상가(아리스토텔레스·싱어·슈바이처·레오폴드)에 맞는 원형 칸으로 이동하세요. 네 사상가가 모두 모이면 결계가 쳐져 보호됩니다. (결계 완성 후에도 방향키/화면 드래그로 전체 맵을 자유롭게 둘러보실 수 있습니다)</p>
     <div id="stageContainer" style="position:relative">
       <canvas id="stage"></canvas>
-      <!-- 통합 하단 툴바: 불 켜짐 현황 + 시뮬레이션 + BGM + 줌 컨트롤 -->
+      <!-- 통합 하단 툴바: 불 켜짐 현황 + 시뮬레이션 + BGM -->
       <div class="stage-unified-bar" id="stageUnifiedBar">
         <div class="bar-lights-group" id="mini"></div>
         <div class="bar-divider"></div>
@@ -583,13 +663,16 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
           <button id="simRunBtn" class="bar-btn btn-run" title="학생들이 자리로 달려가는 시뮬레이션">🏃 모의 달리기</button>
           <button id="simCompleteAllBtn" class="bar-btn btn-complete" title="1번부터 7번 모둠까지 순서대로 완성 & 불 켜기">⚡ 모의 완성</button>
           <button id="bgmToggleBtn" class="bar-btn btn-bgm" title="신나는 게임 BGM 켜기/끄기">🎵 BGM ON</button>
-          <div class="bar-zoom-pill">
-            <button id="zoomOutBtn" title="축소 (−)">−</button>
-            <span id="zoomLabel">1단계 (100%)</span>
-            <button id="zoomInBtn" title="확대 (+)">+</button>
-            <button id="zoomFullBtn" title="전체 맵 보기">🗺️ 전체</button>
-          </div>
         </div>
+      </div>
+      <!-- 좌측 세로 줌 스크롤/슬라이더 컨트롤 -->
+      <div class="zoom-scroll-bar" id="zoomScrollBar" title="맵 크기 조정 (마우스 휠 또는 슬라이더)">
+        <button id="zoomSliderPlus" class="zoom-slider-btn" title="확대 (+)">+</button>
+        <div class="zoom-slider-track-wrap">
+          <input type="range" id="zoomRangeInput" min="22" max="100" value="55" step="1" title="맵 크기 조절">
+        </div>
+        <button id="zoomSliderMinus" class="zoom-slider-btn" title="축소 (−)">−</button>
+        <span id="zoomPercentBadge" class="zoom-percent-badge">55%</span>
       </div>
       <p class="muted" id="mapMsg" style="margin-top:8px"></p>
     </div>
@@ -1150,6 +1233,10 @@ function goToTab(tabIndex){
   if(S.tab === 2) {
     if(stageWrap && $("#t2Card")) $("#t2Card").appendChild(stageWrap);
     resize();
+    if(!S._initialZoomSet) {
+      if(typeof setZoomPercent === "function") setZoomPercent(55);
+      S._initialZoomSet = true;
+    }
     BGM_ENGINE.start();
   } else {
     BGM_ENGINE.stop();
@@ -1638,36 +1725,49 @@ if (bgmBtn) {
   bgmBtn.onclick = () => BGM_ENGINE.toggle();
 }
 
-// 4단계 맵 확대/축소 관리
-const ZOOM_LEVELS = [
-  { scale: 1.00, label: "1단계 (100%)" },
-  { scale: 0.70, label: "2단계 (70%)" },
-  { scale: 0.45, label: "3단계 (45%)" },
-  { scale: 0.22, label: "4단계 (전체)" }
-];
-let currentZoomIdx = 0;
+// 좌측 세로 줌 스크롤/슬라이더 위젯 및 마우스 휠 줌 제어
+S.zoomScale = 0.55; // 처음 입장했을 때는 중간 크기(55%)에서 시작
 
-function setZoomLevel(idx) {
-  currentZoomIdx = Math.max(0, Math.min(ZOOM_LEVELS.length - 1, idx));
-  const level = ZOOM_LEVELS[currentZoomIdx];
-  S.zoomScale = level.scale;
-  if ($("#zoomLabel")) $("#zoomLabel").textContent = level.label;
-  toast(`🔍 맵 시점: ${level.label}`);
+function setZoomPercent(pct, showToast = false) {
+  const clamped = Math.max(22, Math.min(100, Math.round(pct)));
+  S.zoomScale = clamped / 100;
+  const slider = $("#zoomRangeInput");
+  if (slider && +slider.value !== clamped) slider.value = clamped;
+  const badge = $("#zoomPercentBadge");
+  if (badge) badge.textContent = clamped + "%";
+  if (showToast) toast(`🔍 맵 배율: ${clamped}%`);
 }
 
 function initZoomControls() {
-  if ($("#zoomOutBtn")) {
-    $("#zoomOutBtn").onclick = () => setZoomLevel(currentZoomIdx + 1);
-  }
-  if ($("#zoomInBtn")) {
-    $("#zoomInBtn").onclick = () => setZoomLevel(currentZoomIdx - 1);
-  }
-  if ($("#zoomFullBtn")) {
-    $("#zoomFullBtn").onclick = () => {
-      if (currentZoomIdx === 3) setZoomLevel(0);
-      else setZoomLevel(3);
+  const slider = $("#zoomRangeInput");
+  if (slider) {
+    slider.oninput = (e) => {
+      setZoomPercent(+e.target.value);
     };
   }
+  const plusBtn = $("#zoomSliderPlus");
+  if (plusBtn) {
+    plusBtn.onclick = () => {
+      setZoomPercent(Math.round(S.zoomScale * 100) + 10, true);
+    };
+  }
+  const minusBtn = $("#zoomSliderMinus");
+  if (minusBtn) {
+    minusBtn.onclick = () => {
+      setZoomPercent(Math.round(S.zoomScale * 100) - 10, true);
+    };
+  }
+
+  // 캔버스 마우스 휠 스크롤 줌 (어디서든 휠을 굴려 부드럽게 크기 조절)
+  cvs.addEventListener("wheel", e => {
+    if (S.tab !== 2 && S.tab !== 3) return;
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 5 : -5;
+    setZoomPercent(Math.round(S.zoomScale * 100) + delta);
+  }, { passive: false });
+
+  // 처음 시작 시 중간 크기(55%)로 초기화
+  setZoomPercent(55);
 }
 setTimeout(initZoomControls, 100);
 
