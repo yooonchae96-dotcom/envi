@@ -1681,7 +1681,7 @@ const THINKERS=[
   keywords:["생명 공동체","자연 그 자체","생태계 그 자체","무생물","대자연의 일부","유기적","그물망"],
   forbidden:["이성을 지닌 인간만","이용할 수단","오직 인간","인간만이"]}];
 const T=Object.fromEntries(THINKERS.map(t=>[t.id,t]));
-const PETNAME={human:"인간",animal:"포메",plant:"꽃",land:"대지"};
+const PETNAME={human:"인간",animal:"동물",plant:"식물",land:"대지"};
 const CHARACTERS=THINKERS.flatMap(t=>[1,2,3,4,5,6,7].map(i=>{
   const id=t.id+"_s"+i;
   return {charId:id,thinkerId:t.id,scholar:t.scholar,styleName:META[id].name,
@@ -2621,7 +2621,7 @@ function showMine(){
       <p style="margin:4px 0"><b>선택자 계정 아이디:</b> <span style="color:#1a73e8;font-weight:700">👤 ${userGoogleId}</span></p>
       <p style="margin:4px 0"><b>고려 범위</b> ${t.scope}</p>
       <p style="margin:4px 0" class="muted">${t.core}</p>
-      <p style="margin:4px 0">데리고 다니는 대상 ${t.pets.map(p=>PETNAME[p]).join(" · ")}</p>
+      <p style="margin:4px 0"><b>도덕적 고려의 대상:</b> ${t.pets.map(p=>PETNAME[p]).join(" · ")}</p>
       <div>${t.keywords.slice(0,4).map(k=>`<span class="kw">${k}</span>`).join("")}</div>
     </div></div>`;
   const c=$("#mc").getContext("2d");
