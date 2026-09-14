@@ -447,8 +447,7 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 <section id="t2" class="hide">
   <div class="card" id="t2Card"><h2>벤다이어그램 만들기</h2>
-    <p class="muted">각자 자기 크기의 원을 머리에 이고 다닙니다. 반짝이는 우리 모둠 자리로 달려가면
-      네 원이 겹쳐 벤다이어그램이 됩니다. (결계가 완성된 후에도 방향키/화면 드래그로 전체 맵을 자유롭게 둘러보실 수 있습니다)</p>
+    <p class="muted">맵에 7개의 대형 벤다이어그램 구역이 미리 준비되어 있습니다. 내 사상가(아리스토텔레스·싱어·슈바이처·레오폴드)에 맞는 원형 칸으로 이동하세요. 네 사상가가 모두 모이면 결계가 쳐져 보호됩니다. (결계 완성 후에도 방향키/화면 드래그로 전체 맵을 자유롭게 둘러보실 수 있습니다)</p>
     <div id="stageContainer" style="position:relative">
       <canvas id="stage"></canvas>
       <div class="dpad"><i></i><button data-mv="u">↑</button><i></i>
@@ -644,6 +643,15 @@ const S={me:null,players:[],spots:[],tab:1,drawn:null,pool:[],claim:null,votes:{
          teams:[],rot:0,warnAt:0,sound:true};
 const W=3200,H=2000,SPEED=220;
 const SPOTPOS=[[500,420],[1600,420],[2700,420],[500,1580],[1600,1580],[2700,1580],[1600,1000]];
+
+/* ===== 사상가 일렬 슬롯 정의 ===== */
+const THINKER_SLOTS = [
+  { id: "ari", num: 1, scholar: "아리스토텔레스", label: "인간", color: "#5B4FCF", offsetX: -165, offsetY: 0 },
+  { id: "sin", num: 2, scholar: "피터 싱어", label: "동물", color: "#E03E52", offsetX: -55, offsetY: 0 },
+  { id: "sch", num: 3, scholar: "슈바이처", label: "생명", color: "#2FA36B", offsetX: 55, offsetY: 0 },
+  { id: "leo", num: 4, scholar: "레오폴드", label: "생태", color: "#8A6A3B", offsetX: 165, offsetY: 0 }
+];
+
 const IMG={},PIMG={};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),1500);}
@@ -1318,30 +1326,39 @@ addEventListener("pointerup", e => {
 });
 addEventListener("pointercancel", () => isDragging = false);
 
-function blocked(p,nx,ny){
-  for(const sp of S.spots){
-    const dist = Math.hypot(nx - sp.x, ny - sp.y);
-    const currDist = Math.hypot(p.x - sp.x, p.y - sp.y);
+function blocked(p, nx, ny) {
+  for (const sp of S.spots) {
+    if (sp.done) {
+      // 결계 완성된 모둠의 멤버는 내부 이동 허용
+      if (p.spot === sp.id && p.frozen) continue;
 
-    if(sp.done){
-      if(p.spot === sp.id && p.frozen) continue;
-      const barrierR = T.leo.ringR * 1.6 + 35;
-      if(dist < barrierR && dist < currDist){
-        if(p.isMe && performance.now() - S.warnAt > 1200){
+      // 결계 타원 범위 (레오폴드 생태 외곽 타원 + 여유 20px)
+      const Rx = 265 + 20;
+      const Ry = 140 + 15;
+      const normDist = Math.pow((nx - sp.x) / Rx, 2) + Math.pow((ny - sp.y) / Ry, 2);
+      const currNormDist = Math.pow((p.x - sp.x) / Rx, 2) + Math.pow((p.y - sp.y) / Ry, 2);
+
+      // 결계 내부로 진입하려 할 때 차단
+      if (normDist < 1.0 && normDist < currNormDist) {
+        if (p.isMe && performance.now() - S.warnAt > 1200) {
           S.warnAt = performance.now();
-          toast("완성된 모둠입니다. 결계가 쳐져 있어 들어갈 수 없습니다.");
+          toast("🛡️ 완성된 모둠입니다. 결계가 쳐져 있어 들어갈 수 없습니다.");
         }
         return true;
       }
     } else {
-      if(p.spot === sp.id) continue;
-      if(dist < 260 && dist < currDist){
-        const occupantsInZone = S.players.filter(other => other.id !== p.id && (other.spot === sp.id || Math.hypot(other.x - sp.x, other.y - sp.y) < 260));
+      if (p.spot === sp.id) continue;
+      const dist = Math.hypot(nx - sp.x, ny - sp.y);
+      const currDist = Math.hypot(p.x - sp.x, p.y - sp.y);
+
+      // 모둠 구역 진입 시 동일 사상가 중복 검사
+      if (dist < 290 && dist < currDist) {
+        const occupantsInZone = S.players.filter(other => other.id !== p.id && (other.spot === sp.id || Math.hypot(other.x - sp.x, other.y - sp.y) < 290));
         const hasSameThinker = occupantsInZone.some(other => other.thinkerId === p.thinkerId);
-        if(hasSameThinker){
-          if(p.isMe && performance.now() - S.warnAt > 1200){
+        if (hasSameThinker) {
+          if (p.isMe && performance.now() - S.warnAt > 1200) {
             S.warnAt = performance.now();
-            toast("이미 동일한 사상가가 자리에 있습니다! 다른 사상가 4명이 모여야 합니다.");
+            toast("⚠️ 이미 동일한 사상가가 자리에 있습니다! 다른 사상가 4명이 모여야 합니다.");
           }
           return true;
         }
@@ -1351,89 +1368,94 @@ function blocked(p,nx,ny){
   return false;
 }
 
-function step(p,dx,dy,dt){
-  if(p.frozen)return false;
-  const d=Math.hypot(dx,dy);if(!d)return false;
-  const nx=Math.max(60,Math.min(W-60,p.x+dx/d*SPEED*dt)),ny=Math.max(110,Math.min(H-50,p.y+dy/d*SPEED*dt));
-  if(blocked(p,nx,ny))return false;
-  if(dx)p.dir=dx>0?1:-1;
-  p.x=nx;p.y=ny;p.ph+=dt*10;return true;
+function step(p, dx, dy, dt) {
+  if (p.frozen) return false;
+  const d = Math.hypot(dx, dy); if (!d) return false;
+  const nx = Math.max(60, Math.min(W - 60, p.x + dx / d * SPEED * dt));
+  const ny = Math.max(110, Math.min(H - 50, p.y + dy / d * SPEED * dt));
+  if (blocked(p, nx, ny)) return false;
+  if (dx) p.dir = dx > 0 ? 1 : -1;
+  p.x = nx; p.y = ny; p.ph += dt * 10; return true;
 }
 
 function alignSpotThinkersInLine(sp) {
   const inSpot = S.players.filter(p => p.spot === sp.id && p.frozen);
   inSpot.forEach(p => {
-    let offsetX = 0;
-    if (p.thinkerId === "ari") offsetX = 0;
-    else if (p.thinkerId === "sin") offsetX = 130;
-    else if (p.thinkerId === "sch") offsetX = 215;
-    else if (p.thinkerId === "leo") offsetX = 295;
-    
-    p.x = sp.x + offsetX;
-    p.y = sp.y + 10;
-    p.tx = p.x;
-    p.ty = p.y;
-    p.dir = 1;
-    p.run = false;
-  });
-}
-
-function checkSpots(){
-  S.spots.forEach(sp=>{
-    if(sp.done)return;
-    const inZone=S.players.filter(p=>Math.hypot(p.x-sp.x,p.y-sp.y)<260);
-    if(S.me && sp.id === S.me.spot && !inZone.some(p => p.isMe)) return;
-
-    const thinkersInZone = new Set(inZone.map(p=>p.thinkerId));
-    if(thinkersInZone.size === 4 && inZone.length >= 4){
-      const memberMap = new Map();
-      inZone.forEach(p => {
-        if(!memberMap.has(p.thinkerId)) memberMap.set(p.thinkerId, p);
-      });
-      if(memberMap.size === 4){
-        const finalMembers = Array.from(memberMap.values());
-        sp.done = true;
-        sp.t0 = performance.now();
-        finalMembers.forEach(p => {
-          p.spot = sp.id;
-          p.frozen = true;
-          p.isRoamer = false;
-        });
-        
-        alignSpotThinkersInLine(sp);
-
-        toast("모둠 " + (sp.id + 1) + " 벤다이어그램 완성!");
-        if(finalMembers.some(p=>p.isMe)){
-          $("#mapMsg").textContent="🎉 우리 모둠 완성! (방향키/화면 드래그로 맵을 이동하고 다른 모둠을 탐색해보세요)";
-          toast("우리 모둠 완성! 방향키/화면 드래그로 맵을 둘러보세요! 🚀");
-          fanfare();
-          if(S.me) S.cam = { x: S.me.x, y: S.me.y };
-        }
-        drawMini();
-      }
+    const slot = THINKER_SLOTS.find(s => s.id === p.thinkerId);
+    if (slot) {
+      p.x = sp.x + slot.offsetX;
+      p.y = sp.y + slot.offsetY;
+      p.tx = p.x;
+      p.ty = p.y;
+      p.dir = 1;
+      p.run = false;
     }
   });
 }
 
-function drawMini(){
-  $("#mini").innerHTML=S.spots.map(s=>`<i class="${s.done?"done":""}">${s.id+1}</i>`).join("")+
-    `<span class="muted">완성 ${S.spots.filter(s=>s.done).length} / ${S.spots.length}</span>`;
+function checkSpots() {
+  S.spots.forEach(sp => {
+    if (sp.done) return;
+    const inZone = S.players.filter(p => Math.hypot(p.x - sp.x, p.y - sp.y) < 300);
+    if (S.me && sp.id === S.me.spot && !inZone.some(p => p.isMe)) return;
+
+    // 4개 슬롯 각각에 알맞은 사상가가 슬롯 원 근처(반경 52px)에 도달했는지 확인
+    const matched = [];
+    THINKER_SLOTS.forEach(slot => {
+      const slotX = sp.x + slot.offsetX;
+      const slotY = sp.y + slot.offsetY;
+      const cand = inZone.find(p => p.thinkerId === slot.id && Math.hypot(p.x - slotX, p.y - slotY) < 56);
+      if (cand) {
+        matched.push({ slot, player: cand });
+      }
+    });
+
+    if (matched.length === 4) {
+      sp.done = true;
+      sp.t0 = performance.now();
+      matched.forEach(m => {
+        const p = m.player;
+        const slot = m.slot;
+        p.spot = sp.id;
+        p.frozen = true;
+        p.isRoamer = false;
+        p.x = sp.x + slot.offsetX;
+        p.y = sp.y + slot.offsetY;
+        p.tx = p.x;
+        p.ty = p.y;
+        p.dir = 1;
+        p.run = false;
+      });
+
+      toast(`⚡ 모둠 ${sp.id + 1} 벤다이어그램 완성! 결계가 활성화되었습니다.`);
+      if (matched.some(m => m.player.isMe)) {
+        $("#mapMsg").textContent = "🎉 우리 모둠 완성! 결계가 쳐져 안전합니다. (화면 드래그/방향키로 다른 모둠을 둘러보세요)";
+        toast("우리 모둠 결계 발동! 🛡️ 네 사상가가 모두 모였습니다! 🚀");
+        fanfare();
+        if (S.me) S.cam = { x: S.me.x, y: S.me.y };
+      }
+      drawMini();
+    }
+  });
 }
 
-let prev=0;
-function loop(ts){
+function drawMini() {
+  $("#mini").innerHTML = S.spots.map(s => `<i class="${s.done ? "done" : ""}">${s.id + 1}</i>`).join("") +
+    `<span class="muted">완성 ${S.spots.filter(s => s.done).length} / ${S.spots.length}</span>`;
+}
+
+let prev = 0;
+function loop(ts) {
   requestAnimationFrame(loop);
-  const dt=Math.min(.05,(ts-prev)/1000||0);prev=ts;
-  if((S.tab!==2 && S.tab!==3)||!S.spots.length)return;
-  const me=S.me;
-  const dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0),dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
+  const dt = Math.min(.05, (ts - prev) / 1000 || 0); prev = ts;
+  if ((S.tab !== 2 && S.tab !== 3) || !S.spots.length) return;
+  const me = S.me;
+  const dx = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0), dy = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0);
 
   if (me && !me.frozen && S.tab === 2) {
-    // 이동 중일 때는 캐릭터가 언제나 맵 중앙에 오도록 카메라 위치 고정!
     me.run = step(me, dx, dy, dt);
     S.cam = { x: me.x, y: me.y };
   } else if (me && me.frozen) {
-    // 결계 완성 후에는 방향키 / D-pad / 화면 드래그로 카메라 자유 이동 가능
     if (!S.cam) S.cam = { x: me.x, y: me.y };
     if (dx || dy) {
       const d = Math.hypot(dx, dy);
@@ -1444,8 +1466,7 @@ function loop(ts){
       S.cam.y = Math.max(vh / 2, Math.min(H - vh / 2, S.cam.y + (dy / d) * camSpeed * dt));
     }
   } else if (S.tab === 3) {
-    // 3번 탭 추첨/토론 모드에서도 방향키/드래그로 자유 이동 가능
-    if (!S.cam) S.cam = { x: me ? me.x : W/2, y: me ? me.y : H/2 };
+    if (!S.cam) S.cam = { x: me ? me.x : W / 2, y: me ? me.y : H / 2 };
     if ((dx || dy) && !S.lottoCandidateId) {
       const d = Math.hypot(dx, dy);
       const camSpeed = SPEED * 2.2;
@@ -1459,46 +1480,45 @@ function loop(ts){
   // 스팟 유도 및 모둠 구성 로직
   S.spots.forEach(sp => {
     if (sp.done) return;
-    const occupants = S.players.filter(p => Math.hypot(p.x - sp.x, p.y - sp.y) < 320);
-    const presentThinkers = new Set();
-    
-    occupants.forEach(p => {
-      if (p.spot === sp.id || Math.hypot(p.x - sp.x, p.y - sp.y) < 220) {
-        presentThinkers.add(p.thinkerId);
-        p.spot = sp.id;
-      }
-    });
 
-    THINKERS.forEach(t => {
-      if (!presentThinkers.has(t.id)) {
-        const candidate = S.players.find(p => !p.isMe && p.isRoamer && p.thinkerId === t.id && (p.spot === null || p.spot === undefined));
+    THINKER_SLOTS.forEach(slot => {
+      const slotX = sp.x + slot.offsetX;
+      const slotY = sp.y + slot.offsetY;
+
+      // 내가 내 사상가 슬롯 근처에 있으면 자리 자동 스냅 및 등록
+      if (S.me && !S.me.frozen && S.me.thinkerId === slot.id) {
+        if (Math.hypot(S.me.x - slotX, S.me.y - slotY) < 45) {
+          S.me.spot = sp.id;
+        }
+      }
+
+      // 점유자 확인
+      const occupant = S.players.find(p => p.spot === sp.id && p.thinkerId === slot.id);
+
+      // 빈 슬롯이면 배회 중인 적합한 NPC를 이 슬롯으로 유도
+      if (!occupant) {
+        const candidate = S.players.find(p => !p.isMe && p.isRoamer && p.thinkerId === slot.id && (p.spot === null || p.spot === undefined));
         if (candidate) {
           candidate.spot = sp.id;
-          let offset;
-          if (t.id === "ari") offset = { x: 0, y: 15 };
-          else if (t.id === "sin") offset = { x: -90, y: -45 };
-          else if (t.id === "sch") offset = { x: 165, y: -65 };
-          else offset = { x: -240, y: 80 };
-
-          candidate.tx = sp.x + offset.x;
-          candidate.ty = sp.y + offset.y;
+          candidate.tx = slotX;
+          candidate.ty = slotY;
         }
       }
     });
   });
 
-  S.players.forEach(p=>{
-    if(p.isMe||p.frozen){if(!p.isMe)p.run=false;return;}
+  S.players.forEach(p => {
+    if (p.isMe || p.frozen) { if (!p.isMe) p.run = false; return; }
 
     if (p.spot !== null && p.spot !== undefined) {
-      let ax=p.tx-p.x, ay=p.ty-p.y;
-      const dist=Math.hypot(ax,ay);
-      if(dist > 15) {
-        const wiggle = Math.sin((ts||0)*0.002 + (p.no||0)*7.3)*15;
-        ax += Math.cos((p.no||1)*2.5)*wiggle;
-        ay += Math.sin((p.no||1)*2.5)*wiggle;
+      let ax = p.tx - p.x, ay = p.ty - p.y;
+      const dist = Math.hypot(ax, ay);
+      if (dist > 15) {
+        const wiggle = Math.sin((ts || 0) * 0.002 + (p.no || 0) * 7.3) * 15;
+        ax += Math.cos((p.no || 1) * 2.5) * wiggle;
+        ay += Math.sin((p.no || 1) * 2.5) * wiggle;
       }
-      p.run = dist > 6 ? step(p, ax, ay, dt * 0.26) : false;
+      p.run = dist > 5 ? step(p, ax, ay, dt * 0.28) : false;
     } else {
       let ax = p.tx - p.x, ay = p.ty - p.y;
       const dist = Math.hypot(ax, ay);
@@ -1510,12 +1530,8 @@ function loop(ts){
     }
   });
 
-  S.players.forEach(p=>{
-    if (p.spot === null || p.spot === undefined) { p.ringT = 0; return; }
-    const sp=S.spots[p.spot],d=Math.hypot(p.x-sp.x,p.y-sp.y);
-    p.ringT+=((d<260?1:0)-p.ringT)*Math.min(1,dt*5);
-  });
-  checkSpots();render(ts);
+  checkSpots();
+  render(ts);
 }
 
 // 2D 캔버스 메타버스 말풍선 렌더링 함수
@@ -1529,7 +1545,7 @@ function drawSpeechBubble(cx, x, y, claim) {
 
   cx.font = "12px sans-serif";
   const maxWidth = 230;
-  
+
   const words = reasonText.split("");
   let lines = [];
   let currentLine = "";
@@ -1569,7 +1585,7 @@ function drawSpeechBubble(cx, x, y, claim) {
   cx.quadraticCurveTo(bx + bubbleWidth, by, bx + bubbleWidth, by + r);
   cx.lineTo(bx + bubbleWidth, by + bubbleHeight - r);
   cx.quadraticCurveTo(bx + bubbleWidth, by + bubbleHeight, bx + bubbleWidth - r, by + bubbleHeight);
-  
+
   cx.lineTo(x + 10, by + bubbleHeight);
   cx.lineTo(x, by + bubbleHeight + 12);
   cx.lineTo(x - 10, by + bubbleHeight);
@@ -1585,7 +1601,7 @@ function drawSpeechBubble(cx, x, y, claim) {
 
   cx.fillStyle = stanceColor;
   cx.beginPath();
-  if(cx.roundRect) cx.roundRect(bx + 10, by + 8, 44, 18, 4); else cx.rect(bx + 10, by + 8, 44, 18);
+  if (cx.roundRect) cx.roundRect(bx + 10, by + 8, 44, 18, 4); else cx.rect(bx + 10, by + 8, 44, 18);
   cx.fill();
 
   cx.fillStyle = "#FFFFFF";
@@ -1621,12 +1637,12 @@ function drawSpeechBubble(cx, x, y, claim) {
   cx.restore();
 }
 
-function render(ts){
+function render(ts) {
   const scale = S.zoomScale || 1.0;
   const stageH = cvs.clientHeight || 640;
   const vw = cvs.clientWidth / scale, vh = stageH / scale, me = S.me;
-  let targetX = (S.cam && S.cam.x) ? S.cam.x : (me ? me.x : W/2);
-  let targetY = (S.cam && S.cam.y) ? S.cam.y : (me ? me.y : H/2);
+  let targetX = (S.cam && S.cam.x) ? S.cam.x : (me ? me.x : W / 2);
+  let targetY = (S.cam && S.cam.y) ? S.cam.y : (me ? me.y : H / 2);
 
   if (scale <= 0.32) {
     targetX = W / 2;
@@ -1639,85 +1655,197 @@ function render(ts){
   cx.save();
   cx.scale(scale, scale);
   cx.translate(-camx, -camy);
-  cx.fillStyle="#BFE3D8";cx.fillRect(0,0,W,H);
-  cx.fillStyle="#A9D79A";cx.fillRect(0,90,W,H-170);
-  cx.fillStyle="#E6D9B4";cx.fillRect(0,H-80,W,80);
-  cx.strokeStyle="rgba(255,255,255,.22)";cx.lineWidth=2;
-  for(let x=0;x<W;x+=120){cx.beginPath();cx.moveTo(x,90);cx.lineTo(x,H-80);cx.stroke();}
-  for(let y=90;y<H-80;y+=120){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();}
-  // 7개 벤다이어그램 모둠 스팟 선명하게 렌더링
-  S.spots.forEach(sp=>{
-    if(!sp.done){
-      const isMeNear = S.me && Math.hypot(S.me.x - sp.x, S.me.y - sp.y) < 320;
+  cx.fillStyle = "#BFE3D8"; cx.fillRect(0, 0, W, H);
+  cx.fillStyle = "#A9D79A"; cx.fillRect(0, 90, W, H - 170);
+  cx.fillStyle = "#E6D9B4"; cx.fillRect(0, H - 80, W, 80);
+  cx.strokeStyle = "rgba(255,255,255,.22)"; cx.lineWidth = 2;
+  for (let x = 0; x < W; x += 120) { cx.beginPath(); cx.moveTo(x, 90); cx.lineTo(x, H - 80); cx.stroke(); }
+  for (let y = 90; y < H - 80; y += 120) { cx.beginPath(); cx.moveTo(0, y); cx.lineTo(W, y); cx.stroke(); }
+
+  // 7개 벤다이어그램 모둠 스팟 상시 사전 렌더링 + 일렬 사상가 슬롯
+  S.spots.forEach(sp => {
+    const isCompleted = sp.done;
+    const occupants = S.players.filter(p => p.spot === sp.id);
+
+    // 1. 4중 벤다이어그램 (대지/생태 ⊃ 생명 ⊃ 동물 ⊃ 인간)
+    // 1-1. 레오폴드 (생태계 전체 - 가장 큰 외곽 타원)
+    cx.save();
+    cx.beginPath();
+    cx.ellipse(sp.x, sp.y, 265, 140, 0, 0, Math.PI * 2);
+    cx.fillStyle = isCompleted ? "rgba(138, 106, 59, 0.16)" : "rgba(138, 106, 59, 0.08)";
+    cx.fill();
+    cx.strokeStyle = isCompleted ? "#8A6A3B" : "rgba(138, 106, 59, 0.55)";
+    cx.lineWidth = isCompleted ? 3.5 : 2.2;
+    cx.stroke();
+    cx.fillStyle = "#6E542C";
+    cx.font = "bold 11px sans-serif";
+    cx.textAlign = "right";
+    cx.fillText("가. 생태 중심 (생태계 전체)", sp.x + 252, sp.y - 105);
+    cx.restore();
+
+    // 1-2. 슈바이처 (생명 중심 - 모든 생명)
+    cx.save();
+    cx.beginPath();
+    cx.ellipse(sp.x - 55, sp.y, 195, 112, 0, 0, Math.PI * 2);
+    cx.fillStyle = isCompleted ? "rgba(47, 163, 107, 0.15)" : "rgba(47, 163, 107, 0.08)";
+    cx.fill();
+    cx.strokeStyle = isCompleted ? "#2FA36B" : "rgba(47, 163, 107, 0.55)";
+    cx.lineWidth = isCompleted ? 3.5 : 2.2;
+    cx.stroke();
+    cx.fillStyle = "#1E754B";
+    cx.font = "bold 11px sans-serif";
+    cx.textAlign = "right";
+    cx.fillText("나. 생명 중심 (동식물)", sp.x + 128, sp.y - 82);
+    cx.restore();
+
+    // 1-3. 피터 싱어 (동물 중심 - 동물까지)
+    cx.save();
+    cx.beginPath();
+    cx.ellipse(sp.x - 110, sp.y, 130, 84, 0, 0, Math.PI * 2);
+    cx.fillStyle = isCompleted ? "rgba(224, 62, 82, 0.15)" : "rgba(224, 62, 82, 0.08)";
+    cx.fill();
+    cx.strokeStyle = isCompleted ? "#E03E52" : "rgba(224, 62, 82, 0.55)";
+    cx.lineWidth = isCompleted ? 3.5 : 2.2;
+    cx.stroke();
+    cx.fillStyle = "#B32637";
+    cx.font = "bold 11px sans-serif";
+    cx.textAlign = "right";
+    cx.fillText("다. 동물 중심 (인간+동물)", sp.x + 8, sp.y - 60);
+    cx.restore();
+
+    // 1-4. 아리스토텔레스 (인간 중심 - 오직 인간)
+    cx.save();
+    cx.beginPath();
+    cx.ellipse(sp.x - 165, sp.y, 65, 56, 0, 0, Math.PI * 2);
+    cx.fillStyle = isCompleted ? "rgba(91, 79, 207, 0.18)" : "rgba(91, 79, 207, 0.10)";
+    cx.fill();
+    cx.strokeStyle = isCompleted ? "#5B4FCF" : "rgba(91, 79, 207, 0.55)";
+    cx.lineWidth = isCompleted ? 3.5 : 2.2;
+    cx.stroke();
+    cx.fillStyle = "#4338A8";
+    cx.font = "bold 11px sans-serif";
+    cx.textAlign = "center";
+    cx.fillText("라. 인간 중심", sp.x - 165, sp.y - 40);
+    cx.restore();
+
+    // 2. 모둠 번호 및 상태 배너 상단 렌더링
+    cx.save();
+    const bannerY = sp.y - 150;
+    const bannerText = isCompleted ? `🛡️ 모둠 ${sp.id + 1} 벤다이어그램 결계 활성화 (완성)` : `📍 모둠 ${sp.id + 1} 벤다이어그램 (${occupants.length}/4명 모임)`;
+    cx.font = "bold 14px sans-serif";
+    const bw = cx.measureText(bannerText).width + 24;
+    cx.fillStyle = isCompleted ? "rgba(15, 110, 99, 0.95)" : "rgba(255, 255, 255, 0.92)";
+    cx.strokeStyle = isCompleted ? "#3FC4B0" : "#94A3B8";
+    cx.lineWidth = 2;
+    cx.beginPath();
+    if (cx.roundRect) cx.roundRect(sp.x - bw / 2, bannerY - 14, bw, 28, 14);
+    else cx.rect(sp.x - bw / 2, bannerY - 14, bw, 28);
+    cx.fill();
+    cx.stroke();
+    cx.fillStyle = isCompleted ? "#FFFFFF" : "#1E293B";
+    cx.textAlign = "center";
+    cx.textBaseline = "middle";
+    cx.fillText(bannerText, sp.x, bannerY);
+    cx.restore();
+
+    // 3. 네 사상가 원형 칸(슬롯) 일렬 렌더링
+    THINKER_SLOTS.forEach(slot => {
+      const slotX = sp.x + slot.offsetX;
+      const slotY = sp.y + slot.offsetY;
+      const occupant = S.players.find(p => p.spot === sp.id && p.thinkerId === slot.id);
+      const isMyTargetSlot = S.me && !S.me.frozen && S.me.thinkerId === slot.id && !occupant;
+      const pulse = isMyTargetSlot ? Math.sin((ts || 0) * 0.006) * 4 : 0;
+      const slotR = 36 + pulse;
+
       cx.save();
-      cx.globalAlpha = isMeNear ? 0.85 + 0.15 * Math.sin((ts||0) / 200) : 0.65;
-      cx.fillStyle = isMeNear ? "#0F6E63" : "#15B097";
+      // 바닥 원 그림자
+      cx.fillStyle = "rgba(0, 0, 0, 0.08)";
       cx.beginPath();
-      cx.arc(sp.x, sp.y, isMeNear ? 18 : 14, 0, 7);
+      cx.ellipse(slotX, slotY + 2, slotR + 2, (slotR + 2) * 0.5, 0, 0, Math.PI * 2);
       cx.fill();
 
-      cx.strokeStyle = isMeNear ? "#3FC4B0" : "rgba(15, 110, 99, 0.55)";
-      cx.lineWidth = 3;
-      cx.setLineDash([8, 6]);
+      // 원 모양 칸 본체
       cx.beginPath();
-      cx.arc(sp.x, sp.y, isMeNear ? 38 : 30, 0, 7);
+      cx.arc(slotX, slotY, slotR, 0, Math.PI * 2);
+      cx.fillStyle = occupant ? slot.color + "28" : (isMyTargetSlot ? slot.color + "20" : "rgba(255, 255, 255, 0.78)");
+      cx.fill();
+
+      cx.strokeStyle = slot.color;
+      cx.lineWidth = occupant ? 3.5 : (isMyTargetSlot ? 3.5 : 2.2);
+      if (!occupant && !isCompleted) {
+        cx.setLineDash([6, 4]);
+      }
       cx.stroke();
 
-      cx.globalAlpha = 0.95;
-      cx.fillStyle = isMeNear ? "#0F6E63" : "#2C3E50";
-      cx.font = "bold 15px sans-serif";
-      cx.textAlign = "center";
-      const labelText = isMeNear ? `📍 모둠 ${sp.id + 1} (선택 중)` : `📍 모둠 ${sp.id + 1}`;
-      cx.fillText(labelText, sp.x, sp.y - 42);
-      cx.restore();
-    } else {
-      // 4개 concentric Venn diagram 원 중첩 없이 정교하게 렌더링 (sp.x + 135 중심)
-      const centerX = sp.x + 135;
-      const centerY = sp.y + 10;
-      THINKERS.slice().reverse().forEach(t => {
-        let Rx, Ry, offX;
-        if (t.id === "leo") { Rx = 230; Ry = 120; offX = 0; }
-        else if (t.id === "sch") { Rx = 170; Ry = 92; offX = -35; }
-        else if (t.id === "sin") { Rx = 115; Ry = 66; offX = -70; }
-        else { Rx = 55; Ry = 40; offX = -105; }
-
+      // 내 타겟 슬롯일 경우 밝은 안내 이펙트
+      if (isMyTargetSlot) {
         cx.save();
-        cx.globalAlpha = 0.42;
-        cx.fillStyle = t.color + "22";
-        cx.strokeStyle = t.color;
-        cx.lineWidth = 3.5;
+        cx.setLineDash([]);
+        cx.strokeStyle = "#FFD700";
+        cx.lineWidth = 2.5;
         cx.beginPath();
-        cx.ellipse(centerX + offX, centerY, Rx, Ry, 0, 0, 7);
-        cx.fill();
+        cx.arc(slotX, slotY, slotR + 7, 0, Math.PI * 2);
         cx.stroke();
+        cx.fillStyle = "#D97706";
+        cx.font = "bold 12px sans-serif";
+        cx.textAlign = "center";
+        cx.fillText("👇 내 자리!", slotX, slotY - slotR - 18);
         cx.restore();
-      });
-      const k=(ts-sp.t0)/1000;
-      const leoRx = 230 + 16;
-      const leoRy = 120 + 10;
-      cx.save();cx.strokeStyle="#3FC4B0";cx.lineWidth=5;cx.globalAlpha=.85;
-      cx.setLineDash([16,12]);cx.lineDashOffset=-k*45;
-      cx.beginPath();cx.ellipse(centerX,centerY,leoRx,leoRy,0,0,7);
-      cx.stroke();cx.restore();
+      }
+
+      // 슬롯 상단: 사상가 라벨
+      cx.save();
+      cx.font = "bold 11px sans-serif";
+      cx.fillStyle = slot.color;
+      cx.textAlign = "center";
+      cx.fillText(`${slot.num}. ${slot.scholar}`, slotX, slotY - slotR - 6);
+
+      // 슬롯 하단: 도덕적 고려 범위 라벨
+      cx.font = "10px sans-serif";
+      cx.fillStyle = "#475569";
+      cx.fillText(`[${slot.label}]`, slotX, slotY + slotR + 14);
+      cx.restore();
+
+      cx.restore();
+    });
+
+    // 4. 결계 (Barrier) 발동 효과
+    if (isCompleted) {
+      const k = (ts - (sp.t0 || 0)) / 1000;
+      const barrierRx = 265 + 18;
+      const barrierRy = 140 + 12;
+
+      cx.save();
+      // 은은한 에너지 쉴드 돔
+      cx.fillStyle = "rgba(63, 196, 176, 0.08)";
+      cx.beginPath();
+      cx.ellipse(sp.x, sp.y, barrierRx, barrierRy, 0, 0, Math.PI * 2);
+      cx.fill();
+
+      // 회전하는 굵은 점선 결계 링
+      cx.strokeStyle = "#3FC4B0";
+      cx.lineWidth = 5;
+      cx.globalAlpha = 0.88;
+      cx.setLineDash([18, 12]);
+      cx.lineDashOffset = -k * 50;
+      cx.beginPath();
+      cx.ellipse(sp.x, sp.y, barrierRx, barrierRy, 0, 0, Math.PI * 2);
+      cx.stroke();
+
+      // 바깥쪽 반짝이는 얇은 링
+      cx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+      cx.lineWidth = 2;
+      cx.setLineDash([8, 8]);
+      cx.lineDashOffset = k * 30;
+      cx.beginPath();
+      cx.ellipse(sp.x, sp.y, barrierRx + 6, barrierRy + 4, 0, 0, Math.PI * 2);
+      cx.stroke();
+      cx.restore();
     }
   });
 
-  [...S.players].sort((a,b)=>a.y-b.y).forEach(p=>{
-    const t = T[p.thinkerId];
-    if(t && !p.frozen){
-      const Rx = t.ringR * 1.6, Ry = Rx * 0.56;
-      cx.save();
-      cx.globalAlpha = p.disconnected ? 0.35 : (p.isMe ? 0.65 : 0.42);
-      cx.fillStyle = t.color + "28";
-      cx.strokeStyle = t.color;
-      cx.lineWidth = p.isMe ? 4.5 : 3.2;
-      cx.beginPath();
-      cx.ellipse(p.x, p.y + 10, Rx, Ry, 0, 0, 7);
-      cx.fill();
-      cx.stroke();
-      cx.restore();
-    }
-
+  // 캐릭터 렌더링 (원 이고 다니는 방식 제거!)
+  [...S.players].sort((a, b) => a.y - b.y).forEach(p => {
     if (p.disconnected) {
       cx.save();
       cx.fillStyle = "#EF4444";
@@ -1760,7 +1888,7 @@ function render(ts){
       cx.restore();
     }
 
-    // 1. 캐릭터 위 (ABOVE): 본인 아이디 / 학번 / 계정
+    // 1. 캐릭터 위: 사용자 ID / 학번
     const userIdLabel = p.email || p.name || (p.isMe ? "나 (" + p.no + "번)" : p.no + "번");
     cx.save();
     cx.font = "bold 11px sans-serif";
@@ -1769,8 +1897,8 @@ function render(ts){
     cx.strokeStyle = p.isMe ? "#3FC4B0" : "rgba(255, 255, 255, 0.6)";
     cx.lineWidth = 1.8;
     cx.beginPath();
-    if (cx.roundRect) cx.roundRect(p.x - uTw/2, p.y - 62, uTw, 20, 6);
-    else cx.rect(p.x - uTw/2, p.y - 62, uTw, 20);
+    if (cx.roundRect) cx.roundRect(p.x - uTw / 2, p.y - 62, uTw, 20, 6);
+    else cx.rect(p.x - uTw / 2, p.y - 62, uTw, 20);
     cx.fill();
     cx.stroke();
 
@@ -1782,20 +1910,20 @@ function render(ts){
     // 2. 캐릭터 본체 및 이동 모션
     drawChar(cx, p.x, p.y, p.ch, 0.95, { phase: p.ph, run: p.run, dir: p.dir });
 
-    // 3. 캐릭터 아래 (BELOW): 사상가 이름
+    // 3. 캐릭터 아래: 사상가 이름
     const thinkerObj = T[p.thinkerId];
     if (thinkerObj) {
       cx.save();
       cx.font = "bold 12px sans-serif";
       const scholarText = thinkerObj.scholar;
       const sTw = cx.measureText(scholarText).width + 14;
-      
+
       cx.fillStyle = "rgba(255, 255, 255, 0.92)";
       cx.strokeStyle = thinkerObj.color;
       cx.lineWidth = 2.2;
       cx.beginPath();
-      if (cx.roundRect) cx.roundRect(p.x - sTw/2, p.y + 16, sTw, 20, 5);
-      else cx.rect(p.x - sTw/2, p.y + 16, sTw, 20);
+      if (cx.roundRect) cx.roundRect(p.x - sTw / 2, p.y + 16, sTw, 20, 5);
+      else cx.rect(p.x - sTw / 2, p.y + 16, sTw, 20);
       cx.fill();
       cx.stroke();
 
@@ -1805,7 +1933,7 @@ function render(ts){
       cx.restore();
     }
 
-    // 4번 탭 역할바꿔 토론 메타버스 무대 역할 표식 렌더링
+    // 4번 탭 역할바꿔 토론 역할 표식 렌더링
     if (S.tab === 4 && p.swappedThinkerId) {
       const st = T[p.swappedThinkerId];
       if (st) {
@@ -1813,13 +1941,13 @@ function render(ts){
         cx.font = "bold 12px sans-serif";
         const roleLabel = (p.isMe ? "나 🔄 " : `${p.no}번 🔄 `) + st.scholar + " 역할";
         const tw = cx.measureText(roleLabel).width + 18;
-        
+
         cx.fillStyle = "rgba(255, 255, 255, 0.95)";
         cx.strokeStyle = st.color;
         cx.lineWidth = 2.8;
         cx.beginPath();
-        if (cx.roundRect) cx.roundRect(p.x - tw/2, p.y - 88, tw, 24, 7);
-        else cx.rect(p.x - tw/2, p.y - 88, tw, 24);
+        if (cx.roundRect) cx.roundRect(p.x - tw / 2, p.y - 88, tw, 24, 7);
+        else cx.rect(p.x - tw / 2, p.y - 88, tw, 24);
         cx.fill();
         cx.stroke();
 
@@ -1962,13 +2090,11 @@ $("#teamBtn").onclick=()=>{
         p.frozen = true;
         p.isRoamer = false;
         p.swappedThinkerId = team[(i + S.rot) % 4].thinkerId;
-        let offsetX = 0;
-        if(p.thinkerId === "ari") offsetX = 0;
-        else if(p.thinkerId === "sin") offsetX = 130;
-        else if(p.thinkerId === "sch") offsetX = 215;
-        else if(p.thinkerId === "leo") offsetX = 295;
+        const slot = THINKER_SLOTS.find(s => s.id === p.thinkerId);
+        const offsetX = slot ? slot.offsetX : 0;
+        const offsetY = slot ? slot.offsetY : 0;
         p.x = sp.x + offsetX;
-        p.y = sp.y + 10;
+        p.y = sp.y + offsetY;
         p.tx = p.x;
         p.ty = p.y;
       });
