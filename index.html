@@ -9,8 +9,10 @@
 :root{--bg:#E7EEEF;--panel:#fff;--ink:#16302F;--sub:#5B7371;--line:#CBDBDA;--accent:#0F6E63;--barrier:#3FC4B0}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;font-size:15px;line-height:1.55}
-button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:9px 14px;background:var(--accent);color:#fff}
-button.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+button{font:inherit;cursor:pointer;border:2px solid #1e3a8a;border-radius:8px;padding:9px 16px;background:#1e3a8a;color:#ffffff;font-weight:700;transition:all .15s ease}
+button:hover{background:#172554;border-color:#172554}
+button.ghost{background:#ffffff;color:#1e3a8a;border:2px solid #1e3a8a;font-weight:700}
+button.ghost:hover{background:#1e3a8a;color:#ffffff}
 button:disabled{opacity:.4;cursor:default}
 input,select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
 .wrap{max-width:1000px;margin:0 auto;padding:10px 12px 40px}
@@ -20,9 +22,10 @@ header{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px}
 #qrbox .ph{width:78px;height:78px;display:grid;place-items:center;background:#F0F4F4;border-radius:6px;font-size:10px;color:var(--sub)}
 #qrbox small{display:block;font-size:10px;color:var(--sub);margin-top:3px}
 h1{font-size:19px;margin:2px 0}.hsub{color:var(--sub);font-size:13px;margin:0}
-nav{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
-nav button{background:#fff;color:var(--sub);border:1px solid var(--line);font-size:14px;padding:8px 12px}
-nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+nav button{background:#ffffff;color:#1e3a8a;border:2px solid #cbd5e1;font-size:14.5px;font-weight:700;padding:8px 16px;height:42px;border-radius:8px;cursor:pointer;transition:all .15s ease}
+nav button:hover{border-color:#1e3a8a;background:#f8fafc}
+nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-weight:700;box-shadow:0 2px 8px rgba(30,58,138,0.22)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
 .card h2{font-size:16px;margin:0 0 8px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -45,7 +48,7 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .cell.cell-leo:hover{border-color:#0D9488;box-shadow:0 6px 14px rgba(17,94,89,0.22);transform:translateY(-2px)}
 .cell.cell-leo.selected{border:2.5px solid #0F766E;background:#CCFBF1;box-shadow:0 6px 16px rgba(17,94,89,0.35);transform:scale(1.06);z-index:3}
 
-.btn-select-confirm{display:block;width:90%;margin:4px auto 2px;padding:4px 0;background:#1a73e8;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 4px rgba(26,115,232,.4);animation:pulseSelect 1s infinite alternate}
+.btn-select-confirm{display:block;width:90%;margin:4px auto 2px;padding:4px 0;background:#1e3a8a;color:#ffffff;border:1.5px solid #ffffff;border-radius:6px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 6px rgba(30,58,138,.4);animation:pulseSelect 1s infinite alternate}
 @keyframes pulseSelect{0%{transform:scale(0.96)}100%{transform:scale(1.04)}}
 .cell canvas{display:block;margin:0 auto}
 .cell .nm{font-size:10.5px;color:var(--sub);line-height:1.25}
@@ -608,11 +611,60 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   border-top: 1px solid #e2e8f0;
   padding-top: 12px;
 }
-/* Google 로그인 */
-.glogin-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 0}
-.glogin-btn{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #dadce0;border-radius:8px;padding:10px 18px;font-size:15px;font-weight:500;color:#3c4043;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12);transition:box-shadow .15s}
-.glogin-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.glogin-btn svg{flex:0 0 20px}
+/* 시작 화면 버튼 그룹 및 통일된 UI (하얀색 & 남색) */
+.glogin-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0;width:100%}
+.start-btn-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 500px;
+  margin: 6px auto 14px;
+}
+.start-btn {
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 20px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-sizing: border-box;
+  text-decoration: none;
+  transition: all 0.18s ease;
+  letter-spacing: -0.01em;
+}
+.start-btn-primary {
+  background: #1e3a8a;
+  color: #ffffff;
+  border: 2px solid #1e3a8a;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.22);
+}
+.start-btn-primary:hover {
+  background: #172554;
+  border-color: #172554;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(30, 58, 138, 0.32);
+}
+.start-btn-outline {
+  background: #ffffff;
+  color: #1e3a8a;
+  border: 2px solid #1e3a8a;
+  box-shadow: 0 2px 6px rgba(30, 58, 138, 0.08);
+}
+.start-btn-outline:hover {
+  background: #1e3a8a;
+  color: #ffffff;
+  border-color: #1e3a8a;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(30, 58, 138, 0.2);
+}
 .user-info{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--sub)}
 .user-info img{width:28px;height:28px;border-radius:50%;object-fit:cover}
 #googleSignInDiv{display:flex;justify-content:center}
@@ -626,12 +678,12 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .modal-body{display:flex;flex-direction:column;gap:12px}
 .modal-body label{font-size:13px;font-weight:600;color:#3c4043;margin-bottom:4px;display:block}
 .modal-body input{width:100%;padding:9px 12px;font-size:14px;border:1px solid #dadce0;border-radius:8px;box-sizing:border-box}
-.modal-body input:focus{border-color:#1a73e8;outline:none}
-.btn-gsubmit{background:#1a73e8;color:#fff;border:none;padding:12px;font-size:15px;font-weight:600;border-radius:8px;cursor:pointer;transition:background .15s}
-.btn-gsubmit:hover{background:#1557b0}
+.modal-body input:focus{border-color:#1e3a8a;outline:none}
+.btn-gsubmit{background:#1e3a8a;color:#ffffff;border:2px solid #1e3a8a;padding:12px;font-size:15px;font-weight:700;border-radius:8px;cursor:pointer;transition:all .15s}
+.btn-gsubmit:hover{background:#172554;border-color:#172554}
 /* 출발 버튼 */
-.btn-start-tab2{background:linear-gradient(135deg,#0f6e63,#15b097);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(15,110,99,.35);transition:transform .15s,box-shadow .15s;display:inline-flex;align-items:center;gap:6px}
-.btn-start-tab2:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(15,110,99,.45)}
+.btn-start-tab2{background:#1e3a8a;color:#ffffff;border:2px solid #1e3a8a;border-radius:8px;height:42px;padding:0 18px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(30,58,138,.25);transition:transform .15s,box-shadow .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-start-tab2:hover{background:#172554;border-color:#172554;transform:translateY(-1px);box-shadow:0 4px 12px rgba(30,58,138,.35)}
 /* 법적 약관 모달 및 푸터 스타일 */
 .legal-modal-content{background:#fff;border-radius:16px;width:92%;max-width:580px;max-height:85vh;display:flex;flex-direction:column;padding:20px 24px;box-shadow:0 12px 32px rgba(0,0,0,0.25);position:relative;margin:auto}
 .legal-modal-body{flex:1;overflow-y:auto;padding-right:6px;margin:10px 0;font-size:13.5px;line-height:1.65;color:#333;border-top:1px solid #eee;border-bottom:1px solid #eee;padding-top:10px;padding-bottom:10px}
@@ -949,17 +1001,17 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 #t4 .person img { width: 58px; height: 64px; object-fit: cover; border-radius: 12px; background: #fff; }
 #t4 .person b { font-family: "Gowun Batang", serif; font-size: 16px; color: var(--ink); }
 #t4 .rule { font-size: 13.5px; background: var(--butter); color: var(--butter-ink); border-radius: 12px; padding: 10px 14px; margin-top: 12px; line-height: 1.6; }
-#t4 .cases { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
-#t4 .case { text-align: left; border: none; background: var(--cream-2); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; color: var(--ink); cursor: pointer; transition: background .15s; }
-#t4 .case:hover { background: var(--butter); }
-#t4 .case .n { font-family: "Gowun Batang", serif; font-weight: 700; font-size: 18px; color: var(--ink-3); min-width: 34px; }
-#t4 .case b { font-size: 15px; display: block; }
-#t4 .case small { color: var(--ink-3); font-size: 12px; }
+#t4 .cases { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+#t4 .case { text-align: left; border: 2px solid #cbd5e1; background: #ffffff; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; color: #1e3a8a; cursor: pointer; transition: all .15s ease; min-height: 74px; box-sizing: border-box; }
+#t4 .case:hover { border-color: #1e3a8a; background: #f0f4f8; box-shadow: 0 4px 12px rgba(30,58,138,0.12); }
+#t4 .case .n { font-family: "Gowun Batang", serif; font-weight: 700; font-size: 18px; color: #1e3a8a; min-width: 36px; }
+#t4 .case b { font-size: 15px; display: block; color: #0f172a; }
+#t4 .case small { color: #64748b; font-size: 12.5px; }
 #t4 .steps { display: flex; gap: 6px; margin-bottom: 14px; align-items: center; }
 #t4 .steps span { height: 6px; flex: 1; border-radius: 3px; background: var(--line); }
-#t4 .steps span.on { background: var(--butter-2); } #t4 .steps span.done { background: var(--ink-3); }
+#t4 .steps span.on { background: #1e3a8a; } #t4 .steps span.done { background: #64748b; }
 #t4 .crumb { font-size: 13px; color: var(--ink-3); display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-#t4 .crumb button { background: none; border: none; color: var(--ink-3); padding: 0; font-size: 13px; text-decoration: underline; cursor: pointer; }
+#t4 .crumb button { background: none; border: none; color: #1e3a8a; padding: 0; font-size: 13px; font-weight: 700; text-decoration: underline; cursor: pointer; }
 #t4 .situ { background: var(--cream-2); border-radius: 14px; padding: 14px 16px; font-size: 15px; margin-bottom: 14px; line-height: 1.65; }
 #t4 .situ b { display: block; font-family: "Gowun Batang", serif; font-size: 17px; margin-top: 6px; }
 #t4 .who { display: flex; align-items: center; gap: 14px; margin: 4px 0 12px; }
@@ -967,18 +1019,22 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 #t4 .who .lab { font-family: "Gowun Batang", serif; font-size: 30px; font-weight: 700; }
 #t4 .who .txt { font-size: 14px; color: var(--ink-2); }
 #t4 .q { font-size: 16.5px; font-weight: 700; margin: 0 0 8px; color: var(--ink); }
-#t4 .choice { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-#t4 .choice button { border: 2px solid transparent; background: var(--cream-2); border-radius: 12px; padding: 9px 16px; font-size: 15px; color: var(--ink); cursor: pointer; }
-#t4 .choice button[aria-pressed="true"] { background: var(--butter); border-color: var(--butter-2); color: var(--butter-ink); font-weight: 700; }
-#t4 .choice button.ok { border-color: var(--ok); } #t4 .choice button.no { border-color: var(--bad); opacity: .7; }
+#t4 .choice { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+#t4 .choice button { flex: 1 1 calc(50% - 10px); min-width: 130px; height: 48px; border: 2px solid #1e3a8a; background: #ffffff; border-radius: 10px; padding: 0 16px; font-size: 15px; font-weight: 700; color: #1e3a8a; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s ease; box-sizing: border-box; }
+#t4 .choice button:hover { background: #f0f4f8; }
+#t4 .choice button[aria-pressed="true"] { background: #1e3a8a; border-color: #1e3a8a; color: #ffffff; font-weight: 700; box-shadow: 0 4px 12px rgba(30,58,138,.25); }
+#t4 .choice button.ok { border-color: #1e3a8a; background: #1e3a8a; color: #ffffff; }
+#t4 .choice button.no { border-color: #94a3b8; background: #ffffff; color: #64748b; opacity: .75; }
 #t4 textarea { width: 100%; min-height: 96px; padding: 12px 14px; border: 2px solid var(--line); border-radius: 12px; background: var(--cream); resize: vertical; line-height: 1.6; font-size: 15px; box-sizing: border-box; }
 #t4 textarea::placeholder { color: var(--ink-3); }
 #t4 .tip { font-size: 13px; color: var(--ink-3); margin: 6px 0 0; }
-#t4 .nav { display: flex; gap: 10px; margin-top: 16px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-#t4 .btn { border: none; background: var(--butter); color: var(--butter-ink); padding: 11px 22px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; }
-#t4 .btn:hover { background: var(--butter-2); }
-#t4 .btn.ghost { background: transparent; color: var(--ink-2); border: 2px solid var(--line); font-weight: 500; }
-#t4 .btn.dark { background: var(--ink); color: var(--cream); }
+#t4 .nav { display: flex; gap: 10px; margin-top: 18px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+#t4 .btn { min-width: 120px; height: 48px; border: 2px solid #1e3a8a; background: #1e3a8a; color: #ffffff; padding: 0 22px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all .15s ease; box-sizing: border-box; }
+#t4 .btn:hover { background: #172554; border-color: #172554; }
+#t4 .btn.ghost { background: #ffffff; color: #1e3a8a; border: 2px solid #1e3a8a; font-weight: 700; }
+#t4 .btn.ghost:hover { background: #1e3a8a; color: #ffffff; }
+#t4 .btn.dark { background: #172554; color: #ffffff; border: 2px solid #172554; }
+#t4 .btn.dark:hover { background: #0f172a; border-color: #0f172a; }
 #t4 .result { margin-top: 14px; border-top: 2px dashed var(--line); padding-top: 14px; display: grid; gap: 10px; }
 #t4 .result[hidden] { display: none; }
 #t4 .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13.5px; font-weight: 700; color: #fff; }
@@ -1021,9 +1077,10 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 #t4 table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 560px; }
 #t4 th, #t4 td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
 #t4 th { font-size: 12.5px; color: var(--ink-3); }
-#t4 .sheet-pick { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-#t4 .sheet-pick button { border: 2px solid var(--line); background: var(--cream-2); border-radius: 999px; padding: 6px 12px; font-size: 13.5px; cursor: pointer; }
-#t4 .sheet-pick button[aria-pressed="true"] { background: var(--butter); border-color: var(--butter-2); color: var(--butter-ink); font-weight: 700; }
+#t4 .sheet-pick { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+#t4 .sheet-pick button { border: 2px solid #1e3a8a; background: #ffffff; color: #1e3a8a; border-radius: 8px; padding: 0 16px; height: 40px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all .15s ease; box-sizing: border-box; }
+#t4 .sheet-pick button:hover { background: #f0f4f8; }
+#t4 .sheet-pick button[aria-pressed="true"] { background: #1e3a8a; border-color: #1e3a8a; color: #ffffff; font-weight: 700; box-shadow: 0 2px 6px rgba(30,58,138,0.25); }
 #t4 .sheet-title { text-align: center; margin: 6px 0 4px; font-size: 26px; font-family: "Gowun Batang", serif; }
 #t4 .sheet-sub { text-align: center; color: var(--ink-3); font-size: 13px; margin: 0 0 12px; letter-spacing: .08em; }
 #t4 .bubbles { display: grid; gap: 12px; margin-top: 14px; }
@@ -1057,27 +1114,24 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 </header>
 
 <section id="t1">
-  <div class="card" id="loginCard"><h2>구글로 로그인</h2>
-    <p class="muted">학교 구글 계정으로 로그인하면 캐릭터를 선택할 수 있습니다. (또는 테스트 버튼 클릭 시 바로 4명이 선택되어 시작됩니다)</p>
-    <div class="glogin-wrap">
+  <div class="card" id="loginCard">
+    <div style="text-align:center;margin-bottom:16px">
+      <h2 style="font-size:20px;color:#1e3a8a;margin:0 0 6px;font-weight:800">도덕적 고려의 범위 수업 및 연습</h2>
+      <p class="muted" style="margin:0;font-size:13.5px">원하는 버튼을 선택하여 즉시 연습을 시작하거나 수업에 입장하세요.</p>
+    </div>
+    <div class="start-btn-group">
       <div id="googleSignInDiv"></div>
-      <button class="glogin-btn" id="gLoginBtn">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
-          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          <path fill="none" d="M0 0h48v48H0z"/>
-        </svg>
-        Google 계정으로 로그인
+      <button class="start-btn start-btn-primary" id="directPracticeBtn">
+        <span style="font-size:18px">🎯</span> <span>4. 수행평가 연습하기 바로가기 (로그인 불필요)</span>
       </button>
-      <button class="btn-start-tab2" id="quick4TestBtn" style="background:linear-gradient(135deg,#1e40af,#3b82f6);margin-top:6px">
-        ⚡ 4명 즉시 참석 테스트 (본인 포함 4명 캐릭터 자동 선택)
+      <button class="start-btn start-btn-outline" id="quick4TestBtn">
+        <span style="font-size:18px">⚡</span> <span>4명 즉시 참석 테스트 (2번 탭 이동)</span>
       </button>
-      <button class="btn-start-tab2" id="directPracticeBtn" style="background:linear-gradient(135deg,#f59e0b,#d97706);margin-top:10px;font-size:15px;padding:12px 18px;box-shadow:0 4px 14px rgba(217,119,6,.35);font-weight:800;border-radius:10px;cursor:pointer;width:100%;justify-content:center;">
-        🎯 4. 수행평가 연습하기 바로가기 (로그인 없이 즉시 연습)
+      <button class="start-btn start-btn-outline" id="gLoginBtn">
+        <span style="font-size:18px">🔑</span> <span>Google 계정으로 로그인</span>
       </button>
-    </div></div>
+    </div>
+  </div>
 
   <!-- Google 로그인 팝업 모달 -->
   <div id="gAuthModal" class="modal-backdrop hide">
