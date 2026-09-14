@@ -985,7 +985,11 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   <div class="card" id="t3Card">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
       <h2 style="margin:0">누가 말할까요 <span class="muted">메타버스 무대 내 추첨 & 말풍선</span></h2>
-      <div class="row"><button id="drawBtn">추첨하기 🎲</button><button class="ghost" id="soundBtn">소리 끄기</button></div>
+      <div class="row" style="gap:8px;flex-wrap:wrap;">
+        <button id="drawBtn">추첨하기 🎲</button>
+        <button id="drawMeBtn" class="btn-start-tab2" style="background:linear-gradient(135deg,#6366f1,#4f46e5);padding:7px 14px;font-size:13.5px;" title="내가 당첨 학생이 되어 직접 주장 작성 및 채점 테스트하기">🎯 내가 당첨되어 테스트</button>
+        <button class="ghost" id="soundBtn">소리 끄기</button>
+      </div>
     </div>
     <p class="muted" id="drawMsg" style="margin-bottom:8px">추첨을 누르면 메타버스 맵 안에서 실시간 카메라 추적과 함께 발표자가 선택되며, 발표자의 주장과 근거가 캐릭터 머리 위에 말풍선으로 띄워집니다.</p>
     <div id="t3StageSlot"></div>
@@ -3575,17 +3579,74 @@ $("#drawBtn").onclick=()=>{
     setTimeout(hop,45+280*Math.pow(n/N,3));
   })();
 };
+function insertKeywordToReason(k) {
+  const inp = $("#reasonIn");
+  if (!inp) return;
+  inp.value = (inp.value ? inp.value + " " : "") + k;
+  inp.focus();
+}
+
 function openClaim(p){
-  const t=T[p.thinkerId];S.votes={ok:0,no:0};S.claim=null;
-  $("#claimCard").classList.remove("hide");$("#gradeBtn").disabled=true;
-  $("#claimArea").innerHTML=`<div class="banner">${p.no} · ${t.scholar}(${t.name})의 주장을 씁니다</div>
-    <div class="row"><select id="stanceIn"><option>찬성</option><option>반대</option></select>
-      <input id="reasonIn" style="flex:1;min-width:240px" placeholder="근거를 두 문장으로 쓰세요">
-      <button id="sendBtn">말풍선 띄우기</button></div>
-    <p class="muted">${t.keywords.slice(0,4).map(k=>`<span class="kw">${k}</span>`).join("")}</p>`;
+  const t = T[p.thinkerId];
+  S.votes = { ok: 0, no: 0 };
+  S.claim = null;
+
+  // 작성 카드 표시 (충돌 없도록 안전하게 표시)
+  const card = $("#claimCard");
+  if (card) {
+    card.classList.remove("hide");
+    card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  const isMyTurn = p.isMe || (S.me && S.me.id === p.id);
+
+  $("#claimArea").innerHTML = `
+    <div class="banner" style="background:${isMyTurn ? 'linear-gradient(135deg,#0f6e63,#15b097)' : 'linear-gradient(135deg,#1e293b,#334155)'};border-radius:12px;padding:14px 18px;margin-bottom:12px;">
+      <div style="font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>🎤 <b>${p.no}번 · <span style="color:#FEF08A;">${t.scholar}</span>(${t.name})</b> 학생의 주장 작성</span>
+        <span style="background:rgba(255,255,255,0.22);padding:4px 12px;border-radius:999px;font-size:13px;font-weight:700;">
+          ${isMyTurn ? "🌟 당첨 학생 본인(나) 작성 중" : "🧪 당첨 학생 대리 작성 테스트 모드"}
+        </span>
+      </div>
+      <div style="font-size:13px;opacity:0.92;margin-top:6px;line-height:1.5;">
+        사례에 대한 <b>${t.scholar}</b>의 입장을 선택하고, 핵심 개념어를 포함하여 2문장으로 타당한 근거를 서술하세요.
+      </div>
+    </div>
+    <div class="row" style="gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap;">
+      <select id="stanceIn" style="padding:10px 14px;font-size:15px;font-weight:800;border:2px solid var(--accent);border-radius:10px;background:#fff;cursor:pointer;">
+        <option value="찬성">찬성</option>
+        <option value="반대">반대</option>
+      </select>
+      <input id="reasonIn" style="flex:1;min-width:280px;padding:10px 14px;font-size:15px;border:2px solid #CBD5E1;border-radius:10px;box-sizing:border-box;" placeholder="${t.scholar}의 핵심 표현을 넣어 두 문장으로 근거를 작성하세요">
+      <button id="sendBtn" class="btn-start-tab2" style="padding:10px 22px;font-size:15px;font-weight:800;white-space:nowrap;cursor:pointer;">💬 말풍선 띄우기</button>
+    </div>
+    <div style="margin-top:10px;display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+      <span class="muted" style="font-size:12.5px;font-weight:700;">🔑 핵심어 힌트:</span>
+      ${t.keywords.slice(0, 4).map(k => `<button type="button" class="kw-tag used" style="cursor:pointer;background:#EEF4F3;border:1px solid #CBD5E1;color:#1E293B;padding:4px 10px;font-size:12px;" onclick="insertKeywordToReason('${k}')">${k} +</button>`).join("")}
+      <button type="button" class="ghost" id="quickSampleClaimBtn" style="padding:4px 12px;font-size:12.5px;margin-left:auto;background:#FEF3C7;color:#B45309;border-color:#F59E0B;font-weight:700;">⚡ 예시 답안 자동완성 (테스트용)</button>
+    </div>
+  `;
+
+  // 테스트용 예시 답안 즉시 자동완성 버튼
+  const sampleBtn = $("#quickSampleClaimBtn");
+  if (sampleBtn) {
+    sampleBtn.onclick = () => {
+      const expStance = CASE.answers[p.thinkerId]?.stance || "반대";
+      const expReason = CASE.answers[p.thinkerId]?.reason || "";
+      $("#stanceIn").value = expStance;
+      $("#reasonIn").value = expReason;
+      toast("⚡ 예시 모범답안이 자동 입력되었습니다! '말풍선 띄우기'를 누르세요.");
+    };
+  }
+
+  setTimeout(() => {
+    const inp = $("#reasonIn");
+    if (inp) inp.focus();
+  }, 120);
+
   $("#sendBtn").onclick=()=>{
     const r=$("#reasonIn").value.trim();
-    if(r.length<10){toast("근거를 조금 더 써 주세요");return;}
+    if(r.length<10){toast("근거를 조금 더 써 주세요 (최소 10자 이상)");return;}
     const claimObj = {thinkerId:p.thinkerId,stance:$("#stanceIn").value,reason:r,who:p.no};
     S.claim = claimObj;
     p.claim = claimObj;
@@ -3597,6 +3658,46 @@ function openClaim(p){
     showBubble();
   };
 }
+
+// 🎯 내가 당첨 학생이 되어 직접 주장 작성 및 채점 테스트하기 버튼 바인딩
+setTimeout(() => {
+  const drawMeBtn = $("#drawMeBtn");
+  if (drawMeBtn) {
+    drawMeBtn.onclick = () => {
+      const list = lottoList();
+      if (!list.length) { toast("먼저 캐릭터를 고르세요"); return; }
+      const myPlayer = list.find(p => p.isMe || (S.me && p.id === S.me.id)) || list[0];
+
+      if (S.sound) LOTTO_BGM_ENGINE.start();
+      renderLotto();
+      $("#winArea").innerHTML = "";
+      $("#claimCard").classList.add("hide");
+      $("#voteCard").classList.add("hide");
+      $("#gradeCard").classList.add("hide");
+
+      S.lottoCandidateId = null;
+      S.winnerId = myPlayer.id;
+      S.cam = { x: myPlayer.x, y: myPlayer.y - 140 };
+      if (typeof setZoomPercent === "function") setZoomPercent(95, false);
+
+      const cells = $$("#lotto .lc");
+      const winIdx = list.indexOf(myPlayer);
+      if (cells[winIdx]) {
+        cells.forEach(c => c.classList.remove("hot"));
+        cells[winIdx].classList.add("win");
+      }
+
+      fanfare();
+      playApplauseSound();
+      S.drawn = myPlayer;
+      S.pool = S.pool.filter(x => x !== myPlayer);
+      $("#drawMsg").textContent = `✨ [내가 당첨!] ${myPlayer.no}번 학생이 발표자로 선정되었습니다! 아래에서 주장을 작성하세요.`;
+      const th = T[myPlayer.thinkerId];
+      $("#winArea").innerHTML = '<p class="winline">' + myPlayer.no + ' (나) · <span style="color:' + th.color + '">' + th.scholar + '</span> — ' + th.name + '</p><p class="muted">' + th.scope + '</p>';
+      openClaim(myPlayer);
+    };
+  }
+}, 100);
 // 교사 권한 관리 및 채점 로직 (학생은 클릭 불가, 교사 인증 필요)
 function handleTeacherGradeClick() {
   if (!S.claim) {
