@@ -26,15 +26,30 @@ nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .card h2{font-size:16px;margin:0 0 8px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .muted{color:var(--sub);font-size:13px}
-.grid28{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cell{border:1px solid var(--line);border-radius:10px;padding:5px 2px;text-align:center;background:#fff;cursor:pointer;position:relative;transition:all .15s}
-.cell.selected{border:2px solid #1a73e8;background:#e8f0fe;transform:scale(1.05);z-index:2;box-shadow:0 4px 12px rgba(26,115,232,.35)}
+.grid28{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.cell{border:1.5px solid var(--line);border-radius:12px;padding:6px 2px;text-align:center;background:#fff;cursor:pointer;position:relative;transition:all .18s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
+.cell.cell-ari{background:linear-gradient(180deg, #F8F6FF 0%, #EDE9FE 100%);border:1.5px solid #DDD6FE}
+.cell.cell-ari:hover{border-color:#7C3AED;box-shadow:0 6px 14px rgba(91,79,207,0.22);transform:translateY(-2px)}
+.cell.cell-ari.selected{border:2.5px solid #5B4FCF;background:#E0E7FF;box-shadow:0 6px 16px rgba(91,79,207,0.35);transform:scale(1.06);z-index:3}
+
+.cell.cell-sin{background:linear-gradient(180deg, #FFFDF5 0%, #FEF3C7 100%);border:1.5px solid #FDE68A}
+.cell.cell-sin:hover{border-color:#F59E0B;box-shadow:0 6px 14px rgba(217,119,6,0.22);transform:translateY(-2px)}
+.cell.cell-sin.selected{border:2.5px solid #D97706;background:#FEF3C7;box-shadow:0 6px 16px rgba(217,119,6,0.35);transform:scale(1.06);z-index:3}
+
+.cell.cell-sch{background:linear-gradient(180deg, #F6FEF8 0%, #DCFCE7 100%);border:1.5px solid #BBF7D0}
+.cell.cell-sch:hover{border-color:#16A34A;box-shadow:0 6px 14px rgba(46,125,50,0.22);transform:translateY(-2px)}
+.cell.cell-sch.selected{border:2.5px solid #2E7D32;background:#DCFCE7;box-shadow:0 6px 16px rgba(46,125,50,0.35);transform:scale(1.06);z-index:3}
+
+.cell.cell-leo{background:linear-gradient(180deg, #F2FBF9 0%, #CCFBF1 100%);border:1.5px solid #99F6E4}
+.cell.cell-leo:hover{border-color:#0D9488;box-shadow:0 6px 14px rgba(17,94,89,0.22);transform:translateY(-2px)}
+.cell.cell-leo.selected{border:2.5px solid #0F766E;background:#CCFBF1;box-shadow:0 6px 16px rgba(17,94,89,0.35);transform:scale(1.06);z-index:3}
+
 .btn-select-confirm{display:block;width:90%;margin:4px auto 2px;padding:4px 0;background:#1a73e8;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 4px rgba(26,115,232,.4);animation:pulseSelect 1s infinite alternate}
 @keyframes pulseSelect{0%{transform:scale(0.96)}100%{transform:scale(1.04)}}
 .cell canvas{display:block;margin:0 auto}
-.cell .nm{font-size:10px;color:var(--sub);line-height:1.25}
-.cell.taken{opacity:.65;cursor:default;background:#f5f6f7}
-.cell.mine{outline:3px solid var(--accent);outline-offset:-1px;opacity:1!important;background:#e6f4ea}
+.cell .nm{font-size:10.5px;color:var(--sub);line-height:1.25}
+.cell.taken{opacity:.55;filter:grayscale(0.25);cursor:default}
+.cell.mine{outline:3px solid #10B981;outline-offset:-1px;opacity:1!important;transform:scale(1.03)}
 .roster{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
 .rc{border:1px solid var(--line);border-radius:8px;padding:3px 2px;text-align:center;font-size:10px;background:#fff}
 .rc b{display:block;font-size:11px}.rc canvas{display:block;margin:0 auto}
@@ -935,14 +950,29 @@ function drawChar(ctx,x,y,ch,sc,opt){
   const numPets=pets.length;
   pets.forEach(function(pk,i){
     const img=PIMG[pk];if(!img||!img.complete)return;
-    const ps=(numPets>=4?18:numPets===3?20:23)*sc;
-    const gap=ps*0.72;
+    // 도덕적 고려 범위(인간·동물·식물·대지)가 한눈에 보이도록 펫 크기 대폭 확대 (기존 18~23px -> 30~38px)
+    const ps=(numPets>=4?30:numPets===3?33:numPets===2?36:38)*sc;
+    const gap=ps*0.88;
     const side=(i%2===0)?-1:1;
     const pairIndex=Math.floor(i/2);
-    const offset=w*0.35+gap*pairIndex;
-    const pb=run?Math.abs(Math.sin(ph+i*0.9))*4*sc:Math.sin(ph*0.5+i)*1.2*sc;
+    const offset=w*0.42+gap*pairIndex;
+    const pb=run?Math.abs(Math.sin(ph+i*0.9))*4.5*sc:Math.sin(ph*0.6+i*1.2)*2.0*sc;
     const petX=x+(dir*side*offset);
-    ctx.drawImage(img,petX-ps/2,y+3-pb-ps,ps,ps);
+    
+    // 펫 바닥 소프트 입체 그림자
+    ctx.save();
+    ctx.fillStyle="rgba(15, 45, 35, 0.22)";
+    ctx.beginPath();
+    ctx.ellipse(petX, y+2, ps*0.35, ps*0.13, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    // 펫 선명 렌더링
+    ctx.save();
+    ctx.imageSmoothingEnabled=true;
+    ctx.imageSmoothingQuality="high";
+    ctx.drawImage(img,petX-ps/2,y+4-pb-ps,ps,ps);
+    ctx.restore();
   });
   if(opt.name){ctx.save();ctx.font="700 "+(12*sc)+"px sans-serif";ctx.textAlign="center";
     ctx.lineWidth=3.5*sc;ctx.strokeStyle="rgba(12,34,32,.85)";ctx.fillStyle="#fff";
@@ -1212,7 +1242,7 @@ function renderGrid(){
     const taken=S.players.find(p=>p.charId===ch.charId);
     const isSelected=(selectedCharId===ch.charId);
     const d=document.createElement("div");
-    d.className="cell"+(taken?" taken":"")+(taken&&taken.isMe?" mine":"")+(isSelected?" selected":"");
+    d.className="cell cell-"+ch.thinkerId+(taken?" taken":"")+(taken&&taken.isMe?" mine":"")+(isSelected?" selected":"");
     const cv=document.createElement("canvas");cv.width=112;cv.height=104;d.appendChild(cv);
     
     let takenInfo = "";
@@ -1226,8 +1256,10 @@ function renderGrid(){
       confirmBtnHtml = `<button class="btn-select-confirm" onclick="event.stopPropagation(); confirmPick('${ch.charId}')">선택</button>`;
     }
     
+    const t = T[ch.thinkerId];
+    const scopeLabel = t ? `<span style="display:inline-block;font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:6px;background:${ch.color}1c;color:${ch.color};margin-bottom:3px">${t.label}. ${t.name}</span><br>` : "";
     d.insertAdjacentHTML("beforeend",
-      `<div class="nm"><b style="color:${ch.color}">${ch.scholar}</b><br>${ch.styleName}${takenInfo}</div>${confirmBtnHtml}`);
+      `<div class="nm">${scopeLabel}<b style="color:${ch.color}">${ch.scholar}</b><br>${ch.styleName}${takenInfo}</div>${confirmBtnHtml}`);
     drawChar(cv.getContext("2d"),56,96,ch,0.72,{dir:1});
     
     if(!taken && (!S.me || !S.me.charId)) {
