@@ -1602,7 +1602,7 @@ function drawSpeechBubble(cx, x, y, claim) {
   const bubbleHeight = headerHeight + lines.length * lineHeight + paddingV * 2;
 
   const bx = x - bubbleWidth / 2;
-  const by = y - bubbleHeight - 65;
+  const by = y - bubbleHeight - 128;
 
   cx.shadowColor = "rgba(0, 0, 0, 0.28)";
   cx.shadowBlur = 12;
@@ -1879,12 +1879,47 @@ function render(ts) {
 
   // 캐릭터 렌더링 (원 이고 다니는 방식 제거!)
   [...S.players].sort((a, b) => a.y - b.y).forEach(p => {
+    // 1. 캐릭터 본체 및 이동 모션 먼저 렌더링 (발은 p.y, 머리 정수리는 p.y - 82 ~ 85)
+    drawChar(cx, p.x, p.y, p.ch, 0.95, { phase: p.ph, run: p.run, dir: p.dir });
+
+    // 2. 캐릭터 머리 위 텍스트 렌더링 (등 뒤가 아닌 머리 위로 완벽 분리 배치)
+    const rawId = p.email || p.name || (p.isMe ? "나 (" + p.no + "번)" : p.no + "번");
+    const userIdText = formatUserId(rawId) + (p.isMe ? " (나)" : "");
+    const thinkerObj = T[p.thinkerId];
+    const scholarText = thinkerObj ? thinkerObj.scholar : "";
+
+    cx.save();
+    cx.textAlign = "center";
+
+    // 2-1. 머리 바로 위: 사상가 이름 (머리 바로 위 1번째 줄: p.y - 94)
+    if (scholarText) {
+      cx.font = "bold 13px sans-serif";
+      cx.lineWidth = 3.5;
+      cx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+      cx.fillStyle = thinkerObj.color;
+      cx.strokeText(scholarText, p.x, p.y - 94);
+      cx.fillText(scholarText, p.x, p.y - 94);
+    }
+
+    // 2-2. 사상가 이름 위: 계정 아이디 (머리 위 2번째 줄: p.y - 110)
+    cx.font = "bold 12px sans-serif";
+    cx.lineWidth = 3.5;
+    cx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+    cx.fillStyle = p.isMe ? "#0F6E63" : "#1E293B";
+    cx.strokeText(userIdText, p.x, p.y - 110);
+    cx.fillText(userIdText, p.x, p.y - 110);
+    cx.restore();
+
+    // 3. 상태 표시 (머리 및 텍스트 최상단: p.y - 128 ~ 134)
     if (p.disconnected) {
       cx.save();
       cx.fillStyle = "#EF4444";
       cx.font = "bold 11px sans-serif";
       cx.textAlign = "center";
-      cx.fillText("🔴 접속 끊김", p.x, p.y - 68);
+      cx.lineWidth = 3;
+      cx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+      cx.strokeText("🔴 접속 끊김", p.x, p.y - 128);
+      cx.fillText("🔴 접속 끊김", p.x, p.y - 128);
       cx.restore();
     }
 
@@ -1900,7 +1935,10 @@ function render(ts) {
       cx.fillStyle = "#D97706";
       cx.font = "bold 13px sans-serif";
       cx.textAlign = "center";
-      cx.fillText("🎯 추첨 후보", p.x, p.y - 75);
+      cx.lineWidth = 3;
+      cx.strokeStyle = "#ffffff";
+      cx.strokeText("🎯 추첨 후보", p.x, p.y - 128);
+      cx.fillText("🎯 추첨 후보", p.x, p.y - 128);
       cx.restore();
     }
 
@@ -1917,43 +1955,14 @@ function render(ts) {
       cx.fillStyle = "#B45309";
       cx.font = "bold 14px sans-serif";
       cx.textAlign = "center";
-      cx.fillText("✨ 당첨 발표자 ✨", p.x, p.y - 80);
+      cx.lineWidth = 3.5;
+      cx.strokeStyle = "#ffffff";
+      cx.strokeText("✨ 당첨 발표자 ✨", p.x, p.y - 132);
+      cx.fillText("✨ 당첨 발표자 ✨", p.x, p.y - 132);
       cx.restore();
     }
 
-    // 1. 캐릭터 머리 위: 계정 아이디 & 사상가 이름 (검은 바탕 박스 제거, 폰트만 렌더링)
-    const rawId = p.email || p.name || (p.isMe ? "나 (" + p.no + "번)" : p.no + "번");
-    const userIdText = formatUserId(rawId) + (p.isMe ? " (나)" : "");
-    const thinkerObj = T[p.thinkerId];
-    const scholarText = thinkerObj ? thinkerObj.scholar : "";
-
-    cx.save();
-    cx.textAlign = "center";
-
-    // 1-1. 상단: 계정 아이디 (이메일 도메인 없이 아이디만, 폰트만 렌더링)
-    cx.font = "bold 11px sans-serif";
-    cx.lineWidth = 3;
-    cx.strokeStyle = "rgba(255, 255, 255, 0.92)";
-    cx.fillStyle = p.isMe ? "#0F6E63" : "#334155";
-    cx.strokeText(userIdText, p.x, p.y - 66);
-    cx.fillText(userIdText, p.x, p.y - 66);
-
-    // 1-2. 머리 바로 위: 사상가 이름 (사상가 고유 컬러 폰트만 렌더링)
-    if (scholarText) {
-      cx.font = "bold 13px sans-serif";
-      cx.lineWidth = 3.5;
-      cx.strokeStyle = "rgba(255, 255, 255, 0.95)";
-      cx.fillStyle = thinkerObj.color;
-      cx.strokeText(scholarText, p.x, p.y - 50);
-      cx.fillText(scholarText, p.x, p.y - 50);
-    }
-    cx.restore();
-
-    // 2. 캐릭터 본체 및 이동 모션
-    drawChar(cx, p.x, p.y, p.ch, 0.95, { phase: p.ph, run: p.run, dir: p.dir });
-
-
-    // 4번 탭 역할바꿔 토론 역할 표식 렌더링
+    // 4번 탭 역할바꿔 토론 역할 표식 렌더링 (머리 위 상단 배치)
     if (S.tab === 4 && p.swappedThinkerId) {
       const st = T[p.swappedThinkerId];
       if (st) {
@@ -1966,14 +1975,14 @@ function render(ts) {
         cx.strokeStyle = st.color;
         cx.lineWidth = 2.8;
         cx.beginPath();
-        if (cx.roundRect) cx.roundRect(p.x - tw / 2, p.y - 88, tw, 24, 7);
-        else cx.rect(p.x - tw / 2, p.y - 88, tw, 24);
+        if (cx.roundRect) cx.roundRect(p.x - tw / 2, p.y - 144, tw, 24, 7);
+        else cx.rect(p.x - tw / 2, p.y - 144, tw, 24);
         cx.fill();
         cx.stroke();
 
         cx.fillStyle = st.color;
         cx.textAlign = "center";
-        cx.fillText(roleLabel, p.x, p.y - 71);
+        cx.fillText(roleLabel, p.x, p.y - 128);
         cx.restore();
       }
     }
