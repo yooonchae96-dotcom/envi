@@ -81,59 +81,80 @@ nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-weight:
   transform:scale(1.04);
 }
 
-/* 사상가별 고유 단색 채색 (세련된 단색 솔리드 톤) */
-/* 1. 아리스토텔레스: 인간 중심주의 (사람 👤) - 세련된 솔리드 스카이블루 */
+/* 사상가별 고유 단색 채색 (쨍하고 세련된 비비드 솔리드 톤) */
+/* 1. 아리스토텔레스: 인간 중심주의 (사람 👤) - 쨍하고 세련된 비비드 스카이블루 */
 .cell.poke-card.cell-ari{
-  background:#BAE6FD;
+  background:#38BDF8;
 }
-.cell.poke-card.cell-ari .poke-name{color:#0C4A6E}
+.cell.poke-card.cell-ari .poke-name{color:#082F49}
 .cell.poke-card.cell-ari .poke-move-name{color:#0369A1}
 
-/* 2. 피터 싱어: 동물 중심주의 (병아리 🐥) - 산뜻하고 밝은 솔리드 옐로우(노랑) */
+/* 2. 피터 싱어: 동물 중심주의 (병아리 🐥) - 쨍하고 화사한 비비드 카나리아 옐로우 */
 .cell.poke-card.cell-sin{
-  background:#FEF08A;
+  background:#FACC15;
 }
-.cell.poke-card.cell-sin .poke-name{color:#854D0E}
-.cell.poke-card.cell-sin .poke-move-name{color:#A16207}
+.cell.poke-card.cell-sin .poke-name{color:#713F12}
+.cell.poke-card.cell-sin .poke-move-name{color:#854D0E}
 
-/* 3. 슈바이처: 생명 중심주의 (새싹 🌱) - 싱그러운 솔리드 리프 그린 */
+/* 3. 슈바이처: 생명 중심주의 (새싹 🌱) - 쨍하고 생명력 넘치는 비비드 에메랄드 그린 */
 .cell.poke-card.cell-sch{
-  background:#86EFAC;
+  background:#22C55E;
 }
-.cell.poke-card.cell-sch .poke-name{color:#14532D}
-.cell.poke-card.cell-sch .poke-move-name{color:#15803D}
+.cell.poke-card.cell-sch .poke-name{color:#052E16}
+.cell.poke-card.cell-sch .poke-move-name{color:#14532D}
 
-/* 4. 레오폴드: 생태 중심주의 (대지/지구 🌍) - 화사하고 세련된 솔리드 핑크 */
+/* 4. 레오폴드: 생태 중심주의 (대지/지구 🌍) - 쨍하고 매혹적인 비비드 핫핑크 */
 .cell.poke-card.cell-leo{
-  background:#FBCFE8;
+  background:#F472B6;
 }
-.cell.poke-card.cell-leo .poke-name{color:#9D174D}
-.cell.poke-card.cell-leo .poke-move-name{color:#BE185D}
+.cell.poke-card.cell-leo .poke-name{color:#4C0519}
+.cell.poke-card.cell-leo .poke-move-name{color:#831843}
 
-/* 5. 맨 오른쪽 사상가 카드: 스페셜 느낌의 홀로그램 무지개색 채색 */
+/* 5. 맨 오른쪽 사상가 카드: 진짜 화려하고 쨍한 스페셜 홀로그램 무지개색 채색 */
 .cell.poke-card.card-special{
-  background:linear-gradient(135deg, #FFB3BA 0%, #FFDFBA 16%, #FFFFBA 33%, #BAFFC9 50%, #BAE1FF 67%, #E8BAFF 84%, #FFB3E6 100%) !important;
-  background-size:200% 200% !important;
-  animation:holoRainbowShift 4s ease infinite alternate;
-  border-color:#F59E0B !important;
-  box-shadow:0 4px 16px rgba(245,158,11,0.4), 0 0 14px rgba(232,186,255,0.6), inset 0 0 10px rgba(255,255,255,0.85) !important;
+  background:linear-gradient(135deg, 
+    #FF0055 0%, 
+    #FF6B00 16%, 
+    #FFD600 32%, 
+    #00E676 48%, 
+    #00D4FF 64%, 
+    #4361EE 80%, 
+    #C71585 100%
+  ) !important;
+  background-size:250% 250% !important;
+  animation:holoVividRainbow 3s ease infinite alternate;
+  border:4.5px solid #FFE600 !important;
+  box-shadow:0 6px 20px rgba(255,0,85,0.45), 0 0 16px rgba(0,212,255,0.65), inset 0 0 12px rgba(255,255,255,0.8) !important;
 }
-@keyframes holoRainbowShift{
-  0%{background-position:0% 50%}
-  100%{background-position:100% 50%}
+@keyframes holoVividRainbow{
+  0%{background-position:0% 0%}
+  50%{background-position:100% 100%}
+  100%{background-position:0% 100%}
 }
 .cell.poke-card.card-special:hover{
-  box-shadow:0 12px 28px rgba(245,158,11,0.55), 0 0 22px rgba(232,186,255,0.85), inset 0 0 12px rgba(255,255,255,0.95) !important;
-  transform:translateY(-6px) scale(1.04) !important;
+  box-shadow:0 12px 30px rgba(255,0,85,0.65), 0 0 24px rgba(0,212,255,0.9), inset 0 0 16px rgba(255,255,255,0.95) !important;
+  transform:translateY(-6px) scale(1.05) !important;
 }
-.cell.poke-card.card-special .poke-name{color:#1E1B4B !important}
-.cell.poke-card.card-special .poke-move-name{color:#4338CA !important}
+.cell.poke-card.card-special .poke-header{
+  background:rgba(255,255,255,0.9);
+  border-radius:6px;
+  padding:2px 3px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.15);
+}
+.cell.poke-card.card-special .poke-name{color:#0F172A !important;font-weight:900 !important}
+.cell.poke-card.card-special .poke-move-box{
+  background:rgba(255,255,255,0.9) !important;
+  border:1px solid rgba(255,255,255,0.98) !important;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15) !important;
+}
+.cell.poke-card.card-special .poke-move-name{color:#6D28D9 !important}
 .poke-stage-pill.stage-special{
-  background:linear-gradient(135deg,#FEF08A,#F59E0B) !important;
-  border:1px solid #D97706 !important;
-  color:#78350F !important;
+  background:linear-gradient(135deg,#FFDD00,#FF4500) !important;
+  border:1px solid #FFFFFF !important;
+  color:#FFFFFF !important;
   font-weight:900 !important;
-  box-shadow:0 1px 4px rgba(217,119,6,0.4) !important;
+  text-shadow:0 1px 2px rgba(0,0,0,0.35);
+  box-shadow:0 2px 6px rgba(255,69,0,0.5) !important;
 }
 
 /* 포켓몬 카드 상단 헤더 */
