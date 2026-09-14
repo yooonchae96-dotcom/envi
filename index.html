@@ -22,10 +22,10 @@ header{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px}
 #qrbox .ph{width:78px;height:78px;display:grid;place-items:center;background:#F0F4F4;border-radius:6px;font-size:10px;color:var(--sub)}
 #qrbox small{display:block;font-size:10px;color:var(--sub);margin-top:3px}
 h1{font-size:19px;margin:2px 0}.hsub{color:var(--sub);font-size:13px;margin:0}
-nav{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-nav button{background:#ffffff;color:#1e3a8a;border:2px solid #cbd5e1;font-size:14.5px;font-weight:700;padding:8px 16px;height:42px;border-radius:8px;cursor:pointer;transition:all .15s ease}
-nav button:hover{border-color:#1e3a8a;background:#f8fafc}
-nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-weight:700;box-shadow:0 2px 8px rgba(30,58,138,0.22)}
+header nav{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+header nav button{background:#ffffff;color:#1e3a8a;border:2px solid #cbd5e1;font-size:14.5px;font-weight:700;padding:8px 16px;height:42px;border-radius:8px;cursor:pointer;transition:all .15s ease}
+header nav button:hover{border-color:#1e3a8a;background:#f8fafc}
+header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-weight:700;box-shadow:0 2px 8px rgba(30,58,138,0.22)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
 .card h2{font-size:16px;margin:0 0 8px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -2230,10 +2230,11 @@ function populateNPCs(){
 }
 
 function goToTab(tabIndex){
+  if(isNaN(tabIndex)) return;
   if(tabIndex === 4) {
     // 4단계 연습하기는 로그인이나 2, 3단계 캐릭터 세팅 없이 즉시 연습 가능
     S.tab = 4;
-    $$("nav button").forEach(x => x.classList.toggle("on", +x.dataset.tab === 4));
+    $$("header nav button[data-tab]").forEach(x => x.classList.toggle("on", +x.dataset.tab === 4));
     [1,2,3,4].forEach(i => $("#t" + i).classList.toggle("hide", i !== 4));
     if(typeof BGM_ENGINE !== "undefined") BGM_ENGINE.stop();
     if(typeof LOTTO_BGM_ENGINE !== "undefined") LOTTO_BGM_ENGINE.stop();
@@ -2257,7 +2258,7 @@ function goToTab(tabIndex){
     else if(!S.spots.length) seatAll();
   }
   S.tab = tabIndex;
-  $$("nav button").forEach(x => x.classList.toggle("on", +x.dataset.tab === tabIndex));
+  $$("header nav button[data-tab]").forEach(x => x.classList.toggle("on", +x.dataset.tab === tabIndex));
   [1,2,3,4].forEach(i => $("#t" + i).classList.toggle("hide", i !== tabIndex));
   
   const stageWrap = $("#stageContainer");
@@ -2284,7 +2285,7 @@ function goToTab(tabIndex){
   }
 }
 
-$$("nav button").forEach(b => b.onclick = () => {
+$$("header nav button[data-tab]").forEach(b => b.onclick = () => {
   playTabClickSound();
   goToTab(+b.dataset.tab);
 });
@@ -5066,9 +5067,12 @@ let practiceAppInitialized = false;
 function initPracticeApp(){
   if(!practiceAppInitialized) {
     document.querySelectorAll("#t4 [data-view]").forEach(t=>{
-      t.addEventListener("click",()=>{
+      t.addEventListener("click",(e)=>{
+        e.preventDefault();
+        e.stopPropagation();
         P_CURRENT_VIEW = t.dataset.view;
         pSetTab(P_CURRENT_VIEW);
+        if(P_CURRENT_VIEW === "home") PW.c = null;
         if(P_VIEWS[P_CURRENT_VIEW]) P_VIEWS[P_CURRENT_VIEW]();
         pGo();
       });
@@ -5078,6 +5082,7 @@ function initPracticeApp(){
   pSetTab(P_CURRENT_VIEW);
   if(P_VIEWS[P_CURRENT_VIEW]) P_VIEWS[P_CURRENT_VIEW]();
 }
+try { initPracticeApp(); } catch(e){}
 
 /* ===== QR ===== */
 (function(){const s=document.createElement("script");
@@ -5095,6 +5100,7 @@ function ld(store,key,src){pending++;const im=new Image();
 Object.keys(CHARS).forEach(k=>ld(IMG,k,CHARS[k]));
 Object.keys(PET_SRC).forEach(k=>ld(PIMG,k,PET_SRC[k]));
 function afterLoad(){
+  if(typeof initPracticeApp === "function") initPracticeApp();
   if(!S.me)return;
   renderGrid();
   if(S.me.charId){showMine();renderRoster();if(S.tab===3)renderLotto();}
