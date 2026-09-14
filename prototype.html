@@ -661,10 +661,10 @@ const SPOTPOS=[
 
 /* ===== 사상가 일렬 슬롯 정의 ===== */
 const THINKER_SLOTS = [
-  { id: "ari", num: 1, scholar: "아리스토텔레스", label: "인간", color: "#5B4FCF", offsetX: -270, offsetY: 40 },
-  { id: "sin", num: 2, scholar: "피터 싱어", label: "동물", color: "#D97706", offsetX: -90, offsetY: 40 },
-  { id: "sch", num: 3, scholar: "슈바이처", label: "생명", color: "#2E7D32", offsetX: 90, offsetY: 40 },
-  { id: "leo", num: 4, scholar: "레오폴드", label: "생태", color: "#2D6A4F", offsetX: 270, offsetY: 40 }
+  { id: "ari", num: 1, scholar: "아리스토텔레스", label: "인간", color: "#5B4FCF", offsetX: -325, offsetY: 40 },
+  { id: "sin", num: 2, scholar: "피터 싱어", label: "동물", color: "#D97706", offsetX: -110, offsetY: 40 },
+  { id: "sch", num: 3, scholar: "슈바이처", label: "생명", color: "#2E7D32", offsetX: 115, offsetY: 40 },
+  { id: "leo", num: 4, scholar: "레오폴드", label: "생태", color: "#2D6A4F", offsetX: 345, offsetY: 40 }
 ];
 
 
@@ -2218,32 +2218,23 @@ function render(ts) {
     const occupants = S.players.filter(p => p.spot === sp.id);
 
     // 2. 대형 4중 둥근 직사각형 벤다이어그램 (100% 불투명 솔리드 테라스 플랫폼)
-    // 넉넉한 700x340 대형 사이즈로 글씨 가려짐 원천 방지!
-    // 계층 구조: 생태(전체 700) ⊃ 생명(525) ⊃ 동물(365) ⊃ 인간(195)
-    // 슬롯 위치: ari(-210), sin(-70), sch(+70), leo(+210), offsetY: 28
+    // 넉넉한 920x580 대형 사이즈 & 4개 사상가 영역 완벽 중앙정렬
+    // 계층 구조: 생태(전체 920) ⊃ 생명(680) ⊃ 동물(440) ⊃ 인간(210)
+    // 4개 영역 여집합: 인간(-430~-220, w=210) | 동물(-220~0, w=220) | 생명(0~230, w=230) | 생태(230~460, w=230)
+    // 사상가 슬롯 위치: ari(-325), sin(-110), sch(+115), leo(+345), offsetY: 40
 
-    // 2-1. [가. 생태 중심] 레오폴드 - 최외곽 플랫폼 (가로 900, 세로 580, 4명 전체 포괄)
+    // 2-1. [가. 생태 중심] 레오폴드 - 최외곽 플랫폼 (가로 920, 세로 580, 4명 전체 포괄)
     cx.save();
     cx.shadowColor = "rgba(18, 56, 36, 0.24)";
     cx.shadowBlur = 24;
     cx.shadowOffsetY = 8;
-    drawRoundRect(cx, sp.x - 450, sp.y - 280, 900, 580, 36);
+    drawRoundRect(cx, sp.x - 460, sp.y - 280, 920, 580, 36);
     cx.fillStyle = "#F3FAF5"; // 100% 불투명 세이지 유백색
     cx.fill();
     cx.shadowColor = "transparent";
     cx.strokeStyle = isCompleted ? "#1B4D3E" : "#2D6A4F";
     cx.lineWidth = isCompleted ? 4.2 : 3.4;
     cx.stroke();
-
-    // 생태 중심 라벨 뱃지 (우측 상단 레오폴드 고유 구역에 단독 배치)
-    drawRoundRect(cx, sp.x + 165, sp.y - 268, 265, 30, 10);
-    cx.fillStyle = "#2D6A4F";
-    cx.fill();
-    cx.fillStyle = "#FFFFFF";
-    cx.font = "bold 13px sans-serif";
-    cx.textAlign = "center";
-    cx.textBaseline = "middle";
-    cx.fillText("가. 생태 중심 (생태계 전체)", sp.x + 297, sp.y - 253);
     cx.restore();
 
     // 2-2. [나. 생명 중심] 슈바이처 - 2단계 플랫폼 (가로 680, 세로 510, 슈바이처·싱어·아리 포괄)
@@ -2251,71 +2242,90 @@ function render(ts) {
     cx.shadowColor = "rgba(20, 60, 25, 0.12)";
     cx.shadowBlur = 14;
     cx.shadowOffsetY = 6;
-    drawRoundRect(cx, sp.x - 430, sp.y - 245, 680, 510, 32);
+    drawRoundRect(cx, sp.x - 450, sp.y - 245, 680, 510, 32);
     cx.fillStyle = "#EBF7EE"; // 100% 불투명 싱그러운 페일 민트 그린
     cx.fill();
     cx.shadowColor = "transparent";
     cx.strokeStyle = "#388E3C";
     cx.lineWidth = 3.2;
     cx.stroke();
-
-    // 생명 중심 라벨 뱃지 (상단 슈바이처 고유 구역에 단독 배치)
-    drawRoundRect(cx, sp.x - 20, sp.y - 233, 195, 28, 9);
-    cx.fillStyle = "#388E3C";
-    cx.fill();
-    cx.fillStyle = "#FFFFFF";
-    cx.font = "bold 12px sans-serif";
-    cx.textAlign = "center";
-    cx.textBaseline = "middle";
-    cx.fillText("나. 생명 중심 (모든 생명체)", sp.x + 77, sp.y - 219);
     cx.restore();
 
-    // 2-3. [다. 동물 중심] 피터 싱어 - 3단계 플랫폼 (가로 470, 세로 440, 싱어·아리 포괄)
+    // 2-3. [다. 동물 중심] 피터 싱어 - 3단계 플랫폼 (가로 440, 세로 440, 싱어·아리 포괄)
     cx.save();
     cx.shadowColor = "rgba(60, 35, 10, 0.12)";
     cx.shadowBlur = 12;
     cx.shadowOffsetY = 5;
-    drawRoundRect(cx, sp.x - 415, sp.y - 210, 470, 440, 28);
+    drawRoundRect(cx, sp.x - 440, sp.y - 210, 440, 440, 28);
     cx.fillStyle = "#FFF8EE"; // 100% 불투명 따뜻한 웜 앰버 크림
     cx.fill();
     cx.shadowColor = "transparent";
     cx.strokeStyle = "#D97706";
     cx.lineWidth = 3.2;
     cx.stroke();
-
-    // 동물 중심 라벨 뱃지 (상단 싱어 고유 구역에 단독 배치)
-    drawRoundRect(cx, sp.x - 185, sp.y - 198, 180, 28, 9);
-    cx.fillStyle = "#D97706";
-    cx.fill();
-    cx.fillStyle = "#FFFFFF";
-    cx.font = "bold 12px sans-serif";
-    cx.textAlign = "center";
-    cx.textBaseline = "middle";
-    cx.fillText("다. 동물 중심 (감각 동물)", sp.x - 95, sp.y - 184);
     cx.restore();
 
-    // 2-4. [라. 인간 중심] 아리스토텔레스 - 최내곽 플랫폼 (가로 250, 세로 370, 아리스토텔레스 단독 포괄)
+    // 2-4. [라. 인간 중심] 아리스토텔레스 - 최내곽 플랫폼 (가로 210, 세로 370, 아리스토텔레스 단독 포괄)
     cx.save();
     cx.shadowColor = "rgba(35, 25, 75, 0.12)";
     cx.shadowBlur = 12;
     cx.shadowOffsetY = 5;
-    drawRoundRect(cx, sp.x - 390, sp.y - 175, 250, 370, 24);
+    drawRoundRect(cx, sp.x - 430, sp.y - 175, 210, 370, 24);
     cx.fillStyle = "#F6F4FE"; // 100% 불투명 기품 있는 로열 라벤더
     cx.fill();
     cx.shadowColor = "transparent";
     cx.strokeStyle = "#5B4FCF";
     cx.lineWidth = 3.2;
     cx.stroke();
+    cx.restore();
 
-    // 인간 중심 라벨 뱃지 (상단 아리스토텔레스 고유 구역에 단독 배치)
-    drawRoundRect(cx, sp.x - 380, sp.y - 163, 175, 28, 9);
+    // ===== 2-5. 4대 사상 라벨 뱃지 렌더링 (플랫폼 위에 단독 최상단 렌더링하여 절대 가려지지 않음!) =====
+    // 가. 생태 중심 라벨 뱃지 (생태 고유 구역 중앙 sp.x + 345 에 단독 배치)
+    cx.save();
+    drawRoundRect(cx, sp.x + 248, sp.y - 268, 195, 30, 10);
+    cx.fillStyle = "#2D6A4F";
+    cx.fill();
+    cx.fillStyle = "#FFFFFF";
+    cx.font = "bold 12.5px sans-serif";
+    cx.textAlign = "center";
+    cx.textBaseline = "middle";
+    cx.fillText("가. 생태 중심 (생태계 전체)", sp.x + 345, sp.y - 253);
+    cx.restore();
+
+    // 나. 생명 중심 라벨 뱃지 (생명 고유 구역 중앙 sp.x + 115 에 단독 배치)
+    cx.save();
+    drawRoundRect(cx, sp.x + 22, sp.y - 233, 185, 28, 9);
+    cx.fillStyle = "#388E3C";
+    cx.fill();
+    cx.fillStyle = "#FFFFFF";
+    cx.font = "bold 12px sans-serif";
+    cx.textAlign = "center";
+    cx.textBaseline = "middle";
+    cx.fillText("나. 생명 중심 (모든 생명체)", sp.x + 115, sp.y - 219);
+    cx.restore();
+
+    // 다. 동물 중심 라벨 뱃지 (동물 고유 구역 중앙 sp.x - 110 에 단독 배치)
+    cx.save();
+    drawRoundRect(cx, sp.x - 198, sp.y - 198, 175, 28, 9);
+    cx.fillStyle = "#D97706";
+    cx.fill();
+    cx.fillStyle = "#FFFFFF";
+    cx.font = "bold 12px sans-serif";
+    cx.textAlign = "center";
+    cx.textBaseline = "middle";
+    cx.fillText("다. 동물 중심 (감각 동물)", sp.x - 110, sp.y - 184);
+    cx.restore();
+
+    // 라. 인간 중심 라벨 뱃지 (인간 고유 구역 중앙 sp.x - 325 에 단독 배치)
+    cx.save();
+    drawRoundRect(cx, sp.x - 410, sp.y - 163, 170, 28, 9);
     cx.fillStyle = "#5B4FCF";
     cx.fill();
     cx.fillStyle = "#FFFFFF";
     cx.font = "bold 12px sans-serif";
     cx.textAlign = "center";
     cx.textBaseline = "middle";
-    cx.fillText("라. 인간 중심 (이성적 존재)", sp.x - 292, sp.y - 149);
+    cx.fillText("라. 인간 중심 (이성적 존재)", sp.x - 325, sp.y - 149);
     cx.restore();
 
     // ===== 3. 모둠 전등 램프 및 불 켜짐 연출 (1~7번 모둠별 완성 불빛) =====
