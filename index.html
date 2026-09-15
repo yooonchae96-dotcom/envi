@@ -979,6 +979,16 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
 /* 출발 버튼 */
 .btn-start-tab2{background:#1e3a8a;color:#ffffff;border:2px solid #1e3a8a;border-radius:8px;height:42px;padding:0 18px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(30,58,138,.25);transition:transform .15s,box-shadow .15s;display:inline-flex;align-items:center;gap:6px}
 .btn-start-tab2:hover{background:#172554;border-color:#172554;transform:translateY(-1px);box-shadow:0 4px 12px rgba(30,58,138,.35)}
+/* 소리 온오프 스피커 아이콘 버튼 */
+.speaker-toggle-btn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border-radius:50%;background:#ffffff;border:2px solid #CBD5E1;font-size:20px;line-height:1;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.08);transition:all .2s cubic-bezier(0.16,1,0.3,1);user-select:none;flex-shrink:0}
+.speaker-toggle-btn:hover{background:#F8FAFC;border-color:#1e3a8a;transform:scale(1.08);box-shadow:0 4px 12px rgba(30,58,138,.2)}
+.speaker-toggle-btn:active{transform:scale(0.94)}
+.speaker-toggle-btn.is-muted{background:#F1F5F9;border-color:#E2E8F0;opacity:.65;filter:grayscale(1)}
+/* 맵 우측 상단 고정 플로팅 스피커 버튼 */
+.map-speaker-btn{position:absolute;top:14px;right:14px;z-index:100;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border:2px solid #CBD5E1;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15);display:inline-flex;align-items:center;justify-content:center;transition:all .2s cubic-bezier(0.16,1,0.3,1);user-select:none}
+.map-speaker-btn:hover{background:#ffffff;border-color:#1e3a8a;transform:scale(1.1);box-shadow:0 6px 20px rgba(30,58,138,.25)}
+.map-speaker-btn:active{transform:scale(0.94)}
+.map-speaker-btn.is-muted{background:rgba(241,245,249,.9);border-color:#CBD5E1;opacity:.75;filter:grayscale(1)}
 /* 법적 약관 모달 및 푸터 스타일 */
 .legal-modal-content{background:#fff;border-radius:16px;width:92%;max-width:580px;max-height:85vh;display:flex;flex-direction:column;padding:20px 24px;box-shadow:0 12px 32px rgba(0,0,0,0.25);position:relative;margin:auto}
 .legal-modal-body{flex:1;overflow-y:auto;padding-right:6px;margin:10px 0;font-size:13.5px;line-height:1.65;color:#333;border-top:1px solid #eee;border-bottom:1px solid #eee;padding-top:10px;padding-bottom:10px}
@@ -1477,7 +1487,10 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
   <div class="card" id="pickCard">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
       <h2 style="margin:0">캐릭터 고르기 <span class="muted">선착순 · 사상가 4명 × 스타일 7개</span></h2>
-      <button id="startTab2Btn" class="btn-start-tab2">🚀 출발! (2번 탭 벤다이어그램으로 이동)</button>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button id="speakerToggleBtn" class="speaker-toggle-btn" title="소리 켜기/끄기" aria-label="소리 켜기/끄기">🔊</button>
+        <button id="startTab2Btn" class="btn-start-tab2">🚀 출발! (2번 탭 벤다이어그램으로 이동)</button>
+      </div>
     </div>
     <div class="grid28" id="grid28"></div>
   </div>
@@ -1501,14 +1514,15 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
     <p class="muted">맵에 7개의 대형 벤다이어그램 구역이 미리 준비되어 있습니다. 내 사상가(아리스토텔레스·싱어·슈바이처·레오폴드)에 맞는 원형 칸으로 이동하세요. 네 사상가가 모두 모이면 결계가 쳐져 보호됩니다. (결계 완성 후에도 방향키/화면 드래그로 전체 맵을 자유롭게 둘러보실 수 있습니다)</p>
     <div id="stageContainer" style="position:relative">
       <canvas id="stage"></canvas>
-      <!-- 통합 하단 툴바: 불 켜짐 현황 + 시뮬레이션 + BGM -->
+      <!-- 맵 우측 상단 고정 스피커 버튼 -->
+      <button id="mapSpeakerBtn" class="speaker-toggle-btn map-speaker-btn" title="소리 켜기/끄기" aria-label="소리 켜기/끄기">🔊</button>
+      <!-- 통합 하단 툴바: 불 켜짐 현황 + 시뮬레이션 -->
       <div class="stage-unified-bar" id="stageUnifiedBar">
         <div class="bar-lights-group" id="mini"></div>
         <div class="bar-divider"></div>
         <div class="bar-controls-group">
           <button id="simRunBtn" class="bar-btn btn-run" title="학생들이 자리로 달려가는 시뮬레이션">🏃 모의 달리기</button>
           <button id="simCompleteAllBtn" class="bar-btn btn-complete" title="1번부터 7번 모둠까지 순서대로 완성 & 불 켜기">⚡ 모의 완성</button>
-          <button id="bgmToggleBtn" class="bar-btn btn-bgm" title="신나는 게임 BGM 켜기/끄기">🎵 BGM ON</button>
         </div>
       </div>
       <!-- 좌측 세로 줌 스크롤/슬라이더 컨트롤 -->
@@ -1535,7 +1549,6 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
       <div class="row" style="gap:8px;flex-wrap:wrap;">
         <button id="drawBtn">추첨하기 🎲</button>
         <button id="drawMeBtn" class="btn-start-tab2" style="background:linear-gradient(135deg,#6366f1,#4f46e5);padding:7px 14px;font-size:13.5px;" title="내가 당첨 학생이 되어 직접 주장 작성 및 채점 테스트하기">🎯 내가 당첨되어 테스트</button>
-        <button class="ghost" id="soundBtn">소리 끄기</button>
       </div>
     </div>
     <p class="muted" id="drawMsg" style="margin-bottom:8px">추첨을 누르면 메타버스 맵 안에서 실시간 카메라 추적과 함께 발표자가 선택되며, 발표자의 주장과 근거가 캐릭터 머리 위에 말풍선으로 띄워집니다.</p>
@@ -1945,6 +1958,30 @@ function playMiniLightUpSound(spotIdx) {
   }catch(e){}
 }
 
+// 사상가 카드 호버 효과음 (산뜻하고 명쾌한 클릭/플러터 사운드)
+let lastHoverSoundTime = 0;
+function playThinkerHoverSound() {
+  if (!S.sound) return;
+  const now = performance.now();
+  if (now - lastHoverSoundTime < 40) return;
+  lastHoverSoundTime = now;
+  try {
+    const ctx = getAudioCtx(); if (!ctx) return;
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "triangle";
+    o.frequency.setValueAtTime(880, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1440, ctx.currentTime + 0.045);
+    g.gain.setValueAtTime(0.001, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.007);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.065);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + 0.075);
+  } catch (e) {}
+}
+
 // 3. 벤다이어그램 탭 전용 BGM 엔진 (156 BPM, 경쾌한 마림바 & 통통 튀는 베이스 테마)
 const BGM_ENGINE={
   isPlaying:false,
@@ -1974,20 +2011,10 @@ const BGM_ENGINE={
     this.updateUI();
   },
   toggle(){
-    if(this.isPlaying){
-      this.stop();
-      toast("🔇 BGM 꺼짐");
-    }else{
-      this.start();
-      toast("🎵 벤다이어그램 BGM 켜짐!");
-    }
+    toggleMasterSound();
   },
   updateUI(){
-    const btn=$("#bgmToggleBtn");
-    if(btn && S.tab === 2){
-      btn.textContent=this.isPlaying?"🎵 BGM ON":"🔇 BGM OFF";
-      btn.style.backgroundColor=this.isPlaying?"#10B981":"#64748B";
-    }
+    updateAllSoundUI();
   },
   scheduleNext(){
     if(!this.isPlaying)return;
@@ -2057,22 +2084,10 @@ const LOTTO_BGM_ENGINE = {
     this.updateUI();
   },
   toggle() {
-    if (this.isPlaying) {
-      this.stop();
-      S.sound = false;
-      toast("🔇 토론 BGM 꺼짐");
-    } else {
-      S.sound = true;
-      this.start();
-      toast("🎪 신나는 토론 아케이드 BGM 켜짐!");
-    }
+    toggleMasterSound();
   },
   updateUI() {
-    const btn = $("#bgmToggleBtn");
-    if (btn && S.tab === 3) {
-      btn.textContent = this.isPlaying ? "🎪 토론 BGM ON" : "🔇 BGM OFF";
-      btn.style.backgroundColor = this.isPlaying ? "#F59E0B" : "#64748B";
-    }
+    updateAllSoundUI();
   },
   scheduleNext() {
     if (!this.isPlaying) return;
@@ -2108,6 +2123,151 @@ const LOTTO_BGM_ENGINE = {
     this.stepTimer = setTimeout(() => this.scheduleNext(), interval);
   }
 };
+
+// 3-3. 1번 탭 사상가 고르기 전용 스릴 만점 서스펜스 BGM 엔진 (140 BPM)
+const THINKER_BGM_ENGINE = {
+  isPlaying: false,
+  stepTimer: null,
+  step: 0,
+  bpm: 140,
+  melody: [
+    587, 0, 698, 880, 0, 831, 0, 784, 0, 698, 0, 622, 587, 0, 0, 0,
+    587, 0, 698, 880, 0, 932, 0, 880, 0, 1046, 0, 932, 880, 831, 880, 0,
+    1175, 0, 1046, 932, 880, 0, 831, 784, 698, 0, 622, 587, 622, 0, 698, 0,
+    880, 0, 831, 0, 784, 0, 698, 0, 622, 0, 587, 0, 554, 587, 0, 0
+  ],
+  bass: [
+    73.4, 73.4, 146.8, 73.4, 73.4, 110.0, 77.8, 73.4,
+    73.4, 73.4, 146.8, 73.4, 82.4, 110.0, 77.8, 73.4,
+    65.4, 65.4, 130.8, 65.4, 65.4, 98.0, 69.3, 65.4,
+    73.4, 73.4, 146.8, 73.4, 77.8, 82.4, 87.3, 110.0
+  ],
+  start() {
+    if (this.isPlaying || !S.sound) return;
+    this.isPlaying = true;
+    this.step = 0;
+    this.scheduleNext();
+    this.updateUI();
+  },
+  stop() {
+    this.isPlaying = false;
+    clearTimeout(this.stepTimer);
+    this.updateUI();
+  },
+  toggle() {
+    toggleMasterSound();
+  },
+  updateUI() {
+    updateAllSoundUI();
+  },
+  scheduleNext() {
+    if (!this.isPlaying) return;
+    const ctx = getAudioCtx(); if (!ctx) return;
+    const interval = (60 / this.bpm / 2) * 1000;
+
+    const melFreq = this.melody[this.step % this.melody.length];
+    const bassFreq = this.bass[this.step % this.bass.length];
+
+    if (melFreq > 0) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(melFreq, ctx.currentTime);
+      g.gain.setValueAtTime(0.001, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.09, ctx.currentTime + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.13);
+    }
+
+    if (bassFreq > 0) {
+      const bo = ctx.createOscillator(), bg = ctx.createGain();
+      bo.type = "triangle";
+      bo.frequency.setValueAtTime(bassFreq, ctx.currentTime);
+      bg.gain.setValueAtTime(0.001, ctx.currentTime);
+      bg.gain.linearRampToValueAtTime(0.14, ctx.currentTime + 0.008);
+      bg.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+      bo.connect(bg); bg.connect(ctx.destination);
+      bo.start(); bo.stop(ctx.currentTime + 0.16);
+    }
+
+    if (this.step % 2 === 0 || this.step % 4 === 3) {
+      const ho = ctx.createOscillator(), hg = ctx.createGain();
+      ho.type = "square";
+      ho.frequency.setValueAtTime(2200 + (this.step % 4) * 300, ctx.currentTime);
+      hg.gain.setValueAtTime(0.001, ctx.currentTime);
+      hg.gain.linearRampToValueAtTime(0.03, ctx.currentTime + 0.002);
+      hg.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.025);
+      ho.connect(hg); hg.connect(ctx.destination);
+      ho.start(); ho.stop(ctx.currentTime + 0.03);
+    }
+
+    this.step++;
+    this.stepTimer = setTimeout(() => this.scheduleNext(), interval);
+  }
+};
+
+/* ===== 통합 소리 및 스피커 아이콘 제어 ===== */
+function updateAllSoundUI() {
+  $$(".speaker-toggle-btn").forEach(btn => {
+    btn.textContent = S.sound ? "🔊" : "🔇";
+    btn.title = S.sound ? "소리 끄기" : "소리 켜기";
+    btn.classList.toggle("is-muted", !S.sound);
+  });
+}
+
+function toggleMasterSound(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  const ctx = getAudioCtx();
+  if (ctx && ctx.state === "suspended") {
+    ctx.resume().catch(() => {});
+  }
+  S.sound = !S.sound;
+  if (!S.sound) {
+    THINKER_BGM_ENGINE.stop();
+    BGM_ENGINE.stop();
+    LOTTO_BGM_ENGINE.stop();
+    toast("🔇 소리 꺼짐");
+  } else {
+    if (S.tab === 1) THINKER_BGM_ENGINE.start();
+    else if (S.tab === 2) BGM_ENGINE.start();
+    else if (S.tab === 3) LOTTO_BGM_ENGINE.start();
+    toast("🔊 소리 켜짐");
+  }
+  updateAllSoundUI();
+}
+
+function unlockAudio() {
+  try {
+    const ctx = getAudioCtx();
+    if (ctx) {
+      if (ctx.state === "suspended") {
+        ctx.resume().then(() => {
+          if (S.sound) {
+            if (S.tab === 1 && !THINKER_BGM_ENGINE.isPlaying) THINKER_BGM_ENGINE.start();
+            else if (S.tab === 2 && !BGM_ENGINE.isPlaying) BGM_ENGINE.start();
+            else if (S.tab === 3 && !LOTTO_BGM_ENGINE.isPlaying) LOTTO_BGM_ENGINE.start();
+          }
+          updateAllSoundUI();
+        }).catch(() => {});
+      } else if (ctx.state === "running") {
+        if (S.sound) {
+          if (S.tab === 1 && !THINKER_BGM_ENGINE.isPlaying) THINKER_BGM_ENGINE.start();
+          else if (S.tab === 2 && !BGM_ENGINE.isPlaying) BGM_ENGINE.start();
+          else if (S.tab === 3 && !LOTTO_BGM_ENGINE.isPlaying) LOTTO_BGM_ENGINE.start();
+        }
+      }
+    }
+  } catch (e) {}
+}
+
+["click", "pointerdown", "touchstart", "keydown"].forEach(evt => {
+  window.addEventListener(evt, unlockAudio, { passive: true });
+});
+
+// 1번 탭 진입 시 BGM 기본 자동 시작
+if (S.tab === 1 && S.sound) {
+  try { THINKER_BGM_ENGINE.start(); } catch(e) {}
+}
 
 /* ===== 캐릭터 그리기 ===== */
 function drawChar(ctx,x,y,ch,sc,opt){
@@ -2238,6 +2398,8 @@ function goToTab(tabIndex){
     [1,2,3,4].forEach(i => $("#t" + i).classList.toggle("hide", i !== 4));
     if(typeof BGM_ENGINE !== "undefined") BGM_ENGINE.stop();
     if(typeof LOTTO_BGM_ENGINE !== "undefined") LOTTO_BGM_ENGINE.stop();
+    if(typeof THINKER_BGM_ENGINE !== "undefined") THINKER_BGM_ENGINE.stop();
+    updateAllSoundUI();
     if(typeof initPracticeApp === "function") initPracticeApp();
     window.scrollTo({top: 0, behavior: "smooth"});
     return;
@@ -2262,6 +2424,13 @@ function goToTab(tabIndex){
   [1,2,3,4].forEach(i => $("#t" + i).classList.toggle("hide", i !== tabIndex));
   
   const stageWrap = $("#stageContainer");
+  if(S.tab === 1) {
+    BGM_ENGINE.stop();
+    LOTTO_BGM_ENGINE.stop();
+    if(S.sound) THINKER_BGM_ENGINE.start();
+  } else {
+    THINKER_BGM_ENGINE.stop();
+  }
   if(S.tab === 2) {
     if(stageWrap && $("#t2Card")) $("#t2Card").appendChild(stageWrap);
     resize();
@@ -2270,7 +2439,7 @@ function goToTab(tabIndex){
       S._initialZoomSet = true;
     }
     LOTTO_BGM_ENGINE.stop();
-    BGM_ENGINE.start();
+    if(S.sound) BGM_ENGINE.start();
   } else {
     BGM_ENGINE.stop();
   }
@@ -2279,10 +2448,11 @@ function goToTab(tabIndex){
     resize();
     renderLotto();
     BGM_ENGINE.stop();
-    LOTTO_BGM_ENGINE.start();
+    if(S.sound) LOTTO_BGM_ENGINE.start();
   } else {
     LOTTO_BGM_ENGINE.stop();
   }
+  updateAllSoundUI();
 }
 
 $$("header nav button[data-tab]").forEach(b => b.onclick = () => {
@@ -2571,6 +2741,14 @@ function renderGrid(){
       drawChar(cv.getContext("2d"), 56, 76, ch, 0.70, {dir: 1});
     }
 
+    // 사상가 카드 마우스 호버 효과음 재생
+    d.onmouseenter = () => {
+      playThinkerHoverSound();
+      if (S.tab === 1 && !THINKER_BGM_ENGINE.isPlaying && S.sound) {
+        THINKER_BGM_ENGINE.start();
+      }
+    };
+
     if(!taken && (!S.me || !S.me.charId)) {
       d.onclick=()=>{
         selectedCharId = (selectedCharId === ch.charId) ? null : ch.charId;
@@ -2829,13 +3007,8 @@ addEventListener("keydown", e => handleKey(e, true));
 addEventListener("keyup", e => handleKey(e, false));
 addEventListener("blur", () => { Object.keys(keys).forEach(k => keys[k] = 0); });
 
-const bgmBtn = $("#bgmToggleBtn");
-if (bgmBtn) {
-  bgmBtn.onclick = () => {
-    if (S.tab === 3) LOTTO_BGM_ENGINE.toggle();
-    else BGM_ENGINE.toggle();
-  };
-}
+$$(".speaker-toggle-btn").forEach(btn => btn.onclick = toggleMasterSound);
+updateAllSoundUI();
 
 // 좌측 세로 줌 스크롤/슬라이더 위젯 및 마우스 휠 줌 제어
 S.zoomScale = 0.55; // 처음 입장했을 때는 중간 크기(55%)에서 시작
@@ -4178,17 +4351,7 @@ requestAnimationFrame(loop);
 
 /* ===== 3번 탭 — 추첨 ===== */
 $("#caseTitle").textContent=CASE.title;$("#caseQ").textContent=CASE.q;$("#caseSit").textContent=CASE.situation;
-$("#soundBtn").onclick=()=>{
-  S.sound = !S.sound;
-  $("#soundBtn").textContent = S.sound ? "소리 끄기" : "소리 켜기";
-  if (S.sound) {
-    if (S.tab === 2) BGM_ENGINE.start();
-    else if (S.tab === 3) LOTTO_BGM_ENGINE.start();
-  } else {
-    BGM_ENGINE.stop();
-    LOTTO_BGM_ENGINE.stop();
-  }
-};
+if ($("#soundBtn")) $("#soundBtn").onclick = toggleMasterSound;
 function lottoList(){return [...S.players].sort((a,b)=>b.no-a.no);}
 function renderLotto(){
   const box=$("#lotto");box.innerHTML="";
@@ -5101,6 +5264,10 @@ Object.keys(CHARS).forEach(k=>ld(IMG,k,CHARS[k]));
 Object.keys(PET_SRC).forEach(k=>ld(PIMG,k,PET_SRC[k]));
 function afterLoad(){
   if(typeof initPracticeApp === "function") initPracticeApp();
+  if (S.tab === 1 && S.sound && !THINKER_BGM_ENGINE.isPlaying) {
+    try { THINKER_BGM_ENGINE.start(); } catch(e) {}
+  }
+  updateAllSoundUI();
   if(!S.me)return;
   renderGrid();
   if(S.me.charId){showMine();renderRoster();if(S.tab===3)renderLotto();}
