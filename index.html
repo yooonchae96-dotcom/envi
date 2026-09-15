@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>도덕적 고려의 범위 · 메타버스 토론</title>
@@ -1770,26 +1773,7 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
     <p class="muted">맵에 7개의 대형 벤다이어그램 구역이 미리 준비되어 있습니다. 내 사상가(아리스토텔레스·싱어·슈바이처·레오폴드)에 맞는 원형 칸으로 이동하세요. 네 사상가가 모두 모이면 결계가 쳐져 보호됩니다. (결계 완성 후에도 방향키/화면 드래그로 전체 맵을 자유롭게 둘러보실 수 있습니다)</p>
     <div id="stageContainer" style="position:relative">
       <canvas id="stage"></canvas>
-      <!-- 🎆 무지개빛 대형 고속 폭죽 캔버스 -->
-      <canvas id="rainbowFireworksCanvas" class="rainbow-fireworks-canvas"></canvas>
-      <!-- 🏟️ 7개 벤다이어그램 완성 시 전광판 스타일 "완성" 3초 전면 오버레이 -->
-      <div id="completionBillboardOverlay" class="completion-billboard-overlay hide">
-        <div class="bb-matrix-lights"></div>
-        <div class="bb-board-box">
-          <div class="bb-board-top-status">
-            <span class="bb-bulb red"></span>
-            <span class="bb-bulb yellow"></span>
-            <span class="bb-bulb green"></span>
-            <span class="bb-bulb blue"></span>
-            <span class="bb-top-title">🏟️ STADIUM LIVE SCOREBOARD · 7개 모둠 전원 완료 🏟️</span>
-            <span class="bb-bulb blue"></span>
-            <span class="bb-bulb green"></span>
-            <span class="bb-bulb yellow"></span>
-            <span class="bb-bulb red"></span>
-          </div>
-          <div class="bb-giant-text">완 성</div>
-          <div class="bb-sub-text">★ 7개 벤다이어그램 모든 결계가 완성되었습니다! ★</div>
-        </div>
+      
       </div>
       <!-- 맵 우측 상단 고정 스피커 버튼 -->
       <button id="mapSpeakerBtn" class="speaker-toggle-btn map-speaker-btn" title="소리 켜기/끄기" aria-label="소리 켜기/끄기">🔊</button>
@@ -1876,6 +1860,30 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
   </div>
 
   <!-- 10배 확대 말풍선 팝업 모달 -->
+  
+  <!-- 🎆 무지개빛 대형 고속 폭죽 캔버스 (전체 화면 고정) -->
+  <canvas id="rainbowFireworksCanvas" class="rainbow-fireworks-canvas"></canvas>
+
+  <!-- 🏟️ 7개 벤다이어그램 완성 시 전광판 스타일 "완성" 3초 전면 오버레이 (전체 화면 고정) -->
+  <div id="completionBillboardOverlay" class="completion-billboard-overlay hide">
+    <div class="bb-matrix-lights"></div>
+    <div class="bb-board-box">
+      <div class="bb-board-top-status">
+        <span class="bb-bulb red"></span>
+        <span class="bb-bulb yellow"></span>
+        <span class="bb-bulb green"></span>
+        <span class="bb-bulb blue"></span>
+        <span class="bb-top-title">🏟️ STADIUM LIVE SCOREBOARD · 7개 모둠 전원 완료 🏟️</span>
+        <span class="bb-bulb blue"></span>
+        <span class="bb-bulb green"></span>
+        <span class="bb-bulb yellow"></span>
+        <span class="bb-bulb red"></span>
+      </div>
+      <div class="bb-giant-text">완 성</div>
+      <div class="bb-sub-text">★ 7개 벤다이어그램 모든 결계가 완성되었습니다! ★</div>
+    </div>
+  </div>
+
   <div id="enlargedBubbleModal" class="modal-backdrop hide" style="z-index:9999;">
     <div class="enlarged-bubble-content" id="enlargedBubbleCard">
       <div class="enlarged-bubble-header">
@@ -2250,13 +2258,12 @@ function playRealisticRainbowFireworksSound() {
   } catch(e) {}
 }
 
-/* 🎆 무지개색(채도 높은) 대형 고속 폭죽 발사 함수 */
+/* 🎆 무지개색(채도 높은) 대형 고속 폭죽 발사 함수 (전체 화면 고정 캔버스) */
 function triggerRainbowFireworks() {
   const c = $("#rainbowFireworksCanvas");
   if (!c) return;
-  const container = $("#stageContainer") || c.parentElement;
-  c.width = container.clientWidth || window.innerWidth;
-  c.height = container.clientHeight || window.innerHeight;
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
   const ctx = c.getContext("2d");
   if (!ctx) return;
 
@@ -2274,36 +2281,37 @@ function triggerRainbowFireworks() {
   const rockets = [];
   const particles = [];
 
-  for (let i = 0; i < 14; i++) {
+  // 화면 가로 전체에 걸쳐 18발의 고속 로켓을 시간차로 발사
+  for (let i = 0; i < 18; i++) {
     rockets.push({
-      x: c.width * (0.10 + Math.random() * 0.80),
+      x: c.width * (0.06 + Math.random() * 0.88),
       y: c.height,
-      targetY: c.height * (0.12 + Math.random() * 0.42),
-      vx: (Math.random() - 0.5) * 4.0,
-      vy: -(Math.random() * 5 + 16),
+      targetY: c.height * (0.10 + Math.random() * 0.40),
+      vx: (Math.random() - 0.5) * 5.0,
+      vy: -(Math.random() * 6 + 18),
       color: RAINBOW_COLORS[i % RAINBOW_COLORS.length],
-      delay: i * 220,
+      delay: i * 180,
       exploded: false
     });
   }
 
   const startTime = Date.now();
-  function explode(x, y, baseColor) {
-    const pCount = 90 + Math.floor(Math.random() * 40);
+  function explode(x, y) {
+    const pCount = 110 + Math.floor(Math.random() * 50);
     for (let i = 0; i < pCount; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 12 + 8; // 고속 폭발 속도
+      const speed = Math.random() * 16 + 9; // 고속 폭발력
       const rainbowColor = RAINBOW_COLORS[Math.floor(Math.random() * RAINBOW_COLORS.length)];
       particles.push({
         x: x,
         y: y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        color: rainbowColor, // 채도 100% 무지개색
+        color: rainbowColor, // 선명한 무지개 원색
         alpha: 1,
-        decay: Math.random() * 0.018 + 0.012,
-        gravity: 0.68, // 빠른 낙하
-        size: Math.random() * 8 + 8 // 대형 파티클 (8~16px)
+        decay: Math.random() * 0.015 + 0.010,
+        gravity: 0.72, // 빠른 낙하 속도
+        size: Math.random() * 10 + 9 // 9~19px 초대형 입자
       });
     }
   }
@@ -2321,13 +2329,13 @@ function triggerRainbowFireworks() {
       ctx.save();
       ctx.fillStyle = "#FFFFFF";
       ctx.shadowColor = r.color;
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = 18;
       ctx.beginPath();
-      ctx.arc(r.x, r.y, 5, 0, Math.PI * 2);
+      ctx.arc(r.x, r.y, 6, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.strokeStyle = r.color;
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 5;
       ctx.beginPath();
       ctx.moveTo(r.x, r.y);
       ctx.lineTo(r.x - r.vx * 3, r.y - r.vy * 3);
@@ -2336,7 +2344,7 @@ function triggerRainbowFireworks() {
 
       if (r.y <= r.targetY || r.vy >= -2) {
         r.exploded = true;
-        explode(r.x, r.y, r.color);
+        explode(r.x, r.y);
       }
     });
 
@@ -2355,11 +2363,12 @@ function triggerRainbowFireworks() {
         ctx.globalAlpha = Math.max(0, p.alpha);
         ctx.fillStyle = p.color;
         ctx.shadowColor = p.color;
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 20;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
 
+        // 파티클 중심 화이트 코어로 반짝임 극대화
         ctx.fillStyle = "#FFFFFF";
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size * 0.45, 0, Math.PI * 2);
@@ -2370,7 +2379,7 @@ function triggerRainbowFireworks() {
       }
     }
 
-    if (elapsed < 6000 || hasAlive) {
+    if (elapsed < 6500 || hasAlive) {
       requestAnimationFrame(render);
     } else {
       ctx.clearRect(0, 0, c.width, c.height);
@@ -2515,10 +2524,15 @@ const BGM_ENGINE={
   ],
   switchToPeaceful(){
     this.isPeaceful = true;
-    this.bpm = 76; // 평화롭고 차분한 템포
+    this.bpm = 72; // 차분하고 온화한 평화 템포
     this.step = 0;
-    if (!this.isPlaying && S.sound) {
-      this.start();
+    clearTimeout(this.stepTimer);
+    if (typeof LOTTO_BGM_ENGINE !== "undefined") LOTTO_BGM_ENGINE.stop();
+    if (typeof THINKER_BGM_ENGINE !== "undefined") THINKER_BGM_ENGINE.stop();
+    if (S.sound) {
+      this.isPlaying = true;
+      this.scheduleNext();
+      this.updateUI();
     }
   },
   start(){
