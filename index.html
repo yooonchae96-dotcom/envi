@@ -340,8 +340,9 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
   text-align:center;
 }
 @keyframes pulseSelect{0%{transform:scale(0.96)}100%{transform:scale(1.04)}}
-.roster{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
-.rc{border:1px solid var(--line);border-radius:8px;padding:3px 2px;text-align:center;font-size:10px;background:#fff}
+.roster{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;max-width:980px;margin:0 auto}
+.rc{border:1.5px solid var(--line);border-radius:9px;padding:5px 2px;text-align:center;font-size:11px;background:#f8fafc;transition:all 0.15s ease}
+.rc.empty{opacity:0.25;background:#f1f5f9;border:1px dashed #cbd5e1;color:#94a3b8}
 .rc b{display:block;font-size:11px}.rc canvas{display:block;margin:0 auto}
 #stageContainer {
   position: relative;
@@ -1216,120 +1217,28 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
 
 
 /* ========================================================
-   🎆 무지개색(채도 높은) 대형 고속 폭죽 캔버스
+   🌈 벤다이어그램 7개 완성 시 맵 전체 3초 무지개 깜빡임
 ======================================================== */
-.rainbow-fireworks-canvas {
+.map-rainbow-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   pointer-events: none;
-  z-index: 100;
+  z-index: 95;
+  border-radius: 16px;
+  animation: mapRainbowFlash 0.22s infinite alternate ease-in-out;
+  mix-blend-mode: color-dodge;
 }
-
-/* ========================================================
-   🏟️ "완성" 전광판 스타일 3초간 화면 꽉 채우는 오버레이
-======================================================== */
-.completion-billboard-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 120;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(5, 10, 20, 0.92);
-  backdrop-filter: blur(8px);
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 0.5s ease-out;
-}
-.completion-billboard-overlay.hide {
+.map-rainbow-overlay.hide {
   display: none !important;
 }
-.completion-billboard-overlay.fade-out {
-  opacity: 0;
-}
-.bb-matrix-lights {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 15%, transparent 70%);
-  animation: pulseMatrix 1.2s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-@keyframes pulseMatrix {
-  0% { transform: scale(0.95); opacity: 0.7; }
-  100% { transform: scale(1.05); opacity: 1; }
-}
-.bb-board-box {
-  position: relative;
-  width: 90%;
-  max-width: 900px;
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-  border: 6px solid #f59e0b;
-  border-radius: 24px;
-  box-shadow: 0 0 50px rgba(245, 158, 11, 0.85), inset 0 0 30px rgba(245, 158, 11, 0.4), 0 25px 60px rgba(0, 0, 0, 0.8);
-  padding: 30px 24px 36px;
-  text-align: center;
-  box-sizing: border-box;
-  animation: popBillboardBox 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-@keyframes popBillboardBox {
-  0% { transform: scale(0.3); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-.bb-board-top-status {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  font-size: 15px;
-  font-weight: 900;
-  color: #fef08a;
-  letter-spacing: 2px;
-  text-shadow: 0 0 10px rgba(254, 240, 138, 0.6);
-}
-.bb-bulb {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  box-shadow: 0 0 8px currentColor;
-  animation: bulbBlink 0.6s infinite alternate;
-}
-.bb-bulb.red { background: #ef4444; color: #ef4444; }
-.bb-bulb.yellow { background: #eab308; color: #eab308; animation-delay: 0.15s; }
-.bb-bulb.green { background: #22c55e; color: #22c55e; animation-delay: 0.3s; }
-.bb-bulb.blue { background: #3b82f6; color: #3b82f6; animation-delay: 0.45s; }
-@keyframes bulbBlink {
-  0% { opacity: 0.3; transform: scale(0.8); }
-  100% { opacity: 1; transform: scale(1.2); }
-}
-.bb-giant-text {
-  font-size: clamp(80px, 18vw, 170px);
-  font-weight: 950;
-  line-height: 1;
-  letter-spacing: 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #fef08a 25%, #fde047 50%, #f59e0b 75%, #b45309 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 35px rgba(245, 158, 11, 0.95)) drop-shadow(0 0 70px rgba(217, 119, 6, 0.85));
-  text-shadow: 0 8px 0 #78350f, 0 16px 0 #451a03, 0 24px 30px rgba(0,0,0,0.9);
-  margin: 6px 0 16px;
-  user-select: none;
-}
-.bb-sub-text {
-  font-size: clamp(16px, 3.5vw, 26px);
-  font-weight: 800;
-  color: #ffffff;
-  text-shadow: 0 0 14px rgba(254, 240, 138, 0.8), 0 2px 4px rgba(0,0,0,0.9);
-  letter-spacing: 1px;
+@keyframes mapRainbowFlash {
+  0%   { background-color: rgba(255, 0, 0, 0.48); box-shadow: inset 0 0 90px rgba(255, 0, 0, 0.85); }
+  16%  { background-color: rgba(255, 127, 0, 0.48); box-shadow: inset 0 0 90px rgba(255, 127, 0, 0.85); }
+  33%  { background-color: rgba(255, 255, 0, 0.48); box-shadow: inset 0 0 90px rgba(255, 255, 0, 0.85); }
+  50%  { background-color: rgba(0, 255, 0, 0.48); box-shadow: inset 0 0 90px rgba(0, 255, 0, 0.85); }
+  66%  { background-color: rgba(0, 180, 255, 0.48); box-shadow: inset 0 0 90px rgba(0, 180, 255, 0.85); }
+  83%  { background-color: rgba(120, 0, 255, 0.48); box-shadow: inset 0 0 90px rgba(120, 0, 255, 0.85); }
+  100% { background-color: rgba(255, 0, 180, 0.48); box-shadow: inset 0 0 90px rgba(255, 0, 180, 0.85); }
 }
 
 /* 오른쪽 위 접속 끊김(튕김) 위젯 */
@@ -1756,7 +1665,7 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
   <div class="card hide" id="myCard"><h2>내 입장</h2><div id="mine"></div></div>
   <div class="card hide" id="rosterCard">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-      <h2 style="margin:0">우리 반 <span class="muted">학번 내림차순, 가로 10명</span></h2>
+      <h2 style="margin:0">우리 반 <span class="muted">출석 번호 순 (1~10번, 11~20번, 21~28번)</span></h2>
       <button id="startTab2BtnRoster" class="btn-start-tab2">🚀 출발! (2번 탭 벤다이어그램으로 이동)</button>
     </div>
     <div class="row" style="margin-bottom:8px">
@@ -1773,6 +1682,7 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
     <p class="muted">맵에 7개의 대형 벤다이어그램 구역이 미리 준비되어 있습니다. 내 사상가(아리스토텔레스·싱어·슈바이처·레오폴드)에 맞는 원형 칸으로 이동하세요. 네 사상가가 모두 모이면 결계가 쳐져 보호됩니다. (결계 완성 후에도 방향키/화면 드래그로 전체 맵을 자유롭게 둘러보실 수 있습니다)</p>
     <div id="stageContainer" style="position:relative">
       <canvas id="stage"></canvas>
+      <div id="mapRainbowOverlay" class="map-rainbow-overlay hide"></div>
       
       </div>
       <!-- 맵 우측 상단 고정 스피커 버튼 -->
@@ -1861,46 +1771,6 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
 
   <!-- 10배 확대 말풍선 팝업 모달 -->
   
-  <!-- 🎆 무지개빛 대형 고속 폭죽 캔버스 (전체 화면 고정) -->
-  <canvas id="rainbowFireworksCanvas" class="rainbow-fireworks-canvas"></canvas>
-
-  <!-- 🏟️ 7개 벤다이어그램 완성 시 전광판 스타일 "완성" 3초 전면 오버레이 (전체 화면 고정) -->
-  <div id="completionBillboardOverlay" class="completion-billboard-overlay hide">
-    <div class="bb-matrix-lights"></div>
-    <div class="bb-board-box">
-      <div class="bb-board-top-status">
-        <span class="bb-bulb red"></span>
-        <span class="bb-bulb yellow"></span>
-        <span class="bb-bulb green"></span>
-        <span class="bb-bulb blue"></span>
-        <span class="bb-top-title">🏟️ STADIUM LIVE SCOREBOARD · 7개 모둠 전원 완료 🏟️</span>
-        <span class="bb-bulb blue"></span>
-        <span class="bb-bulb green"></span>
-        <span class="bb-bulb yellow"></span>
-        <span class="bb-bulb red"></span>
-      </div>
-      <div class="bb-giant-text">완 성</div>
-      <div class="bb-sub-text">★ 7개 벤다이어그램 모든 결계가 완성되었습니다! ★</div>
-    </div>
-  </div>
-
-  <div id="enlargedBubbleModal" class="modal-backdrop hide" style="z-index:9999;">
-    <div class="enlarged-bubble-content" id="enlargedBubbleCard">
-      <div class="enlarged-bubble-header">
-        <span class="enlarged-badge" id="ebStance">찬성</span>
-        <span class="enlarged-who" id="ebWho">20314번 · 아리스토텔레스</span>
-        <button class="modal-close" id="closeEnlargedBubbleBtn">&times;</button>
-      </div>
-      <div class="enlarged-bubble-body">
-        <div class="enlarged-quote-icon">💬</div>
-        <div id="ebReasonText" class="enlarged-reason-text"></div>
-      </div>
-      <div class="enlarged-bubble-footer">
-        <span>🔍 10배 확대 말풍선 모드 (클릭하거나 ✕ 버튼을 누르면 닫힙니다)</span>
-      </div>
-    </div>
-  </div>
-
   <footer class="app-footer">
     <div class="row" style="justify-content:center;gap:12px;margin-bottom:6px">
       <button type="button" class="btn-legal-link" id="openTermsBtn">이용약관</button>
@@ -2258,151 +2128,21 @@ function playRealisticRainbowFireworksSound() {
   } catch(e) {}
 }
 
-/* 🎆 무지개색(채도 높은) 대형 고속 폭죽 발사 함수 (전체 화면 고정 캔버스) */
-function triggerRainbowFireworks() {
-  const c = $("#rainbowFireworksCanvas");
-  if (!c) return;
-  c.width = window.innerWidth;
-  c.height = window.innerHeight;
-  const ctx = c.getContext("2d");
-  if (!ctx) return;
-
-  const RAINBOW_COLORS = [
-    "#FF0033", // Vivid Red
-    "#FF6600", // Vivid Orange
-    "#FFEE00", // Vivid Yellow
-    "#00FF44", // Vivid Lime Green
-    "#00FFFF", // Vivid Electric Cyan
-    "#0066FF", // Vivid Blue
-    "#AA00FF", // Vivid Purple
-    "#FF0088"  // Vivid Hot Pink
-  ];
-
-  const rockets = [];
-  const particles = [];
-
-  // 화면 가로 전체에 걸쳐 18발의 고속 로켓을 시간차로 발사
-  for (let i = 0; i < 18; i++) {
-    rockets.push({
-      x: c.width * (0.06 + Math.random() * 0.88),
-      y: c.height,
-      targetY: c.height * (0.10 + Math.random() * 0.40),
-      vx: (Math.random() - 0.5) * 5.0,
-      vy: -(Math.random() * 6 + 18),
-      color: RAINBOW_COLORS[i % RAINBOW_COLORS.length],
-      delay: i * 180,
-      exploded: false
-    });
-  }
-
-  const startTime = Date.now();
-  function explode(x, y) {
-    const pCount = 110 + Math.floor(Math.random() * 50);
-    for (let i = 0; i < pCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 16 + 9; // 고속 폭발력
-      const rainbowColor = RAINBOW_COLORS[Math.floor(Math.random() * RAINBOW_COLORS.length)];
-      particles.push({
-        x: x,
-        y: y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        color: rainbowColor, // 선명한 무지개 원색
-        alpha: 1,
-        decay: Math.random() * 0.015 + 0.010,
-        gravity: 0.72, // 빠른 낙하 속도
-        size: Math.random() * 10 + 9 // 9~19px 초대형 입자
-      });
-    }
-  }
-
-  function render() {
-    const elapsed = Date.now() - startTime;
-    ctx.clearRect(0, 0, c.width, c.height);
-
-    rockets.forEach(r => {
-      if (elapsed < r.delay || r.exploded) return;
-      r.x += r.vx;
-      r.y += r.vy;
-      r.vy += 0.16;
-
-      ctx.save();
-      ctx.fillStyle = "#FFFFFF";
-      ctx.shadowColor = r.color;
-      ctx.shadowBlur = 18;
-      ctx.beginPath();
-      ctx.arc(r.x, r.y, 6, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = r.color;
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.moveTo(r.x, r.y);
-      ctx.lineTo(r.x - r.vx * 3, r.y - r.vy * 3);
-      ctx.stroke();
-      ctx.restore();
-
-      if (r.y <= r.targetY || r.vy >= -2) {
-        r.exploded = true;
-        explode(r.x, r.y);
-      }
-    });
-
-    let hasAlive = false;
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += p.gravity;
-      p.vx *= 0.97;
-      p.alpha -= p.decay;
-
-      if (p.alpha > 0) {
-        hasAlive = true;
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, p.alpha);
-        ctx.fillStyle = p.color;
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 20;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 파티클 중심 화이트 코어로 반짝임 극대화
-        ctx.fillStyle = "#FFFFFF";
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 0.45, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      } else {
-        particles.splice(i, 1);
-      }
-    }
-
-    if (elapsed < 6500 || hasAlive) {
-      requestAnimationFrame(render);
-    } else {
-      ctx.clearRect(0, 0, c.width, c.height);
-    }
-  }
-  requestAnimationFrame(render);
-}
-
-/* 🏟️ 7개 완성 시 "완성" 전광판 3초간 화면 꽉 채우기 */
-function show3SecCompletionBillboard() {
-  const overlay = $("#completionBillboardOverlay");
-  if (!overlay) return;
-  overlay.classList.remove("hide");
-  overlay.classList.remove("fade-out");
-
-  // 정확히 3초간 표시 후 부드럽게 퇴장
-  setTimeout(() => {
-    overlay.classList.add("fade-out");
+/* 🌈 벤다이어그램 7개 완성 시 맵 전체 3초 무지개 깜빡임 함수 */
+function triggerMapRainbowFlash3Sec() {
+  const overlay = $("#mapRainbowOverlay");
+  if (overlay) {
+    overlay.classList.remove("hide");
     setTimeout(() => {
       overlay.classList.add("hide");
-      overlay.classList.remove("fade-out");
-    }, 500);
-  }, 3000);
+    }, 3000);
+  }
+  S.mapRainbowUntil = Date.now() + 3000;
+  playApplauseSound();
+  fanfare();
+  if (typeof BGM_ENGINE !== "undefined" && BGM_ENGINE.switchToPeaceful) {
+    BGM_ENGINE.switchToPeaceful();
+  }
 }
 
 function fanfare(){ playBarrierSound(); }
@@ -2571,7 +2311,7 @@ const BGM_ENGINE={
         o.type = "sine";
         o.frequency.setValueAtTime(melFreq, ctx.currentTime);
         g.gain.setValueAtTime(0.001, ctx.currentTime);
-        g.gain.linearRampToValueAtTime(0.055, ctx.currentTime + 0.04);
+        g.gain.linearRampToValueAtTime(0.018, ctx.currentTime + 0.04);
         g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.55);
         o.connect(g); g.connect(ctx.destination);
         o.start(); o.stop(ctx.currentTime + 0.58);
@@ -2582,7 +2322,7 @@ const BGM_ENGINE={
         bo.type = "triangle";
         bo.frequency.setValueAtTime(bassFreq, ctx.currentTime);
         bg.gain.setValueAtTime(0.001, ctx.currentTime);
-        bg.gain.linearRampToValueAtTime(0.065, ctx.currentTime + 0.06);
+        bg.gain.linearRampToValueAtTime(0.020, ctx.currentTime + 0.06);
         bg.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.70);
         bo.connect(bg); bg.connect(ctx.destination);
         bo.start(); bo.stop(ctx.currentTime + 0.72);
@@ -2594,7 +2334,7 @@ const BGM_ENGINE={
         o.type="triangle";
         o.frequency.setValueAtTime(melFreq,ctx.currentTime);
         g.gain.setValueAtTime(0.001,ctx.currentTime);
-        g.gain.linearRampToValueAtTime(0.06,ctx.currentTime+0.008);
+        g.gain.linearRampToValueAtTime(0.018,ctx.currentTime+0.008);
         g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.10);
         o.connect(g);g.connect(ctx.destination);
         o.start();o.stop(ctx.currentTime+0.11);
@@ -2606,7 +2346,7 @@ const BGM_ENGINE={
         bo.type="sine";
         bo.frequency.setValueAtTime(bassFreq,ctx.currentTime);
         bg.gain.setValueAtTime(0.001,ctx.currentTime);
-        bg.gain.linearRampToValueAtTime(0.075,ctx.currentTime+0.012);
+        bg.gain.linearRampToValueAtTime(0.022,ctx.currentTime+0.012);
         bg.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.14);
         bo.connect(bg);bo.connect(ctx.destination);
         bo.start();bo.stop(ctx.currentTime+0.15);
@@ -2929,26 +2669,36 @@ function drawCarried(ctx,x,y,ch,sc,ph){
 }
 
 /* ===== 탭 및 출발 로직 ===== */
+function getPlayerSeatNo(p) {
+  if (!p) return 0;
+  if (typeof p.no === "number") {
+    return p.no > 100 ? (p.no % 100) : p.no;
+  }
+  return 0;
+}
+
 function populateNPCs(){
   if(S.players.length >= 28) return;
-  const used = new Set(S.players.map(p=>p.charId));
-  const base = S.me ? S.me.no-14 : 20301;
-  let k = 0;
-  CHARACTERS.filter(c=>!used.has(c.charId)).forEach((ch,i)=>{
-    let n = base + k++;
-    if(S.me && n === S.me.no) n = base + k++;
-    const mockEmail = "student" + n + "@school.sen.go.kr";
-    S.players.push({
-      id: "n" + i,
-      no: n,
-      name: mockEmail.split("@")[0],
-      email: mockEmail,
-      charId: ch.charId,
-      thinkerId: ch.thinkerId,
-      ch: ch,
-      isNPC: true
-    });
-  });
+  const usedChars = new Set(S.players.map(p => p.charId));
+  const usedNos = new Set(S.players.map(p => getPlayerSeatNo(p)));
+  const availChars = CHARACTERS.filter(c => !usedChars.has(c.charId));
+  let charIdx = 0;
+  for (let num = 1; num <= 28; num++) {
+    if (!usedNos.has(num) && charIdx < availChars.length) {
+      const ch = availChars[charIdx++];
+      const mockEmail = "student" + num + "@school.sen.go.kr";
+      S.players.push({
+        id: "n" + num,
+        no: num,
+        name: mockEmail.split("@")[0],
+        email: mockEmail,
+        charId: ch.charId,
+        thinkerId: ch.thinkerId,
+        ch: ch,
+        isNPC: true
+      });
+    }
+  }
   renderGrid();
   renderRoster();
   seatAll();
@@ -3378,31 +3128,61 @@ function showMine(){
 }
 
 $("#simBtn").onclick=()=>{
-  const used=new Set(S.players.map(p=>p.charId));
-  const base=S.me.no-14;let k=0;
-  CHARACTERS.filter(c=>!used.has(c.charId)).forEach((ch,i)=>{
-    let n=base+k++;if(n===S.me.no)n=base+k++;
-    const mockEmail = "student" + n + "@school.sen.go.kr";
-    S.players.push({id:"n"+i,no:n,name:mockEmail.split("@")[0],email:mockEmail,charId:ch.charId,thinkerId:ch.thinkerId,ch:ch,isNPC:true});
-  });
-  renderGrid();renderRoster();seatAll();$("#simBtn").disabled=true;
+  const usedChars = new Set(S.players.map(p => p.charId));
+  const usedNos = new Set(S.players.map(p => getPlayerSeatNo(p)));
+  const availChars = CHARACTERS.filter(c => !usedChars.has(c.charId));
+  let charIdx = 0;
+  for (let num = 1; num <= 28; num++) {
+    if (!usedNos.has(num) && charIdx < availChars.length) {
+      const ch = availChars[charIdx++];
+      const mockEmail = "student" + num + "@school.sen.go.kr";
+      S.players.push({
+        id: "n" + num,
+        no: num,
+        name: mockEmail.split("@")[0],
+        email: mockEmail,
+        charId: ch.charId,
+        thinkerId: ch.thinkerId,
+        ch: ch,
+        isNPC: true
+      });
+    }
+  }
+  renderGrid(); renderRoster(); seatAll(); $("#simBtn").disabled = true;
 };
 
 function renderRoster(){
-  const list=[...S.players].sort((a,b)=>b.no-a.no);
-  $("#cnt").textContent=`${list.length}명 접속`;
-  const r=$("#roster");r.innerHTML="";
-  list.forEach(p=>{
-    const d=document.createElement("div");d.className="rc"+(p.disconnected?" disconnected":"");
-    const cv=document.createElement("canvas");cv.width=62;cv.height=68;d.appendChild(cv);
-    const googleId = formatUserId(p.email || p.name || (p.no + "번"));
-    const statusText = p.disconnected ? `<span style="color:#ef4444;font-weight:700;font-size:9px;display:block">🔴 튕김</span>` : "";
-    d.insertAdjacentHTML("beforeend",`<b style="font-size:9px;color:#1a73e8;word-break:break-all;display:block;margin-bottom:2px" title="${googleId}">${googleId}</b><span style="color:${p.ch.color}">${p.ch.scholar.slice(0,3)}</span>${statusText}`);
-    if(p.isMe)d.style.outline="2px solid var(--accent)";
-    if(p.disconnected)d.style.opacity="0.5";
-    drawChar(cv.getContext("2d"),31,62,p.ch,0.46,{dir:1});
-    r.appendChild(d);
-  });
+  const connectedCnt = S.players.filter(p => !p.disconnected).length;
+  $("#cnt").textContent = `${connectedCnt} / 28명 참석 (접속: ${S.players.length}명)`;
+  const r = $("#roster");
+  if (!r) return;
+  r.innerHTML = "";
+
+  // 1번부터 28번까지 10명씩 오름차순 (1행: 1~10, 2행: 11~20, 3행: 21~28)
+  for (let num = 1; num <= 28; num++) {
+    const p = S.players.find(pl => getPlayerSeatNo(pl) === num);
+    if (p) {
+      // 참석(캐릭터 선택 완료) 번호
+      const d = document.createElement("div");
+      d.className = "rc" + (p.disconnected ? " disconnected" : "");
+      const cv = document.createElement("canvas");
+      cv.width = 62; cv.height = 68;
+      d.appendChild(cv);
+      const googleId = formatUserId(p.email || p.name || (num + "번"));
+      const statusText = p.disconnected ? `<span style="color:#ef4444;font-weight:700;font-size:9px;display:block">🔴 튕김</span>` : "";
+      d.insertAdjacentHTML("beforeend", `<b style="font-size:9.5px;color:#1a73e8;word-break:break-all;display:block;margin-bottom:1px" title="${googleId}">[${num}번] ${googleId}</b><span style="color:${p.ch.color};font-weight:700;">${p.ch.scholar.slice(0,3)}</span>${statusText}`);
+      if (p.isMe) d.style.outline = "2.5px solid var(--accent)";
+      if (p.disconnected) d.style.opacity = "0.5";
+      drawChar(cv.getContext("2d"), 31, 62, p.ch, 0.46, { dir: 1 });
+      r.appendChild(d);
+    } else {
+      // 아직 참석 안 한 번호는 공란(Empty Slot)으로 비워둠
+      const emptyDiv = document.createElement("div");
+      emptyDiv.className = "rc empty";
+      emptyDiv.innerHTML = `<b style="font-size:11px;color:#94a3b8;">${num}번</b><span style="font-size:9px;color:#cbd5e1;margin-top:2px;">(미참석)</span>`;
+      r.appendChild(emptyDiv);
+    }
+  }
 }
 
 
@@ -3883,8 +3663,7 @@ function completeSpot(spotId) {
   if (doneCount === S.spots.length) {
     playAllCompletedVictoryFanfare();
     playRealisticRainbowFireworksSound();
-    triggerRainbowFireworks();
-    show3SecCompletionBillboard();
+    triggerMapRainbowFlash3Sec();
     if (typeof BGM_ENGINE !== "undefined" && BGM_ENGINE.switchToPeaceful) {
       BGM_ENGINE.switchToPeaceful();
     }
@@ -4236,188 +4015,66 @@ function drawRoundRect(ctx, x, y, w, h, r) {
 }
 
 
-// 유기적인 전역 초원 배경 디테일 (정사각형 타일링 제거, 450개 풀잎 클러스터 + 140개 들꽃 군락)
-const MEADOW_GRASS_CLUSTERS = Array.from({ length: 550 }, (_, i) => ({
-  x: ((i * 383 + 127) % 4100) + 50,
-  y: ((i * 571 + 239) % 3100) + 50,
-  blades: 3 + (i % 4),
-  h: 7 + (i % 9),
-  colIdx: i % 5,
-  bend: ((i % 5) - 2) * 2.5
+// 🌲 고급스럽고 미니멀한 숲속 배경 디테일
+const FOREST_TREES = Array.from({ length: 42 }, (_, i) => ({
+  x: ((i * 379 + 83) % 2400) - 200,
+  y: ((i * 491 + 137) % 2000) - 150,
+  radius: 36 + (i % 6) * 11,
+  color: [
+    "#163820", "#14331c", "#183e24", "#1b4428", "#122f19"
+  ][i % 5],
+  trunkColor: "#0b1c10",
+  type: i % 3
 }));
 
-const MEADOW_FLOWERS = Array.from({ length: 180 }, (_, i) => ({
-  x: ((i * 499 + 89) % 4100) + 50,
-  y: ((i * 733 + 173) % 3100) + 50,
-  petalColor: ["#FFFFFF", "#FFF9A6", "#FFE4E6", "#FEF08A", "#FBCFE8"][i % 5],
-  size: 2.0 + (i % 3) * 0.8
-}));
+function drawForestBackground(ctx, W, H, ts) {
+  const t = (ts || 0) * 0.001;
 
-// 바람에 대각선으로 부드럽게 흩날리는 35개의 연둣빛 풀잎/꽃잎 파티클
-const FLYING_LEAVES = Array.from({ length: 35 }, (_, i) => ({
-  baseX: ((i * 197) % W),
-  baseY: ((i * 131) % H),
-  speedX: 38 + (i % 6) * 10,
-  speedY: 16 + (i % 4) * 7,
-  rotSpeed: 1.5 + (i % 3) * 0.8,
-  size: 4.5 + (i % 4) * 1.5,
-  phase: (i * 0.9) % (Math.PI * 2),
-  color: ["#86EFAC", "#4ADE80", "#A7F3D0", "#BBF7D0", "#FEF08A"][i % 5]
-}));
-
-// 60개의 공중 부유 햇살 스파클 입자
-const SUN_SPARKLES = Array.from({ length: 60 }, (_, i) => ({
-  baseX: ((i * 173) % W),
-  baseY: ((i * 241) % H),
-  size: 2.2 + (i % 4) * 0.9,
-  speed: 12 + (i % 5) * 4,
-  phase: (i * 0.7) % (Math.PI * 2),
-  twinkleSpeed: 1.5 + (i % 3) * 0.8
-}));
-
-function drawSparkles(ctx, ts) {
-  const t = (ts || 0) / 1000;
-  ctx.save();
-  SUN_SPARKLES.forEach(s => {
-    const curX = (s.baseX + t * s.speed) % W;
-    const curY = (s.baseY + Math.sin(t * 1.2 + s.phase) * 25) % H;
-    const alpha = 0.35 + Math.sin(t * s.twinkleSpeed + s.phase) * 0.35;
-    if (alpha <= 0.05) return;
-
-    ctx.save();
-    ctx.translate(curX, curY);
-    ctx.fillStyle = `rgba(255, 255, 255, ${alpha.toFixed(2)})`;
-    ctx.shadowColor = "#FEF08A";
-    ctx.shadowBlur = 8;
-
-    // 반짝이는 4각 다이아몬드 별 모양
-    const sz = s.size;
-    ctx.beginPath();
-    ctx.moveTo(0, -sz * 1.8);
-    ctx.quadraticCurveTo(0, 0, sz * 1.8, 0);
-    ctx.quadraticCurveTo(0, 0, 0, sz * 1.8);
-    ctx.quadraticCurveTo(0, 0, -sz * 1.8, 0);
-    ctx.quadraticCurveTo(0, 0, 0, -sz * 1.8);
-    ctx.fill();
-
-    // 중심 코어
-    ctx.fillStyle = `rgba(254, 240, 138, ${(alpha * 0.9).toFixed(2)})`;
-    ctx.beginPath();
-    ctx.arc(0, 0, sz * 0.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  });
-  ctx.restore();
-}
-
-function drawMeadowBackground(ctx, W, H, ts) {
-  const t = (ts || 0) / 1000;
-
-  // 1. 대형 연속 수직 그라데이션 (정사각형 타일링 아티팩트 완전 제거!)
-  const skyGlow = ctx.createLinearGradient(0, 0, 0, H);
-  skyGlow.addColorStop(0, "#56A838");   // 상단 따스한 햇살 라임 그린
-  skyGlow.addColorStop(0.35, "#489C2E"); // 중상단 활력 넘치는 초원 그린
-  skyGlow.addColorStop(0.7, "#3C8B24");  // 중하단 풍성한 클로버 그린
-  skyGlow.addColorStop(1, "#2C7518");    // 하단 깊은 숲 가장자리 올리브 딥 그린
-  ctx.fillStyle = skyGlow;
+  // 1. 깊고 차분한 프리미엄 딥 포레스트 그라디언트 베이스
+  const forestGrad = ctx.createRadialGradient(W / 2, H / 2, 80, W / 2, H / 2, Math.max(W, H) * 0.78);
+  forestGrad.addColorStop(0, "#194226");
+  forestGrad.addColorStop(0.5, "#13351e");
+  forestGrad.addColorStop(1, "#0c2314");
+  ctx.fillStyle = forestGrad;
   ctx.fillRect(0, 0, W, H);
 
-  // 2. 완만한 5중 물결 언덕 능선 (부드러운 유기적 곡선미)
-  const HILL_LAYERS = [
-    { y: 550,  amp: 70, freq: 0.0014, color: "rgba(165, 235, 85, 0.11)" },
-    { y: 1150, amp: 80, freq: 0.0012, color: "rgba(25, 75, 22, 0.12)" },
-    { y: 1800, amp: 90, freq: 0.0013, color: "rgba(180, 245, 95, 0.10)" },
-    { y: 2450, amp: 95, freq: 0.0011, color: "rgba(18, 65, 20, 0.13)" },
-    { y: 2980, amp: 75, freq: 0.0012, color: "rgba(150, 230, 75, 0.09)" }
-  ];
-
-  HILL_LAYERS.forEach((hill, idx) => {
-    ctx.save();
-    ctx.fillStyle = hill.color;
+  // 2. 은은한 숲속 자연광 (코모레비 빔)
+  ctx.save();
+  ctx.fillStyle = "rgba(255, 250, 220, 0.025)";
+  for (let b = 0; b < 3; b++) {
+    const shift = Math.sin(t * 0.25 + b * 1.8) * 45;
     ctx.beginPath();
-    ctx.moveTo(0, H);
-    ctx.lineTo(0, hill.y);
-    for (let x = 0; x <= W; x += 120) {
-      const wave = Math.sin(x * hill.freq + idx * 1.5) * hill.amp + Math.cos(x * hill.freq * 0.5) * (hill.amp * 0.4);
-      ctx.lineTo(x, hill.y + wave);
-    }
-    ctx.lineTo(W, H);
+    ctx.moveTo(W * (0.2 + b * 0.3) + shift, 0);
+    ctx.lineTo(W * (0.4 + b * 0.3) + shift + 120, H);
+    ctx.lineTo(W * (0.28 + b * 0.3) + shift + 80, H);
+    ctx.lineTo(W * (0.12 + b * 0.3) + shift, 0);
     ctx.closePath();
     ctx.fill();
-    ctx.restore();
-  });
-
-  // 3. 햇살 산책로 및 바람길 (부드러운 S자형 물결 레이어)
-  ctx.save();
-  ctx.fillStyle = "rgba(255, 252, 225, 0.08)";
-  ctx.beginPath();
-  ctx.moveTo(0, 750);
-  ctx.bezierCurveTo(W * 0.35, 400, W * 0.65, 1300, W, 950);
-  ctx.lineTo(W, 1250);
-  ctx.bezierCurveTo(W * 0.65, 1600, W * 0.35, 700, 0, 1050);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = "rgba(255, 250, 215, 0.06)";
-  ctx.beginPath();
-  ctx.moveTo(0, 2100);
-  ctx.bezierCurveTo(W * 0.4, 1750, W * 0.7, 2700, W, 2300);
-  ctx.lineTo(W, 2600);
-  ctx.bezierCurveTo(W * 0.7, 3000, W * 0.4, 2050, 0, 2400);
-  ctx.closePath();
-  ctx.fill();
+  }
   ctx.restore();
 
-  // 4. 유기적으로 분포된 450개 자연스러운 풀잎 다발
-  const grassCols = ["#68C242", "#7CD64E", "#3A8520", "#2E7018", "#92E25A"];
-  ctx.save();
-  MEADOW_GRASS_CLUSTERS.forEach(cl => {
-    ctx.strokeStyle = grassCols[cl.colIdx];
-    ctx.lineWidth = 1.6;
-    for (let b = 0; b < cl.blades; b++) {
-      const bx = cl.x + (b - 1) * 3;
-      const by = cl.y;
-      const bladeH = cl.h + b * 1.2;
-      const bend = cl.bend + (b - 1) * 2;
-      ctx.beginPath();
-      ctx.moveTo(bx, by);
-      ctx.quadraticCurveTo(bx + bend * 0.5, by - bladeH * 0.6, bx + bend, by - bladeH);
-      ctx.stroke();
-    }
-  });
-
-  // 5. 140개 아기자기한 들꽃 점묘
-  MEADOW_FLOWERS.forEach(fl => {
-    ctx.fillStyle = fl.petalColor;
-    ctx.beginPath();
-    ctx.arc(fl.x, fl.y, fl.size, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#F59E0B";
-    ctx.beginPath();
-    ctx.arc(fl.x, fl.y, fl.size * 0.45, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  ctx.restore();
-
-  // 6. 바람에 실려 흩날리는 풀잎/꽃잎 파티클
-  ctx.save();
-  FLYING_LEAVES.forEach(leaf => {
-    const lx = (leaf.baseX + t * leaf.speedX) % W;
-    const ly = (leaf.baseY + t * leaf.speedY + Math.sin(t * 1.5 + leaf.phase) * 35) % H;
-    const rot = t * leaf.rotSpeed + leaf.phase;
+  // 3. 숲속 나무들 (절제된 미니멀 실루엣 캐노피)
+  FOREST_TREES.forEach(tr => {
     ctx.save();
-    ctx.translate(lx, ly);
-    ctx.rotate(rot);
-    ctx.fillStyle = leaf.color;
+    // 부드러운 그림자
+    ctx.fillStyle = "rgba(4, 15, 8, 0.38)";
     ctx.beginPath();
-    ctx.ellipse(0, 0, leaf.size * 2, leaf.size * 0.8, 0, 0, Math.PI * 2);
+    ctx.ellipse(tr.x + 8, tr.y + tr.radius * 0.72, tr.radius * 0.95, tr.radius * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 겹쳐진 둥근 침엽/활엽 캐노피
+    ctx.fillStyle = tr.color;
+    ctx.beginPath();
+    ctx.arc(tr.x, tr.y, tr.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 상단 하이라이트
+    ctx.fillStyle = "rgba(255, 255, 255, 0.045)";
+    ctx.beginPath();
+    ctx.arc(tr.x - tr.radius * 0.2, tr.y - tr.radius * 0.2, tr.radius * 0.65, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   });
-  ctx.restore();
-
-  // 7. 반짝이는 햇살 스타 스파클
-  drawSparkles(ctx, ts);
 }
 
 function render(ts) {
@@ -4440,7 +4097,14 @@ function render(ts) {
   cx.translate(-camx, -camy);
 
   // 1. 지브리 애니 감성 화사하고 연속적인 유기적 초원 맵 배경 렌더링 (타일링 제거!)
-  drawMeadowBackground(cx, W, H, ts);
+  drawForestBackground(cx, W, H, ts);
+  if (S.mapRainbowUntil && Date.now() < S.mapRainbowUntil) {
+    const hue = (Date.now() / 3) % 360;
+    cx.save();
+    cx.fillStyle = `hsla(${hue}, 100%, 50%, 0.35)`;
+    cx.fillRect(0, 0, W, H);
+    cx.restore();
+  }
 
   // 7개 벤다이어그램 모둠 스팟 상시 사전 렌더링 + 일렬 사상가 슬롯
   S.spots.forEach(sp => {
