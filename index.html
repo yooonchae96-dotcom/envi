@@ -350,7 +350,7 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
   overflow: hidden;
   box-shadow: 0 8px 30px rgba(0,0,0,0.12);
 }
-#stage{width:100%;height:clamp(560px,70vh,780px);background:#43A047;border-radius:16px;display:block;touch-action:none;border:1px solid var(--line)}
+#stage{width:100%;height:clamp(560px,70vh,780px);background:#8CE06E;border-radius:16px;display:block;touch-action:none;border:1px solid var(--line)}
 .dpad{display:none!important}
 /* 통합 하단 컨트롤 툴바 (불 켜짐 현황 + 달리기/완성 + BGM + 줌 조절) */
 .stage-unified-bar {
@@ -4014,22 +4014,40 @@ function drawRoundRect(ctx, x, y, w, h, r) {
 }
 
 
-// 🌿 동화 속 지브리 감성 숲속 맵 자연 조형물 (나무, 디딤돌, 버섯, 반딧불이)
-const FOREST_SCENERY_TREES = Array.from({ length: 90 }, (_, i) => {
+// 🌸 봄날의 사랑스러운 핑크빛 벚꽃 나무 (Cherry Blossom Trees)
+const CHERRY_BLOSSOM_TREES = Array.from({ length: 85 }, (_, i) => {
   const x = ((i * 479 + 137) % 4000) + 100;
   const y = ((i * 631 + 251) % 3000) + 100;
-  const r = 36 + (i % 6) * 10;
+  const r = 38 + (i % 5) * 8; // 벚꽃 수관 크기
   return {
     x, y, r,
-    trunkW: 13 + (i % 4) * 3,
-    trunkH: r * 0.95,
-    leafCols: [
-      ["#38A12B", "#4DBE38", "#2E8A22"], // 싱그러운 라임 숲
-      ["#2E963D", "#3EAE4D", "#227C2E"], // 에메랄드 숲
-      ["#43A047", "#5DBB62", "#2E7D32"], // 싱그런 포레스트
-      ["#34983D", "#48B452", "#277E30"], // 활력 숲
-      ["#52A829", "#68C43B", "#3C881D"]  // 화사한 햇살 숲
-    ][i % 5]
+    trunkW: 9 + (i % 4) * 2.5,
+    trunkH: r * 0.9,
+    palette: [
+      { base: "#F472B6", mid: "#F9A8D4", light: "#FFF1F2", floret: "#F43F5E", shadow: "rgba(220, 100, 140, 0.15)" }, // 사쿠라 로즈 핑크
+      { base: "#FB7185", mid: "#FDA4AF", light: "#FFF5F5", floret: "#E11D48", shadow: "rgba(230, 110, 150, 0.15)" }, // 소프트 베이비 핑크
+      { base: "#EC4899", mid: "#F472B6", light: "#FCE7F3", floret: "#BE185D", shadow: "rgba(210, 80, 130, 0.15)" },  // 파스텔 벚꽃 핑크
+      { base: "#F49DB5", mid: "#FBCFE8", light: "#FFFFFF", floret: "#EC4899", shadow: "rgba(240, 130, 160, 0.15)" }, // 크림 블라썸 핑크
+      { base: "#FB7185", mid: "#FECDD3", light: "#FFFFFF", floret: "#F43F5E", shadow: "rgba(225, 105, 145, 0.15)" }  // 화사한 코랄 핑크
+    ][i % 5],
+    // 바닥에 살포시 떨어진 벚꽃 꽃잎들 (자연스러운 점묘)
+    fallenPetals: Array.from({ length: 9 }, (_, pi) => ({
+      ox: (Math.sin(pi * 1.7) * (r * 1.1)),
+      oy: (Math.cos(pi * 1.3) * (r * 0.45)),
+      pr: 2.0 + (pi % 3) * 0.9,
+      rot: pi * 0.8
+    })),
+    // 수관을 장식하는 사랑스러운 5엽 벚꽃 꽃송이들
+    florets: [
+      { ox: 0, oy: -r * 0.35, scale: 1.0 },
+      { ox: -r * 0.4, oy: -r * 0.2, scale: 0.85 },
+      { ox: r * 0.42, oy: -r * 0.22, scale: 0.85 },
+      { ox: -r * 0.22, oy: -r * 0.6, scale: 0.8 },
+      { ox: r * 0.24, oy: -r * 0.58, scale: 0.8 },
+      { ox: -r * 0.48, oy: r * 0.05, scale: 0.75 },
+      { ox: r * 0.46, oy: r * 0.02, scale: 0.75 },
+      { ox: 0, oy: -r * 0.78, scale: 0.9 }
+    ]
   };
 });
 
@@ -4075,32 +4093,55 @@ const MEADOW_FLOWERS = Array.from({ length: 180 }, (_, i) => ({
   size: 2.0 + (i % 3) * 0.8
 }));
 
-const FLYING_LEAVES = Array.from({ length: 40 }, (_, i) => ({
+// 🌸 바람에 부드럽게 날리는 핑크빛 벚꽃 꽃잎들
+const FLYING_CHERRY_PETALS = Array.from({ length: 55 }, (_, i) => ({
   baseX: ((i * 197) % W),
   baseY: ((i * 131) % H),
-  speedX: 38 + (i % 6) * 10,
-  speedY: 16 + (i % 4) * 7,
-  rotSpeed: 1.5 + (i % 3) * 0.8,
-  size: 4.5 + (i % 4) * 1.5,
+  speedX: 42 + (i % 6) * 12,
+  speedY: 20 + (i % 4) * 8,
+  rotSpeed: 1.8 + (i % 3) * 0.9,
+  size: 3.8 + (i % 4) * 1.3,
   phase: (i * 0.9) % (Math.PI * 2),
-  color: ["#86EFAC", "#4ADE80", "#A7F3D0", "#BBF7D0", "#FEF08A"][i % 5]
+  color: ["#F472B6", "#FDA4AF", "#FBCFE8", "#FECDD3", "#FFF1F2"][i % 5]
 }));
+
+// 🌸 5엽 벚꽃 꽃송이 그리기 헬퍼 함수
+function drawSakuraFloret(ctx, x, y, size, petalColor, centerColor) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = petalColor;
+  for (let p = 0; p < 5; p++) {
+    const angle = (p * Math.PI * 2) / 5;
+    ctx.save();
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.ellipse(0, -size * 0.75, size * 0.46, size * 0.68, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  // 꽃 중앙의 귀여운 노란 수술 포인트
+  ctx.fillStyle = centerColor || "#FEF08A";
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.32, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
 
 function drawForestMeadowBackground(ctx, W, H, ts) {
   const t = (ts || 0) / 1000;
 
-  // 1. 햇살 쏟아지는 싱그러운 숲속 잔디밭 그라데이션 (밝고 청량한 에메랄드 톤)
-  const forestGlow = ctx.createLinearGradient(0, 0, 0, H);
-  forestGlow.addColorStop(0, "#82DC54");    // 상단 아침 햇살 라임 그린
-  forestGlow.addColorStop(0.35, "#60C840"); // 중상단 활력 넘치는 잔디 그린
-  forestGlow.addColorStop(0.7, "#48A82E");  // 중하단 풍성한 숲속 그린
-  forestGlow.addColorStop(1, "#369022");    // 하단 싱그러운 포레스트 그린
-  ctx.fillStyle = forestGlow;
+  // 1. 햇살 쏟아지는 화사하고 싱그러운 연한 연두빛 봄날 초원 (어두운 녹색 완전 제거)
+  const meadowGlow = ctx.createLinearGradient(0, 0, 0, H);
+  meadowGlow.addColorStop(0, "#D9F99D");    // 상단 따스한 햇살 파스텔 라임 연두
+  meadowGlow.addColorStop(0.35, "#BEF264"); // 중상단 화사한 소프트 연두
+  meadowGlow.addColorStop(0.7, "#A3E635");  // 중하단 맑고 청량한 봄 연두
+  meadowGlow.addColorStop(1, "#84CC16");    // 하단 싱그러운 연한 연두
+  ctx.fillStyle = meadowGlow;
   ctx.fillRect(0, 0, W, H);
 
-  // 2. 부드러운 숲속 자연광 코모레비 햇살 빔
+  // 2. 부드러운 자연광 코모레비 햇살 빔
   ctx.save();
-  ctx.fillStyle = "rgba(255, 253, 230, 0.055)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
   for (let b = 0; b < 4; b++) {
     const shift = Math.sin(t * 0.2 + b * 1.5) * 55;
     ctx.beginPath();
@@ -4119,7 +4160,7 @@ function drawForestMeadowBackground(ctx, W, H, ts) {
     ctx.save();
     ctx.translate(st.x, st.y);
     ctx.rotate(st.rot);
-    ctx.fillStyle = "rgba(45, 90, 40, 0.12)";
+    ctx.fillStyle = "rgba(100, 160, 60, 0.12)";
     ctx.beginPath();
     ctx.ellipse(2, 2, st.rx, st.ry, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -4132,7 +4173,7 @@ function drawForestMeadowBackground(ctx, W, H, ts) {
   ctx.restore();
 
   // 4. 유기적으로 분포된 풀잎 다발
-  const grassCols = ["#86EFAC", "#4ADE80", "#22C55E", "#16A34A", "#A7F3D0"];
+  const grassCols = ["#BEF264", "#A7F3D0", "#4ADE80", "#86EFAC", "#FEF08A"];
   ctx.save();
   MEADOW_GRASS_CLUSTERS.forEach(cl => {
     ctx.strokeStyle = grassCols[cl.colIdx];
@@ -4148,8 +4189,10 @@ function drawForestMeadowBackground(ctx, W, H, ts) {
       ctx.stroke();
     }
   });
+  ctx.restore();
 
   // 5. 들꽃 점묘
+  ctx.save();
   MEADOW_FLOWERS.forEach(fl => {
     ctx.fillStyle = fl.petalColor;
     ctx.beginPath();
@@ -4160,8 +4203,10 @@ function drawForestMeadowBackground(ctx, W, H, ts) {
     ctx.arc(fl.x, fl.y, fl.size * 0.45, 0, Math.PI * 2);
     ctx.fill();
   });
+  ctx.restore();
 
   // 6. 숲속 버섯 무리
+  ctx.save();
   FOREST_MUSHROOMS.forEach(m => {
     ctx.fillStyle = "#FDE68A";
     ctx.fillRect(m.x - m.size * 0.25, m.y - m.size * 0.4, m.size * 0.5, m.size * 0.6);
@@ -4176,66 +4221,94 @@ function drawForestMeadowBackground(ctx, W, H, ts) {
   });
   ctx.restore();
 
-  // 7. 아름다운 숲속 나무들 (지브리 감성 풍성한 나무 캐노피 & 갈색 나무 기둥)
+  // 7. 🌸 너무나 사랑스러운 핑크빛 벚꽃 나무들 (풍성한 벚꽃 구름 수관 & 5엽 꽃송이 & 갈색 기둥)
   ctx.save();
-  FOREST_SCENERY_TREES.forEach(tr => {
-    // 7-1. 나무 그림자
-    ctx.fillStyle = "rgba(30, 80, 30, 0.18)";
+  CHERRY_BLOSSOM_TREES.forEach(tr => {
+    const pal = tr.palette;
+
+    // 7-1. 나무 그림자 및 바닥에 살포시 흩뿌려진 벚꽃 꽃잎들 (Fallen Blossom Petals)
+    ctx.fillStyle = pal.shadow;
     ctx.beginPath();
-    ctx.ellipse(tr.x + 8, tr.y + tr.trunkH * 0.5 + 4, tr.r * 1.1, tr.r * 0.38, 0, 0, Math.PI * 2);
+    ctx.ellipse(tr.x, tr.y + tr.trunkH * 0.5 + 4, tr.r * 1.15, tr.r * 0.42, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 7-2. 나무 기둥 (줄기)
-    ctx.fillStyle = "#6B4423";
+    // 바닥 벚꽃 꽃잎 점묘
+    tr.fallenPetals.forEach(p => {
+      ctx.save();
+      ctx.translate(tr.x + p.ox, tr.y + tr.trunkH * 0.5 + p.oy);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = pal.mid;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.pr * 1.4, p.pr * 0.75, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // 7-2. 나무 둥치(기둥)와 나뭇가지 (따뜻하고 우아한 나무 갈색)
+    ctx.fillStyle = "#6D4C41";
     ctx.beginPath();
-    ctx.moveTo(tr.x - tr.trunkW * 0.5, tr.y - 10);
-    ctx.lineTo(tr.x + tr.trunkW * 0.5, tr.y - 10);
-    ctx.lineTo(tr.x + tr.trunkW * 0.65, tr.y + tr.trunkH * 0.5);
-    ctx.lineTo(tr.x - tr.trunkW * 0.65, tr.y + tr.trunkH * 0.5);
+    ctx.moveTo(tr.x - tr.trunkW * 0.45, tr.y - 12);
+    ctx.lineTo(tr.x + tr.trunkW * 0.45, tr.y - 12);
+    ctx.lineTo(tr.x + tr.trunkW * 0.65, tr.y + tr.trunkH * 0.52);
+    ctx.lineTo(tr.x - tr.trunkW * 0.65, tr.y + tr.trunkH * 0.52);
     ctx.closePath();
     ctx.fill();
 
-    // 7-3. 풍성한 3단 둥근 나뭇잎 덩어리
-    const cols = tr.leafCols;
-    // 하단 잎
-    ctx.fillStyle = cols[2];
+    // 뻗어나가는 잔가지들
+    ctx.strokeStyle = "#5D4037";
+    ctx.lineWidth = Math.max(2.4, tr.trunkW * 0.35);
+    ctx.lineCap = "round";
+    // 좌측 가지
     ctx.beginPath();
-    ctx.arc(tr.x - tr.r * 0.35, tr.y - tr.r * 0.1, tr.r * 0.68, 0, Math.PI * 2);
-    ctx.arc(tr.x + tr.r * 0.35, tr.y - tr.r * 0.1, tr.r * 0.68, 0, Math.PI * 2);
+    ctx.moveTo(tr.x - tr.trunkW * 0.2, tr.y - 5);
+    ctx.quadraticCurveTo(tr.x - tr.r * 0.35, tr.y - tr.r * 0.15, tr.x - tr.r * 0.5, tr.y - tr.r * 0.3);
+    ctx.stroke();
+    // 우측 가지
+    ctx.beginPath();
+    ctx.moveTo(tr.x + tr.trunkW * 0.2, tr.y - 6);
+    ctx.quadraticCurveTo(tr.x + tr.r * 0.35, tr.y - tr.r * 0.18, tr.x + tr.r * 0.5, tr.y - tr.r * 0.32);
+    ctx.stroke();
+
+    // 7-3. 🌸 풍성하고 부드러운 핑크빛 벚꽃 꽃구름 (Blossom Cloud)
+    // 하단 은은한 벚꽃 베이스
+    ctx.fillStyle = pal.base;
+    ctx.beginPath();
+    ctx.ellipse(tr.x, tr.y - tr.r * 0.3, tr.r * 0.95, tr.r * 0.65, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 중앙 본체 잎
-    ctx.fillStyle = cols[0];
+    // 중앙 화사한 메인 핑크 바디
+    ctx.fillStyle = pal.mid;
     ctx.beginPath();
-    ctx.arc(tr.x, tr.y - tr.r * 0.35, tr.r * 0.85, 0, Math.PI * 2);
+    ctx.ellipse(tr.x, tr.y - tr.r * 0.42, tr.r * 0.88, tr.r * 0.6, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 상단 하이라이트 잎
-    ctx.fillStyle = cols[1];
+    // 상단 햇살 하이라이트 베이비 핑크
+    ctx.fillStyle = pal.light;
     ctx.beginPath();
-    ctx.arc(tr.x - tr.r * 0.18, tr.y - tr.r * 0.55, tr.r * 0.55, 0, Math.PI * 2);
+    ctx.ellipse(tr.x - tr.r * 0.15, tr.y - tr.r * 0.58, tr.r * 0.62, tr.r * 0.42, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 햇살 반사 부드러운 스팟
-    ctx.fillStyle = "rgba(255, 255, 255, 0.14)";
-    ctx.beginPath();
-    ctx.arc(tr.x - tr.r * 0.25, tr.y - tr.r * 0.62, tr.r * 0.32, 0, Math.PI * 2);
-    ctx.fill();
+    // 7-4. 🌸 수관을 예쁘게 장식하는 5엽 벚꽃 꽃송이들 포인트
+    tr.florets.forEach(fl => {
+      drawSakuraFloret(ctx, tr.x + fl.ox, tr.y + fl.oy, 5.5 * fl.scale, pal.light, "#FDE047");
+      // 미니 벚꽃 외곽 라인
+      drawSakuraFloret(ctx, tr.x + fl.ox * 0.8, tr.y + fl.oy * 0.85 + 2, 4.2 * fl.scale, pal.floret, "#FEF08A");
+    });
   });
   ctx.restore();
 
-  // 8. 바람에 날리는 풀잎 파티클
+  // 8. 🌸 봄바람에 살랑살랑 날리는 핑크빛 벚꽃 꽃잎들 (Flying Cherry Blossom Petals)
   ctx.save();
-  FLYING_LEAVES.forEach(leaf => {
-    const lx = (leaf.baseX + t * leaf.speedX) % W;
-    const ly = (leaf.baseY + t * leaf.speedY + Math.sin(t * 1.5 + leaf.phase) * 35) % H;
-    const rot = t * leaf.rotSpeed + leaf.phase;
+  FLYING_CHERRY_PETALS.forEach(petal => {
+    const px = (petal.baseX + t * petal.speedX) % W;
+    const py = (petal.baseY + t * petal.speedY + Math.sin(t * 1.5 + petal.phase) * 35) % H;
+    const rot = t * petal.rotSpeed + petal.phase;
     ctx.save();
-    ctx.translate(lx, ly);
+    ctx.translate(px, py);
     ctx.rotate(rot);
-    ctx.fillStyle = leaf.color;
+    ctx.fillStyle = petal.color;
     ctx.beginPath();
-    ctx.ellipse(0, 0, leaf.size * 2, leaf.size * 0.8, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, petal.size * 1.8, petal.size * 0.85, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   });
