@@ -1240,12 +1240,35 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
   83%  { background-color: rgba(120, 0, 255, 0.48); box-shadow: inset 0 0 90px rgba(120, 0, 255, 0.85); }
   100% { background-color: rgba(255, 0, 180, 0.48); box-shadow: inset 0 0 90px rgba(255, 0, 180, 0.85); }
 }
+/* 토스트 알림 메시지 스타일 */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(30px);
+  background: rgba(15, 23, 42, 0.92);
+  color: #ffffff;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-size: 14.5px;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 100000;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  backdrop-filter: blur(4px);
+}
+#toast.on {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 
 /* 🌟 7개 완성 시 초대형 네온 전광판 "완성" (3초간 반짝이고 사라짐) */
 .complete-grand-banner {
   position: fixed;
   inset: 0;
-  z-index: 99999;
+  z-index: 999999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1856,6 +1879,9 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
 
   <!-- 10배 확대 말풍선 팝업 모달 -->
   
+  <!-- 토스트 알림 메시지 컨테이너 -->
+  <div id="toast"></div>
+
   <!-- 🌟 7개 완성 시 초대형 네온 전광판 "완성" 3초간 반짝이고 사라지는 오버레이 -->
   <div id="completeGrandBanner" class="complete-grand-banner hide" aria-hidden="true">
     <div class="complete-grand-board-wrap">
@@ -2004,7 +2030,18 @@ const THINKER_SLOTS = [
 
 const IMG={},PIMG={};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),1500);}
+function toast(m){
+  let t=$("#toast");
+  if(!t){
+    t=document.createElement("div");
+    t.id="toast";
+    document.body.appendChild(t);
+  }
+  t.textContent=m;
+  t.classList.add("on");
+  clearTimeout(t._h);
+  t._h=setTimeout(()=>t.classList.remove("on"),1800);
+}
 
 /* ===== 소리 및 신나는 게임 BGM 엔진 ===== */
 let AC=null;
@@ -2261,10 +2298,10 @@ function triggerMapRainbowFlash3Sec() {
     }, 3000);
   }
   S.mapRainbowUntil = Date.now() + 3000;
-  playApplauseSound();
-  fanfare();
+  try { playApplauseSound(); } catch(e) {}
+  try { fanfare(); } catch(e) {}
   if (typeof BGM_ENGINE !== "undefined" && BGM_ENGINE.switchToPeaceful) {
-    BGM_ENGINE.switchToPeaceful();
+    try { BGM_ENGINE.switchToPeaceful(); } catch(e) {}
   }
 }
 
@@ -3784,11 +3821,11 @@ function completeSpot(spotId) {
   }
 
   if (doneCount === S.spots.length) {
-    playAllCompletedVictoryFanfare();
-    playRealisticRainbowFireworksSound();
+    try { playAllCompletedVictoryFanfare(); } catch(e) {}
+    try { playRealisticRainbowFireworksSound(); } catch(e) {}
     triggerMapRainbowFlash3Sec();
     if (typeof BGM_ENGINE !== "undefined" && BGM_ENGINE.switchToPeaceful) {
-      BGM_ENGINE.switchToPeaceful();
+      try { BGM_ENGINE.switchToPeaceful(); } catch(e) {}
     }
     toast("🏆 축하합니다! 모든 7개 모둠의 벤다이어그램 결계가 완성되었습니다! 🎊");
   }
@@ -6101,6 +6138,17 @@ resize();
 function simRunAllToSeats() {
   if (S.players.length < 28) populateNPCs();
   seatAll();
+  if (S.me) {
+    const thId = S.me.assignedSlot || S.me.thinkerId;
+    const slot = THINKER_SLOTS.find(s => s.id === thId);
+    const sp = S.spots[S.me.assignedSpot || 6];
+    if (slot && sp) {
+      S.me.targetX = sp.x + slot.offsetX;
+      S.me.targetY = sp.y + slot.offsetY;
+      S.me.run = true;
+      S.me.dir = 1;
+    }
+  }
   toast("🏃 모든 학생들이 자기 모둠 자리를 향해 순서대로 달려갑니다!");
 }
 
@@ -6108,13 +6156,29 @@ function simCompleteAllSpots() {
   if (S.players.length < 28) populateNPCs();
   if (!S.spots || !S.spots.length) seatAll();
 
+  // 이미 7개가 완성되어 있는 경우 다시 테스트할 수 있도록 초기화
+  S.spots.forEach(sp => {
+    sp.done = false;
+  });
+  drawMini();
+
   toast("⚡ 1, 2, 3 순서대로 벤다이어그램 완성 & 불 켜기 시뮬레이션 시작!");
   S.spots.forEach((sp, idx) => {
     setTimeout(() => {
       completeSpot(sp.id);
-    }, idx * 450);
+    }, idx * 300);
   });
 }
+
+// 개발자 및 교사용 콘솔/전역 즉시 피날레 테스트 함수
+window.testCompleteFinale = function() {
+  if (!S.spots || !S.spots.length) seatAll();
+  S.spots.forEach(sp => { sp.done = true; });
+  drawMini();
+  try { playAllCompletedVictoryFanfare(); } catch(e) {}
+  try { playRealisticRainbowFireworksSound(); } catch(e) {}
+  triggerMapRainbowFlash3Sec();
+};
 
 setTimeout(() => {
   const simRunBtn = $("#simRunBtn");
