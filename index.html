@@ -1256,6 +1256,9 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
   transform: scale(0.7);
   transition: opacity 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28), transform 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
+.complete-grand-banner.hide {
+  display: none !important;
+}
 .complete-grand-banner.show {
   opacity: 1;
   transform: scale(1);
@@ -1870,6 +1873,7 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
   </footer>
 </div>
 
+<script src="complete_board.js"></script>
 <script>
 const SPRITES = {CHARS:{
   "ari_s1": "data:image/png;base64,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",
@@ -1977,7 +1981,7 @@ function gradeClaim({thinkerId,stance,reason}){
 /* ===== 상태 ===== */
 const S={me:null,players:[],spots:[],tab:1,drawn:null,pool:[],claim:null,votes:{ok:0,no:0},
          teams:[],rot:0,warnAt:0,sound:true,isTeacher:localStorage.getItem("envi_is_teacher")==="true"};
-const W=4200,H=3200,SPEED=220;
+const W=4200,H=3200,SPEED=280;
 // 7개 벤다이어그램 위치: 가로 410px, 세로 385px 이상 충분히 넉넉하게 완벽 분리 배치
 const SPOTPOS=[
   [750, 550],   // 1번 모둠 (1행 좌측)
@@ -2222,9 +2226,15 @@ function triggerCompleteFlashBanner() {
   const banner = $("#completeGrandBanner");
   if (!banner) return;
 
+  const img = $("#completeBoardImg");
+  if (img && window.COMPLETE_BOARD_BASE64 && (!img.src || img.src.indexOf("data:") !== 0)) {
+    img.src = window.COMPLETE_BOARD_BASE64;
+  }
+
   if (window._completeBannerTimer) clearTimeout(window._completeBannerTimer);
   if (window._completeBannerFadeTimer) clearTimeout(window._completeBannerFadeTimer);
 
+  banner.style.display = "flex";
   banner.classList.remove("hide", "fade-out");
   void banner.offsetWidth; // 리플로우 강제 트리거로 애니메이션 초기화 보장
   banner.classList.add("show");
@@ -2234,6 +2244,7 @@ function triggerCompleteFlashBanner() {
     banner.classList.add("fade-out");
     window._completeBannerFadeTimer = setTimeout(() => {
       banner.classList.add("hide");
+      banner.style.display = "none";
       banner.classList.remove("show", "fade-out");
     }, 450);
   }, 3000);
@@ -3845,7 +3856,7 @@ function drawMini() {
 let prev = 0;
 function loop(ts) {
   requestAnimationFrame(loop);
-  const dt = Math.min(.05, (ts - prev) / 1000 || 0); prev = ts;
+  const dt = Math.min(.08, (ts - prev) / 1000 || 0); prev = ts;
   if ((S.tab !== 2 && S.tab !== 3) || !S.spots.length) return;
   const me = S.me;
   const dx = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0), dy = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0);
@@ -4240,17 +4251,166 @@ function drawSakuraFloret(ctx, x, y, size, petalColor, centerColor) {
   ctx.restore();
 }
 
-function drawForestMeadowBackground(ctx, W, H, ts) {
-  const t = (ts || 0) / 1000;
+// 🌿 정적 배경(초원, 잔디, 조약돌, 벚꽃 나무 전체) 오프스크린 캔버스 캐시 (60FPS 초고속 성능 보장)
+let _bgCacheCanvas = null;
 
-  // 1. 햇살 쏟아지는 화사하고 싱그러운 연한 연두빛 봄날 초원 (어두운 녹색 완전 제거)
-  const meadowGlow = ctx.createLinearGradient(0, 0, 0, H);
-  meadowGlow.addColorStop(0, "#D9F99D");    // 상단 따스한 햇살 파스텔 라임 연두
-  meadowGlow.addColorStop(0.35, "#BEF264"); // 중상단 화사한 소프트 연두
-  meadowGlow.addColorStop(0.7, "#A3E635");  // 중하단 맑고 청량한 봄 연두
-  meadowGlow.addColorStop(1, "#84CC16");    // 하단 싱그러운 연한 연두
-  ctx.fillStyle = meadowGlow;
-  ctx.fillRect(0, 0, W, H);
+function buildStaticBackgroundCache(W, H) {
+  _bgCacheCanvas = document.createElement("canvas");
+  _bgCacheCanvas.width = W;
+  _bgCacheCanvas.height = H;
+  const bctx = _bgCacheCanvas.getContext("2d");
+
+  // 1. 햇살 쏟아지는 화사하고 싱그러운 연한 연두빛 봄날 초원
+  const meadowGlow = bctx.createLinearGradient(0, 0, 0, H);
+  meadowGlow.addColorStop(0, "#D9F99D");
+  meadowGlow.addColorStop(0.35, "#BEF264");
+  meadowGlow.addColorStop(0.7, "#A3E635");
+  meadowGlow.addColorStop(1, "#84CC16");
+  bctx.fillStyle = meadowGlow;
+  bctx.fillRect(0, 0, W, H);
+
+  // 2. 조약돌 디딤돌
+  bctx.save();
+  FOREST_STEPPING_STONES.forEach(st => {
+    bctx.save();
+    bctx.translate(st.x, st.y);
+    bctx.rotate(st.rot);
+    bctx.fillStyle = "rgba(100, 160, 60, 0.12)";
+    bctx.beginPath();
+    bctx.ellipse(2, 2, st.rx, st.ry, 0, 0, Math.PI * 2);
+    bctx.fill();
+    bctx.fillStyle = st.color;
+    bctx.beginPath();
+    bctx.ellipse(0, 0, st.rx, st.ry, 0, 0, Math.PI * 2);
+    bctx.fill();
+    bctx.restore();
+  });
+  bctx.restore();
+
+  // 3. 풀잎 다발
+  const grassCols = ["#BEF264", "#A7F3D0", "#4ADE80", "#86EFAC", "#FEF08A"];
+  bctx.save();
+  MEADOW_GRASS_CLUSTERS.forEach(cl => {
+    bctx.strokeStyle = grassCols[cl.colIdx];
+    bctx.lineWidth = 1.6;
+    for (let b = 0; b < cl.blades; b++) {
+      const bx = cl.x + (b - 1) * 3;
+      const by = cl.y;
+      const bladeH = cl.h + b * 1.2;
+      const bend = cl.bend + (b - 1) * 2;
+      bctx.beginPath();
+      bctx.moveTo(bx, by);
+      bctx.quadraticCurveTo(bx + bend * 0.5, by - bladeH * 0.6, bx + bend, by - bladeH);
+      bctx.stroke();
+    }
+  });
+  bctx.restore();
+
+  // 4. 들꽃 점묘
+  bctx.save();
+  MEADOW_FLOWERS.forEach(fl => {
+    bctx.fillStyle = fl.petalColor;
+    bctx.beginPath();
+    bctx.arc(fl.x, fl.y, fl.size, 0, Math.PI * 2);
+    bctx.fill();
+    bctx.fillStyle = "#F59E0B";
+    bctx.beginPath();
+    bctx.arc(fl.x, fl.y, fl.size * 0.45, 0, Math.PI * 2);
+    bctx.fill();
+  });
+  bctx.restore();
+
+  // 5. 버섯 무리
+  bctx.save();
+  FOREST_MUSHROOMS.forEach(m => {
+    bctx.fillStyle = "#FDE68A";
+    bctx.fillRect(m.x - m.size * 0.25, m.y - m.size * 0.4, m.size * 0.5, m.size * 0.6);
+    bctx.fillStyle = m.capColor;
+    bctx.beginPath();
+    bctx.arc(m.x, m.y - m.size * 0.4, m.size, Math.PI, Math.PI * 2);
+    bctx.fill();
+    bctx.fillStyle = "#FFFFFF";
+    bctx.beginPath();
+    bctx.arc(m.x, m.y - m.size * 0.75, m.size * 0.25, 0, Math.PI * 2);
+    bctx.fill();
+  });
+  bctx.restore();
+
+  // 6. 🌸 핑크빛 벚꽃 나무들 (85그루)
+  bctx.save();
+  CHERRY_BLOSSOM_TREES.forEach(tr => {
+    const pal = tr.palette;
+
+    // 나무 그림자
+    bctx.fillStyle = pal.shadow;
+    bctx.beginPath();
+    bctx.ellipse(tr.x, tr.y + tr.trunkH * 0.5 + 4, tr.r * 1.15, tr.r * 0.42, 0, 0, Math.PI * 2);
+    bctx.fill();
+
+    // 바닥 벚꽃 꽃잎들
+    tr.fallenPetals.forEach(p => {
+      bctx.fillStyle = pal.mid;
+      bctx.beginPath();
+      bctx.ellipse(tr.x + p.ox, tr.y + tr.trunkH * 0.5 + p.oy, p.pr * 1.4, p.pr * 0.75, p.rot, 0, Math.PI * 2);
+      bctx.fill();
+    });
+
+    // 나무 둥치와 나뭇가지
+    bctx.fillStyle = "#6D4C41";
+    bctx.beginPath();
+    bctx.moveTo(tr.x - tr.trunkW * 0.45, tr.y - 12);
+    bctx.lineTo(tr.x + tr.trunkW * 0.45, tr.y - 12);
+    bctx.lineTo(tr.x + tr.trunkW * 0.65, tr.y + tr.trunkH * 0.52);
+    bctx.lineTo(tr.x - tr.trunkW * 0.65, tr.y + tr.trunkH * 0.52);
+    bctx.closePath();
+    bctx.fill();
+
+    bctx.strokeStyle = "#5D4037";
+    bctx.lineWidth = Math.max(2.4, tr.trunkW * 0.35);
+    bctx.lineCap = "round";
+    bctx.beginPath();
+    bctx.moveTo(tr.x - tr.trunkW * 0.2, tr.y - 5);
+    bctx.quadraticCurveTo(tr.x - tr.r * 0.35, tr.y - tr.r * 0.15, tr.x - tr.r * 0.5, tr.y - tr.r * 0.3);
+    bctx.stroke();
+
+    bctx.beginPath();
+    bctx.moveTo(tr.x + tr.trunkW * 0.2, tr.y - 6);
+    bctx.quadraticCurveTo(tr.x + tr.r * 0.35, tr.y - tr.r * 0.18, tr.x + tr.r * 0.5, tr.y - tr.r * 0.32);
+    bctx.stroke();
+
+    // 벚꽃 꽃구름 수관
+    bctx.fillStyle = pal.base;
+    bctx.beginPath();
+    bctx.ellipse(tr.x, tr.y - tr.r * 0.3, tr.r * 0.95, tr.r * 0.65, 0, 0, Math.PI * 2);
+    bctx.fill();
+
+    bctx.fillStyle = pal.mid;
+    bctx.beginPath();
+    bctx.ellipse(tr.x, tr.y - tr.r * 0.42, tr.r * 0.88, tr.r * 0.6, 0, 0, Math.PI * 2);
+    bctx.fill();
+
+    bctx.fillStyle = pal.light;
+    bctx.beginPath();
+    bctx.ellipse(tr.x - tr.r * 0.15, tr.y - tr.r * 0.58, tr.r * 0.62, tr.r * 0.42, 0, 0, Math.PI * 2);
+    bctx.fill();
+
+    // 5엽 벚꽃 꽃송이 포인트
+    tr.florets.forEach(fl => {
+      drawSakuraFloret(bctx, tr.x + fl.ox, tr.y + fl.oy, 5.5 * fl.scale, pal.light, "#FDE047");
+      drawSakuraFloret(bctx, tr.x + fl.ox * 0.8, tr.y + fl.oy * 0.85 + 2, 4.2 * fl.scale, pal.floret, "#FEF08A");
+    });
+  });
+  bctx.restore();
+}
+
+function drawForestMeadowBackground(ctx, W, H, ts) {
+  if (!_bgCacheCanvas) {
+    buildStaticBackgroundCache(W, H);
+  }
+  // 1. 사전 렌더링된 고화질 정적 배경 1회 블릿 (CPU/GPU 부하 0%, 60FPS 초고속 유지)
+  ctx.drawImage(_bgCacheCanvas, 0, 0);
+
+  const t = (ts || 0) / 1000;
 
   // 2. 부드러운 자연광 코모레비 햇살 빔
   ctx.save();
@@ -4267,150 +4427,7 @@ function drawForestMeadowBackground(ctx, W, H, ts) {
   }
   ctx.restore();
 
-  // 3. 숲속 오솔길 조약돌 디딤돌
-  ctx.save();
-  FOREST_STEPPING_STONES.forEach(st => {
-    ctx.save();
-    ctx.translate(st.x, st.y);
-    ctx.rotate(st.rot);
-    ctx.fillStyle = "rgba(100, 160, 60, 0.12)";
-    ctx.beginPath();
-    ctx.ellipse(2, 2, st.rx, st.ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = st.color;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, st.rx, st.ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  });
-  ctx.restore();
-
-  // 4. 유기적으로 분포된 풀잎 다발
-  const grassCols = ["#BEF264", "#A7F3D0", "#4ADE80", "#86EFAC", "#FEF08A"];
-  ctx.save();
-  MEADOW_GRASS_CLUSTERS.forEach(cl => {
-    ctx.strokeStyle = grassCols[cl.colIdx];
-    ctx.lineWidth = 1.6;
-    for (let b = 0; b < cl.blades; b++) {
-      const bx = cl.x + (b - 1) * 3;
-      const by = cl.y;
-      const bladeH = cl.h + b * 1.2;
-      const bend = cl.bend + (b - 1) * 2;
-      ctx.beginPath();
-      ctx.moveTo(bx, by);
-      ctx.quadraticCurveTo(bx + bend * 0.5, by - bladeH * 0.6, bx + bend, by - bladeH);
-      ctx.stroke();
-    }
-  });
-  ctx.restore();
-
-  // 5. 들꽃 점묘
-  ctx.save();
-  MEADOW_FLOWERS.forEach(fl => {
-    ctx.fillStyle = fl.petalColor;
-    ctx.beginPath();
-    ctx.arc(fl.x, fl.y, fl.size, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#F59E0B";
-    ctx.beginPath();
-    ctx.arc(fl.x, fl.y, fl.size * 0.45, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  ctx.restore();
-
-  // 6. 숲속 버섯 무리
-  ctx.save();
-  FOREST_MUSHROOMS.forEach(m => {
-    ctx.fillStyle = "#FDE68A";
-    ctx.fillRect(m.x - m.size * 0.25, m.y - m.size * 0.4, m.size * 0.5, m.size * 0.6);
-    ctx.fillStyle = m.capColor;
-    ctx.beginPath();
-    ctx.arc(m.x, m.y - m.size * 0.4, m.size, Math.PI, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.arc(m.x, m.y - m.size * 0.75, m.size * 0.25, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  ctx.restore();
-
-  // 7. 🌸 너무나 사랑스러운 핑크빛 벚꽃 나무들 (풍성한 벚꽃 구름 수관 & 5엽 꽃송이 & 갈색 기둥)
-  ctx.save();
-  CHERRY_BLOSSOM_TREES.forEach(tr => {
-    const pal = tr.palette;
-
-    // 7-1. 나무 그림자 및 바닥에 살포시 흩뿌려진 벚꽃 꽃잎들 (Fallen Blossom Petals)
-    ctx.fillStyle = pal.shadow;
-    ctx.beginPath();
-    ctx.ellipse(tr.x, tr.y + tr.trunkH * 0.5 + 4, tr.r * 1.15, tr.r * 0.42, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 바닥 벚꽃 꽃잎 점묘
-    tr.fallenPetals.forEach(p => {
-      ctx.save();
-      ctx.translate(tr.x + p.ox, tr.y + tr.trunkH * 0.5 + p.oy);
-      ctx.rotate(p.rot);
-      ctx.fillStyle = pal.mid;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, p.pr * 1.4, p.pr * 0.75, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    });
-
-    // 7-2. 나무 둥치(기둥)와 나뭇가지 (따뜻하고 우아한 나무 갈색)
-    ctx.fillStyle = "#6D4C41";
-    ctx.beginPath();
-    ctx.moveTo(tr.x - tr.trunkW * 0.45, tr.y - 12);
-    ctx.lineTo(tr.x + tr.trunkW * 0.45, tr.y - 12);
-    ctx.lineTo(tr.x + tr.trunkW * 0.65, tr.y + tr.trunkH * 0.52);
-    ctx.lineTo(tr.x - tr.trunkW * 0.65, tr.y + tr.trunkH * 0.52);
-    ctx.closePath();
-    ctx.fill();
-
-    // 뻗어나가는 잔가지들
-    ctx.strokeStyle = "#5D4037";
-    ctx.lineWidth = Math.max(2.4, tr.trunkW * 0.35);
-    ctx.lineCap = "round";
-    // 좌측 가지
-    ctx.beginPath();
-    ctx.moveTo(tr.x - tr.trunkW * 0.2, tr.y - 5);
-    ctx.quadraticCurveTo(tr.x - tr.r * 0.35, tr.y - tr.r * 0.15, tr.x - tr.r * 0.5, tr.y - tr.r * 0.3);
-    ctx.stroke();
-    // 우측 가지
-    ctx.beginPath();
-    ctx.moveTo(tr.x + tr.trunkW * 0.2, tr.y - 6);
-    ctx.quadraticCurveTo(tr.x + tr.r * 0.35, tr.y - tr.r * 0.18, tr.x + tr.r * 0.5, tr.y - tr.r * 0.32);
-    ctx.stroke();
-
-    // 7-3. 🌸 풍성하고 부드러운 핑크빛 벚꽃 꽃구름 (Blossom Cloud)
-    // 하단 은은한 벚꽃 베이스
-    ctx.fillStyle = pal.base;
-    ctx.beginPath();
-    ctx.ellipse(tr.x, tr.y - tr.r * 0.3, tr.r * 0.95, tr.r * 0.65, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 중앙 화사한 메인 핑크 바디
-    ctx.fillStyle = pal.mid;
-    ctx.beginPath();
-    ctx.ellipse(tr.x, tr.y - tr.r * 0.42, tr.r * 0.88, tr.r * 0.6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 상단 햇살 하이라이트 베이비 핑크
-    ctx.fillStyle = pal.light;
-    ctx.beginPath();
-    ctx.ellipse(tr.x - tr.r * 0.15, tr.y - tr.r * 0.58, tr.r * 0.62, tr.r * 0.42, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 7-4. 🌸 수관을 예쁘게 장식하는 5엽 벚꽃 꽃송이들 포인트
-    tr.florets.forEach(fl => {
-      drawSakuraFloret(ctx, tr.x + fl.ox, tr.y + fl.oy, 5.5 * fl.scale, pal.light, "#FDE047");
-      // 미니 벚꽃 외곽 라인
-      drawSakuraFloret(ctx, tr.x + fl.ox * 0.8, tr.y + fl.oy * 0.85 + 2, 4.2 * fl.scale, pal.floret, "#FEF08A");
-    });
-  });
-  ctx.restore();
-
-  // 8. 🌸 봄바람에 살랑살랑 날리는 핑크빛 벚꽃 꽃잎들 (Flying Cherry Blossom Petals)
+  // 3. 🌸 봄바람에 살랑살랑 날리는 핑크빛 벚꽃 꽃잎들 (55개)
   ctx.save();
   FLYING_CHERRY_PETALS.forEach(petal => {
     const px = (petal.baseX + t * petal.speedX) % W;
@@ -6104,6 +6121,12 @@ setTimeout(() => {
   if (simRunBtn) simRunBtn.onclick = simRunAllToSeats;
   const simCompBtn = $("#simCompleteAllBtn");
   if (simCompBtn) simCompBtn.onclick = simCompleteAllSpots;
+
+  // 🌟 전광판 이미지 즉시 메모리 사전 프리로드
+  if (window.COMPLETE_BOARD_BASE64) {
+    const img = $("#completeBoardImg");
+    if (img) img.src = window.COMPLETE_BOARD_BASE64;
+  }
 }, 200);
 
 </script>
