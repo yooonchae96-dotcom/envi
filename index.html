@@ -350,7 +350,7 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
   overflow: hidden;
   box-shadow: 0 8px 30px rgba(0,0,0,0.12);
 }
-#stage{width:100%;height:clamp(560px,70vh,780px);background:#458428;border-radius:16px;display:block;touch-action:none;border:1px solid var(--line)}
+#stage{width:100%;height:clamp(560px,70vh,780px);background:#43A047;border-radius:16px;display:block;touch-action:none;border:1px solid var(--line)}
 .dpad{display:none!important}
 /* 통합 하단 컨트롤 툴바 (불 켜짐 현황 + 달리기/완성 + BGM + 줌 조절) */
 .stage-unified-bar {
@@ -1729,13 +1729,12 @@ header nav button.on{background:#1e3a8a;color:#ffffff;border-color:#1e3a8a;font-
     <div class="lotto" id="lotto" style="margin-top:10px"></div>
     <div id="winArea"></div>
   </div>
-  <div class="card hide" id="claimCard" style="display:none !important;"><h2>주장과 근거</h2>
+  <div class="card hide" id="claimCard"><h2>주장과 근거</h2>
     <div id="claimArea"></div></div>
-  <div class="card hide" id="voteCard" style="display:none !important;"><h2>이 주장은 그 사상가의 근거로 정확한가요?</h2>
+  <div class="card hide" id="voteCard"><h2>이 주장은 그 사상가의 근거로 정확한가요?</h2>
     <div class="row"><button id="vOk">정확하다</button><button class="ghost" id="vNo">아니다</button></div>
     <div id="voteRes" style="margin-top:10px"></div></div>
-  <!-- 채점 및 이유 설명은 말풍선 바로 위에 위치하여 학생 답변과 1:1로 함께 비교됩니다 (하단 배치 금지) -->
-  <div class="card hide" id="gradeCard" style="display:none !important;"><h2>채점 결과</h2><div id="gradeOut"></div></div>
+  <div class="card hide" id="gradeCard"><h2>선생님 채점 결과 및 모범답안 비교</h2><div id="gradeOut"></div></div>
 </section>
 
 <section id="t4" class="hide">
@@ -4015,66 +4014,254 @@ function drawRoundRect(ctx, x, y, w, h, r) {
 }
 
 
-// 🌲 고급스럽고 미니멀한 숲속 배경 디테일
-const FOREST_TREES = Array.from({ length: 42 }, (_, i) => ({
-  x: ((i * 379 + 83) % 2400) - 200,
-  y: ((i * 491 + 137) % 2000) - 150,
-  radius: 36 + (i % 6) * 11,
-  color: [
-    "#163820", "#14331c", "#183e24", "#1b4428", "#122f19"
-  ][i % 5],
-  trunkColor: "#0b1c10",
-  type: i % 3
+// 🌿 동화 속 지브리 감성 숲속 맵 자연 조형물 (나무, 디딤돌, 버섯, 반딧불이)
+const FOREST_SCENERY_TREES = Array.from({ length: 90 }, (_, i) => {
+  const x = ((i * 479 + 137) % 4000) + 100;
+  const y = ((i * 631 + 251) % 3000) + 100;
+  const r = 36 + (i % 6) * 10;
+  return {
+    x, y, r,
+    trunkW: 13 + (i % 4) * 3,
+    trunkH: r * 0.95,
+    leafCols: [
+      ["#38A12B", "#4DBE38", "#2E8A22"], // 싱그러운 라임 숲
+      ["#2E963D", "#3EAE4D", "#227C2E"], // 에메랄드 숲
+      ["#43A047", "#5DBB62", "#2E7D32"], // 싱그런 포레스트
+      ["#34983D", "#48B452", "#277E30"], // 활력 숲
+      ["#52A829", "#68C43B", "#3C881D"]  // 화사한 햇살 숲
+    ][i % 5]
+  };
+});
+
+const FOREST_STEPPING_STONES = Array.from({ length: 130 }, (_, i) => ({
+  x: ((i * 353 + 79) % 4050) + 75,
+  y: ((i * 521 + 183) % 3050) + 75,
+  rx: 8 + (i % 5) * 3,
+  ry: 5 + (i % 3) * 2,
+  rot: (i * 0.7) % Math.PI,
+  color: ["#D8DFCE", "#E5ECE0", "#CCD4C0", "#F0F5E8"][i % 4]
 }));
 
-function drawForestBackground(ctx, W, H, ts) {
-  const t = (ts || 0) * 0.001;
+const FOREST_MUSHROOMS = Array.from({ length: 70 }, (_, i) => ({
+  x: ((i * 439 + 191) % 4000) + 100,
+  y: ((i * 607 + 317) % 3000) + 100,
+  capColor: ["#EF4444", "#F59E0B", "#F97316", "#EC4899", "#10B981"][i % 5],
+  size: 5 + (i % 4) * 1.5
+}));
 
-  // 1. 깊고 차분한 프리미엄 딥 포레스트 그라디언트 베이스
-  const forestGrad = ctx.createRadialGradient(W / 2, H / 2, 80, W / 2, H / 2, Math.max(W, H) * 0.78);
-  forestGrad.addColorStop(0, "#194226");
-  forestGrad.addColorStop(0.5, "#13351e");
-  forestGrad.addColorStop(1, "#0c2314");
-  ctx.fillStyle = forestGrad;
+const FOREST_FIREFLIES = Array.from({ length: 65 }, (_, i) => ({
+  baseX: ((i * 179 + 89) % W),
+  baseY: ((i * 257 + 149) % H),
+  speedX: 9 + (i % 5) * 4,
+  speedY: 7 + (i % 4) * 3,
+  phase: (i * 0.8) % (Math.PI * 2),
+  color: ["#FEF08A", "#86EFAC", "#6EE7B7", "#FDE047", "#A7F3D0"][i % 5],
+  size: 2.4 + (i % 3) * 1.0
+}));
+
+const MEADOW_GRASS_CLUSTERS = Array.from({ length: 550 }, (_, i) => ({
+  x: ((i * 383 + 127) % 4100) + 50,
+  y: ((i * 571 + 239) % 3100) + 50,
+  blades: 3 + (i % 4),
+  h: 7 + (i % 9),
+  colIdx: i % 5,
+  bend: ((i % 7) - 3) * 2.5
+}));
+
+const MEADOW_FLOWERS = Array.from({ length: 180 }, (_, i) => ({
+  x: ((i * 499 + 89) % 4100) + 50,
+  y: ((i * 733 + 173) % 3100) + 50,
+  petalColor: ["#FFFFFF", "#FFF9A6", "#FFE4E6", "#FEF08A", "#FBCFE8"][i % 5],
+  size: 2.0 + (i % 3) * 0.8
+}));
+
+const FLYING_LEAVES = Array.from({ length: 40 }, (_, i) => ({
+  baseX: ((i * 197) % W),
+  baseY: ((i * 131) % H),
+  speedX: 38 + (i % 6) * 10,
+  speedY: 16 + (i % 4) * 7,
+  rotSpeed: 1.5 + (i % 3) * 0.8,
+  size: 4.5 + (i % 4) * 1.5,
+  phase: (i * 0.9) % (Math.PI * 2),
+  color: ["#86EFAC", "#4ADE80", "#A7F3D0", "#BBF7D0", "#FEF08A"][i % 5]
+}));
+
+function drawForestMeadowBackground(ctx, W, H, ts) {
+  const t = (ts || 0) / 1000;
+
+  // 1. 햇살 쏟아지는 싱그러운 숲속 잔디밭 그라데이션 (밝고 청량한 에메랄드 톤)
+  const forestGlow = ctx.createLinearGradient(0, 0, 0, H);
+  forestGlow.addColorStop(0, "#82DC54");    // 상단 아침 햇살 라임 그린
+  forestGlow.addColorStop(0.35, "#60C840"); // 중상단 활력 넘치는 잔디 그린
+  forestGlow.addColorStop(0.7, "#48A82E");  // 중하단 풍성한 숲속 그린
+  forestGlow.addColorStop(1, "#369022");    // 하단 싱그러운 포레스트 그린
+  ctx.fillStyle = forestGlow;
   ctx.fillRect(0, 0, W, H);
 
-  // 2. 은은한 숲속 자연광 (코모레비 빔)
+  // 2. 부드러운 숲속 자연광 코모레비 햇살 빔
   ctx.save();
-  ctx.fillStyle = "rgba(255, 250, 220, 0.025)";
-  for (let b = 0; b < 3; b++) {
-    const shift = Math.sin(t * 0.25 + b * 1.8) * 45;
+  ctx.fillStyle = "rgba(255, 253, 230, 0.055)";
+  for (let b = 0; b < 4; b++) {
+    const shift = Math.sin(t * 0.2 + b * 1.5) * 55;
     ctx.beginPath();
-    ctx.moveTo(W * (0.2 + b * 0.3) + shift, 0);
-    ctx.lineTo(W * (0.4 + b * 0.3) + shift + 120, H);
-    ctx.lineTo(W * (0.28 + b * 0.3) + shift + 80, H);
-    ctx.lineTo(W * (0.12 + b * 0.3) + shift, 0);
+    ctx.moveTo(W * (0.15 + b * 0.25) + shift, 0);
+    ctx.lineTo(W * (0.35 + b * 0.25) + shift + 180, H);
+    ctx.lineTo(W * (0.24 + b * 0.25) + shift + 120, H);
+    ctx.lineTo(W * (0.08 + b * 0.25) + shift, 0);
     ctx.closePath();
     ctx.fill();
   }
   ctx.restore();
 
-  // 3. 숲속 나무들 (절제된 미니멀 실루엣 캐노피)
-  FOREST_TREES.forEach(tr => {
+  // 3. 숲속 오솔길 조약돌 디딤돌
+  ctx.save();
+  FOREST_STEPPING_STONES.forEach(st => {
     ctx.save();
-    // 부드러운 그림자
-    ctx.fillStyle = "rgba(4, 15, 8, 0.38)";
+    ctx.translate(st.x, st.y);
+    ctx.rotate(st.rot);
+    ctx.fillStyle = "rgba(45, 90, 40, 0.12)";
     ctx.beginPath();
-    ctx.ellipse(tr.x + 8, tr.y + tr.radius * 0.72, tr.radius * 0.95, tr.radius * 0.42, 0, 0, Math.PI * 2);
+    ctx.ellipse(2, 2, st.rx, st.ry, 0, 0, Math.PI * 2);
     ctx.fill();
-
-    // 겹쳐진 둥근 침엽/활엽 캐노피
-    ctx.fillStyle = tr.color;
+    ctx.fillStyle = st.color;
     ctx.beginPath();
-    ctx.arc(tr.x, tr.y, tr.radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 상단 하이라이트
-    ctx.fillStyle = "rgba(255, 255, 255, 0.045)";
-    ctx.beginPath();
-    ctx.arc(tr.x - tr.radius * 0.2, tr.y - tr.radius * 0.2, tr.radius * 0.65, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, st.rx, st.ry, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   });
+  ctx.restore();
+
+  // 4. 유기적으로 분포된 풀잎 다발
+  const grassCols = ["#86EFAC", "#4ADE80", "#22C55E", "#16A34A", "#A7F3D0"];
+  ctx.save();
+  MEADOW_GRASS_CLUSTERS.forEach(cl => {
+    ctx.strokeStyle = grassCols[cl.colIdx];
+    ctx.lineWidth = 1.6;
+    for (let b = 0; b < cl.blades; b++) {
+      const bx = cl.x + (b - 1) * 3;
+      const by = cl.y;
+      const bladeH = cl.h + b * 1.2;
+      const bend = cl.bend + (b - 1) * 2;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.quadraticCurveTo(bx + bend * 0.5, by - bladeH * 0.6, bx + bend, by - bladeH);
+      ctx.stroke();
+    }
+  });
+
+  // 5. 들꽃 점묘
+  MEADOW_FLOWERS.forEach(fl => {
+    ctx.fillStyle = fl.petalColor;
+    ctx.beginPath();
+    ctx.arc(fl.x, fl.y, fl.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#F59E0B";
+    ctx.beginPath();
+    ctx.arc(fl.x, fl.y, fl.size * 0.45, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 6. 숲속 버섯 무리
+  FOREST_MUSHROOMS.forEach(m => {
+    ctx.fillStyle = "#FDE68A";
+    ctx.fillRect(m.x - m.size * 0.25, m.y - m.size * 0.4, m.size * 0.5, m.size * 0.6);
+    ctx.fillStyle = m.capColor;
+    ctx.beginPath();
+    ctx.arc(m.x, m.y - m.size * 0.4, m.size, Math.PI, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.arc(m.x, m.y - m.size * 0.75, m.size * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+
+  // 7. 아름다운 숲속 나무들 (지브리 감성 풍성한 나무 캐노피 & 갈색 나무 기둥)
+  ctx.save();
+  FOREST_SCENERY_TREES.forEach(tr => {
+    // 7-1. 나무 그림자
+    ctx.fillStyle = "rgba(30, 80, 30, 0.18)";
+    ctx.beginPath();
+    ctx.ellipse(tr.x + 8, tr.y + tr.trunkH * 0.5 + 4, tr.r * 1.1, tr.r * 0.38, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 7-2. 나무 기둥 (줄기)
+    ctx.fillStyle = "#6B4423";
+    ctx.beginPath();
+    ctx.moveTo(tr.x - tr.trunkW * 0.5, tr.y - 10);
+    ctx.lineTo(tr.x + tr.trunkW * 0.5, tr.y - 10);
+    ctx.lineTo(tr.x + tr.trunkW * 0.65, tr.y + tr.trunkH * 0.5);
+    ctx.lineTo(tr.x - tr.trunkW * 0.65, tr.y + tr.trunkH * 0.5);
+    ctx.closePath();
+    ctx.fill();
+
+    // 7-3. 풍성한 3단 둥근 나뭇잎 덩어리
+    const cols = tr.leafCols;
+    // 하단 잎
+    ctx.fillStyle = cols[2];
+    ctx.beginPath();
+    ctx.arc(tr.x - tr.r * 0.35, tr.y - tr.r * 0.1, tr.r * 0.68, 0, Math.PI * 2);
+    ctx.arc(tr.x + tr.r * 0.35, tr.y - tr.r * 0.1, tr.r * 0.68, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 중앙 본체 잎
+    ctx.fillStyle = cols[0];
+    ctx.beginPath();
+    ctx.arc(tr.x, tr.y - tr.r * 0.35, tr.r * 0.85, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 상단 하이라이트 잎
+    ctx.fillStyle = cols[1];
+    ctx.beginPath();
+    ctx.arc(tr.x - tr.r * 0.18, tr.y - tr.r * 0.55, tr.r * 0.55, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 햇살 반사 부드러운 스팟
+    ctx.fillStyle = "rgba(255, 255, 255, 0.14)";
+    ctx.beginPath();
+    ctx.arc(tr.x - tr.r * 0.25, tr.y - tr.r * 0.62, tr.r * 0.32, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+
+  // 8. 바람에 날리는 풀잎 파티클
+  ctx.save();
+  FLYING_LEAVES.forEach(leaf => {
+    const lx = (leaf.baseX + t * leaf.speedX) % W;
+    const ly = (leaf.baseY + t * leaf.speedY + Math.sin(t * 1.5 + leaf.phase) * 35) % H;
+    const rot = t * leaf.rotSpeed + leaf.phase;
+    ctx.save();
+    ctx.translate(lx, ly);
+    ctx.rotate(rot);
+    ctx.fillStyle = leaf.color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, leaf.size * 2, leaf.size * 0.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+  ctx.restore();
+
+  // 9. 반짝이는 숲속 반딧불이 & 요정 가루
+  ctx.save();
+  FOREST_FIREFLIES.forEach(f => {
+    const fx = (f.baseX + Math.sin(t * 0.8 + f.phase) * 45) % W;
+    const fy = (f.baseY + Math.cos(t * 0.7 + f.phase) * 35) % H;
+    const alpha = 0.3 + Math.sin(t * 2.2 + f.phase) * 0.3;
+    if (alpha <= 0.05) return;
+
+    ctx.save();
+    ctx.translate(fx, fy);
+    const grad = ctx.createRadialGradient(0, 0, 1, 0, 0, f.size * 4);
+    grad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+    grad.addColorStop(0.35, f.color);
+    grad.addColorStop(1, "rgba(254, 240, 138, 0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0, 0, f.size * 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+  ctx.restore();
 }
 
 function render(ts) {
@@ -4096,8 +4283,8 @@ function render(ts) {
   cx.scale(scale, scale);
   cx.translate(-camx, -camy);
 
-  // 1. 지브리 애니 감성 화사하고 연속적인 유기적 초원 맵 배경 렌더링 (타일링 제거!)
-  drawForestBackground(cx, W, H, ts);
+  // 1. 지브리 애니 감성 화사하고 싱그러운 햇살 숲속 맵 배경 렌더링
+  drawForestMeadowBackground(cx, W, H, ts);
   if (S.mapRainbowUntil && Date.now() < S.mapRainbowUntil) {
     const hue = (Date.now() / 3) % 360;
     cx.save();
@@ -4111,74 +4298,75 @@ function render(ts) {
     const isCompleted = sp.done;
     const occupants = S.players.filter(p => p.spot === sp.id);
 
-    // 2. 대형 4중 둥근 직사각형 벤다이어그램 (100% 불투명 솔리드 테라스 플랫폼)
+    // 2. 숲속 정원 테라스 벤다이어그램 (4중 숲속 테라스 힐링 플랫폼)
     // 넉넉한 920x580 대형 사이즈 & 4개 사상가 영역 완벽 중앙정렬
     // 계층 구조: 생태(전체 920) ⊃ 생명(680) ⊃ 동물(440) ⊃ 인간(210)
-    // 4개 영역 여집합: 인간(-430~-220, w=210) | 동물(-220~0, w=220) | 생명(0~230, w=230) | 생태(230~460, w=230)
-    // 사상가 슬롯 위치: ari(-325), sin(-110), sch(+115), leo(+345), offsetY: 40
 
-    // 2-1. [가. 생태 중심] 레오폴드 - 최외곽 플랫폼 (가로 920, 세로 580, 4명 전체 포괄)
+    // 2-1. [가. 생태 중심] 레오폴드 - 숲과 대지의 테라스 (가로 920, 세로 580, 4명 전체 포괄)
     cx.save();
-    cx.shadowColor = "rgba(18, 56, 36, 0.24)";
+    cx.shadowColor = "rgba(22, 101, 52, 0.16)";
     cx.shadowBlur = 24;
     cx.shadowOffsetY = 8;
     drawRoundRect(cx, sp.x - 460, sp.y - 280, 920, 580, 36);
-    cx.fillStyle = "#F3FAF5"; // 100% 불투명 세이지 유백색
+    cx.fillStyle = "#F2FBF5"; // 싱그럽고 맑은 포레스트 민트 백색
     cx.fill();
     cx.shadowColor = "transparent";
-    cx.strokeStyle = isCompleted ? "#1B4D3E" : "#2D6A4F";
-    cx.lineWidth = isCompleted ? 4.2 : 3.4;
+    cx.strokeStyle = isCompleted ? "#15803D" : "#16A34A";
+    cx.lineWidth = isCompleted ? 4.5 : 3.6;
     cx.stroke();
     cx.restore();
 
-    // 2-2. [나. 생명 중심] 슈바이처 - 2단계 플랫폼 (가로 680, 세로 510, 슈바이처·싱어·아리 포괄)
+    // 2-2. [나. 생명 중심] 슈바이처 - 생명의 클로버 정원 (가로 680, 세로 510, 슈바이처·싱어·아리 포괄)
     cx.save();
-    cx.shadowColor = "rgba(20, 60, 25, 0.12)";
-    cx.shadowBlur = 14;
+    cx.shadowColor = "rgba(67, 160, 71, 0.12)";
+    cx.shadowBlur = 16;
     cx.shadowOffsetY = 6;
     drawRoundRect(cx, sp.x - 450, sp.y - 245, 680, 510, 32);
-    cx.fillStyle = "#EBF7EE"; // 100% 불투명 싱그러운 페일 민트 그린
+    cx.fillStyle = "#F7FEE7"; // 싱그러운 봄빛 클로버 연두
     cx.fill();
     cx.shadowColor = "transparent";
-    cx.strokeStyle = "#388E3C";
+    cx.strokeStyle = "#65A30D";
     cx.lineWidth = 3.2;
     cx.stroke();
     cx.restore();
 
-    // 2-3. [다. 동물 중심] 피터 싱어 - 3단계 플랫폼 (가로 440, 세로 440, 싱어·아리 포괄)
+    // 2-3. [다. 동물 중심] 피터 싱어 - 동물들의 햇살 테라스 (가로 440, 세로 440, 싱어·아리 포괄)
     cx.save();
-    cx.shadowColor = "rgba(60, 35, 10, 0.12)";
-    cx.shadowBlur = 12;
+    cx.shadowColor = "rgba(245, 158, 11, 0.12)";
+    cx.shadowBlur = 14;
     cx.shadowOffsetY = 5;
     drawRoundRect(cx, sp.x - 440, sp.y - 210, 440, 440, 28);
-    cx.fillStyle = "#FFF8EE"; // 100% 불투명 따뜻한 웜 앰버 크림
+    cx.fillStyle = "#FFFDF0"; // 따스한 숲속 햇살 앰버 크림
     cx.fill();
     cx.shadowColor = "transparent";
-    cx.strokeStyle = "#D97706";
+    cx.strokeStyle = "#F59E0B";
     cx.lineWidth = 3.2;
     cx.stroke();
     cx.restore();
 
-    // 2-4. [라. 인간 중심] 아리스토텔레스 - 최내곽 플랫폼 (가로 210, 세로 370, 아리스토텔레스 단독 포괄)
+    // 2-4. [라. 인간 중심] 아리스토텔레스 - 이성의 숲속 샘터 (가로 210, 세로 370, 아리스토텔레스 단독 포괄)
     cx.save();
-    cx.shadowColor = "rgba(35, 25, 75, 0.12)";
+    cx.shadowColor = "rgba(2, 132, 199, 0.12)";
     cx.shadowBlur = 12;
     cx.shadowOffsetY = 5;
     drawRoundRect(cx, sp.x - 430, sp.y - 175, 210, 370, 24);
-    cx.fillStyle = "#F6F4FE"; // 100% 불투명 기품 있는 로열 라벤더
+    cx.fillStyle = "#F0F9FF"; // 맑고 청량한 숲속 샘물 스카이
     cx.fill();
     cx.shadowColor = "transparent";
-    cx.strokeStyle = "#5B4FCF";
+    cx.strokeStyle = "#0284C7";
     cx.lineWidth = 3.2;
     cx.stroke();
     cx.restore();
 
-    // ===== 2-5. 4대 사상 라벨 뱃지 렌더링 (플랫폼 위에 단독 최상단 렌더링하여 절대 가려지지 않음!) =====
-    // 가. 생태 중심 라벨 뱃지 (생태 고유 구역 중앙 sp.x + 345 에 단독 배치)
+    // ===== 2-5. 4대 사상 라벨 뱃지 렌더링 (산뜻한 숲속 팻말 디자인) =====
+    // 가. 생태 중심 라벨 뱃지
     cx.save();
     drawRoundRect(cx, sp.x + 248, sp.y - 268, 195, 30, 10);
-    cx.fillStyle = "#2D6A4F";
+    cx.fillStyle = "#16A34A";
     cx.fill();
+    cx.strokeStyle = "#FFFFFF";
+    cx.lineWidth = 1.5;
+    cx.stroke();
     cx.fillStyle = "#FFFFFF";
     cx.font = "bold 12.5px sans-serif";
     cx.textAlign = "center";
@@ -4186,11 +4374,14 @@ function render(ts) {
     cx.fillText("가. 생태 중심 (생태계 전체)", sp.x + 345, sp.y - 253);
     cx.restore();
 
-    // 나. 생명 중심 라벨 뱃지 (생명 고유 구역 중앙 sp.x + 115 에 단독 배치)
+    // 나. 생명 중심 라벨 뱃지
     cx.save();
     drawRoundRect(cx, sp.x + 22, sp.y - 233, 185, 28, 9);
-    cx.fillStyle = "#388E3C";
+    cx.fillStyle = "#65A30D";
     cx.fill();
+    cx.strokeStyle = "#FFFFFF";
+    cx.lineWidth = 1.5;
+    cx.stroke();
     cx.fillStyle = "#FFFFFF";
     cx.font = "bold 12px sans-serif";
     cx.textAlign = "center";
@@ -4198,11 +4389,14 @@ function render(ts) {
     cx.fillText("나. 생명 중심 (모든 생명체)", sp.x + 115, sp.y - 219);
     cx.restore();
 
-    // 다. 동물 중심 라벨 뱃지 (동물 고유 구역 중앙 sp.x - 110 에 단독 배치)
+    // 다. 동물 중심 라벨 뱃지
     cx.save();
     drawRoundRect(cx, sp.x - 198, sp.y - 198, 175, 28, 9);
     cx.fillStyle = "#D97706";
     cx.fill();
+    cx.strokeStyle = "#FFFFFF";
+    cx.lineWidth = 1.5;
+    cx.stroke();
     cx.fillStyle = "#FFFFFF";
     cx.font = "bold 12px sans-serif";
     cx.textAlign = "center";
@@ -4210,11 +4404,14 @@ function render(ts) {
     cx.fillText("다. 동물 중심 (감각 동물)", sp.x - 110, sp.y - 184);
     cx.restore();
 
-    // 라. 인간 중심 라벨 뱃지 (인간 고유 구역 중앙 sp.x - 325 에 단독 배치)
+    // 라. 인간 중심 라벨 뱃지
     cx.save();
     drawRoundRect(cx, sp.x - 410, sp.y - 163, 170, 28, 9);
-    cx.fillStyle = "#5B4FCF";
+    cx.fillStyle = "#0284C7";
     cx.fill();
+    cx.strokeStyle = "#FFFFFF";
+    cx.lineWidth = 1.5;
+    cx.stroke();
     cx.fillStyle = "#FFFFFF";
     cx.font = "bold 12px sans-serif";
     cx.textAlign = "center";
@@ -4663,89 +4860,128 @@ function openClaim(p){
   S.votes = { ok: 0, no: 0 };
   S.claim = null;
 
-  const panel = $("#mapDiscussionPanel");
-  if (!panel) return;
-  panel.classList.remove("hide");
-  panel.classList.remove("is-collapsed");
-
   const isMyTurn = p.isMe || (S.me && S.me.id === p.id);
 
-  panel.innerHTML = `
-    <div class="map-discussion-header">
-      <div class="map-discussion-title">
+  // 1. 토론 탭(3번 탭) 주장 카드 표시 및 복구
+  const claimCard = $("#claimCard");
+  if (claimCard) {
+    claimCard.classList.remove("hide");
+    claimCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  if ($("#voteCard")) $("#voteCard").classList.add("hide");
+  if ($("#gradeCard")) $("#gradeCard").classList.add("hide");
+
+  // 2. 맵 내부 패널 표시
+  const panel = $("#mapDiscussionPanel");
+  if (panel) {
+    panel.classList.remove("hide");
+    panel.classList.remove("is-collapsed");
+  }
+
+  const formHtml = `
+    <div class="banner" style="background:${isMyTurn ? 'linear-gradient(135deg,#0f6e63,#15b097)' : 'linear-gradient(135deg,#1e293b,#334155)'};border-radius:12px;padding:14px 18px;margin-bottom:12px;color:#fff;">
+      <div style="font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
         <span>🎤 <b>${p.no}번 · <span style="color:#FEF08A;">${t.scholar}</span>(${t.name})</b> 학생의 주장 작성</span>
+        <span style="background:rgba(255,255,255,0.22);padding:4px 12px;border-radius:999px;font-size:13px;font-weight:700;">
+          ${isMyTurn ? "🌟 당첨 학생 본인(나) 작성 중" : "🧪 당첨 학생 대리 작성 테스트 모드"}
+        </span>
       </div>
-      <div class="map-discussion-header-btns">
-        <button type="button" class="btn-panel-toggle" id="togglePanelCollapseBtn" title="패널 접기/펼치기">▼ 접기</button>
+      <div style="font-size:13px;opacity:0.92;margin-top:6px;line-height:1.5;">
+        사례에 대한 <b>${t.scholar}</b>의 입장을 선택하고, 핵심 개념어를 포함하여 2문장으로 타당한 근거를 서술하세요.
       </div>
     </div>
-    <div class="map-discussion-body">
-      <div class="banner" style="background:${isMyTurn ? 'linear-gradient(135deg,#0f6e63,#15b097)' : 'linear-gradient(135deg,#1e293b,#334155)'};border-radius:12px;padding:12px 16px;margin-bottom:12px;color:#fff;">
-        <div style="font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-          <span>사례에 대한 <b>${t.scholar}</b>의 입장을 선택하고 근거를 작성하세요</span>
-          <span style="background:rgba(255,255,255,0.22);padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;">
-            ${isMyTurn ? "🌟 당첨 학생 본인(나) 작성 중" : "🧪 당첨 학생 대리 작성 테스트 모드"}
-          </span>
-        </div>
-        <div style="font-size:12.5px;opacity:0.92;margin-top:5px;line-height:1.45;">
-          ${t.scholar}의 핵심 개념어를 포함하여 2문장으로 타당한 근거를 서술하세요.
-        </div>
-      </div>
-      <div class="row" style="gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap;">
-        <select id="stanceIn" style="padding:9px 12px;font-size:15px;font-weight:800;border:2px solid var(--accent);border-radius:10px;background:#fff;cursor:pointer;">
-          <option value="찬성">찬성</option>
-          <option value="반대">반대</option>
-        </select>
-        <input id="reasonIn" style="flex:1;min-width:260px;padding:9px 12px;font-size:14.5px;border:2px solid #CBD5E1;border-radius:10px;box-sizing:border-box;" placeholder="${t.scholar}의 핵심 표현을 넣어 두 문장으로 근거를 작성하세요">
-        <button id="sendBtn" class="btn-start-tab2" style="padding:9px 18px;font-size:14px;font-weight:800;white-space:nowrap;cursor:pointer;">💬 맵에 말풍선 띄우기</button>
-      </div>
-      <div style="margin-top:10px;display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
-        <span class="muted" style="font-size:12px;font-weight:700;">🔑 핵심어 힌트:</span>
-        ${t.keywords.slice(0, 4).map(k => `<button type="button" class="kw-tag used" style="cursor:pointer;background:#EEF4F3;border:1px solid #CBD5E1;color:#1E293B;padding:4px 10px;font-size:12px;" onclick="insertKeywordToReason('${k}')">${k} +</button>`).join("")}
-        <button type="button" class="ghost" id="quickSampleClaimBtn" style="padding:4px 12px;font-size:12px;margin-left:auto;background:#FEF3C7;color:#B45309;border-color:#F59E0B;font-weight:700;">⚡ 예시 답안 자동완성 (테스트용)</button>
-      </div>
+    <div class="row" style="gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap;">
+      <select class="stance-input-field" style="padding:10px 14px;font-size:15px;font-weight:800;border:2px solid var(--accent);border-radius:10px;background:#fff;cursor:pointer;">
+        <option value="찬성">찬성</option>
+        <option value="반대">반대</option>
+      </select>
+      <input class="reason-input-field" style="flex:1;min-width:280px;padding:10px 14px;font-size:15px;border:2px solid #CBD5E1;border-radius:10px;box-sizing:border-box;" placeholder="${t.scholar}의 핵심 표현을 넣어 두 문장으로 근거를 작성하세요">
+      <button type="button" class="btn-send-claim btn-start-tab2" style="padding:10px 22px;font-size:15px;font-weight:800;white-space:nowrap;cursor:pointer;">💬 말풍선 띄우기</button>
+    </div>
+    <div style="margin-top:10px;display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+      <span class="muted" style="font-size:12.5px;font-weight:700;">🔑 핵심어 힌트:</span>
+      ${t.keywords.slice(0, 4).map(k => `<button type="button" class="kw-tag used kw-hint-btn" style="cursor:pointer;background:#EEF4F3;border:1px solid #CBD5E1;color:#1E293B;padding:4px 10px;font-size:12px;" data-kw="${k}">${k} +</button>`).join("")}
+      <button type="button" class="ghost btn-quick-sample" style="padding:4px 12px;font-size:12.5px;margin-left:auto;background:#FEF3C7;color:#B45309;border-color:#F59E0B;font-weight:700;">⚡ 예시 답안 자동완성 (테스트용)</button>
     </div>
   `;
 
-  // 테스트용 예시 답안 즉시 자동완성 버튼
-  const sampleBtn = $("#quickSampleClaimBtn");
-  if (sampleBtn) {
-    sampleBtn.onclick = () => {
+  if ($("#claimArea")) {
+    $("#claimArea").innerHTML = formHtml;
+  }
+
+  if (panel) {
+    panel.innerHTML = `
+      <div class="map-discussion-header">
+        <div class="map-discussion-title">
+          <span>🎤 <b>${p.no}번 · <span style="color:#FEF08A;">${t.scholar}</span>(${t.name})</b> 학생의 주장 작성</span>
+        </div>
+        <div class="map-discussion-header-btns">
+          <button type="button" class="btn-panel-toggle" id="togglePanelCollapseBtn" title="패널 접기/펼치기">▼ 접기</button>
+        </div>
+      </div>
+      <div class="map-discussion-body">
+        ${formHtml}
+      </div>
+    `;
+    const toggleBtn = $("#togglePanelCollapseBtn");
+    if (toggleBtn) {
+      toggleBtn.onclick = () => {
+        panel.classList.toggle("is-collapsed");
+        toggleBtn.textContent = panel.classList.contains("is-collapsed") ? "▲ 펼치기" : "▼ 접기";
+      };
+    }
+  }
+
+  // 힌트 버튼 클릭 이벤트 연결
+  $$(".kw-hint-btn").forEach(btn => {
+    btn.onclick = () => {
+      const kw = btn.dataset.kw;
+      $$(".reason-input-field").forEach(inp => {
+        inp.value = (inp.value ? inp.value + " " : "") + kw;
+      });
+      const firstInp = $(".reason-input-field");
+      if (firstInp) firstInp.focus();
+    };
+  });
+
+  // 예시 답안 자동완성 버튼 이벤트 연결
+  $$(".btn-quick-sample").forEach(btn => {
+    btn.onclick = () => {
       const expStance = CASE.answers[p.thinkerId]?.stance || "반대";
       const expReason = CASE.answers[p.thinkerId]?.reason || "";
-      $("#stanceIn").value = expStance;
-      $("#reasonIn").value = expReason;
+      $$(".stance-input-field").forEach(sel => sel.value = expStance);
+      $$(".reason-input-field").forEach(inp => inp.value = expReason);
       toast("⚡ 예시 모범답안이 자동 입력되었습니다! '말풍선 띄우기'를 누르세요.");
     };
-  }
+  });
 
-  // 패널 접기/펼치기 버튼 바인딩
-  const toggleBtn = $("#togglePanelCollapseBtn");
-  if (toggleBtn) {
-    toggleBtn.onclick = () => {
-      panel.classList.toggle("is-collapsed");
-      toggleBtn.textContent = panel.classList.contains("is-collapsed") ? "▲ 펼치기" : "▼ 접기";
+  // 말풍선 띄우기 버튼 이벤트 연결
+  $$(".btn-send-claim").forEach(btn => {
+    btn.onclick = () => {
+      const reasonInp = btn.closest(".row")?.querySelector(".reason-input-field") || $(".reason-input-field");
+      const stanceSel = btn.closest(".row")?.querySelector(".stance-input-field") || $(".stance-input-field");
+      const r = (reasonInp ? reasonInp.value : "").trim();
+      if (r.length < 10) {
+        toast("근거를 조금 더 써 주세요 (최소 10자 이상)");
+        if (reasonInp) reasonInp.focus();
+        return;
+      }
+      const st = stanceSel ? stanceSel.value : "찬성";
+      const claimObj = { thinkerId: p.thinkerId, stance: st, reason: r, who: p.no };
+      S.claim = claimObj;
+      p.claim = claimObj;
+      S.cam = { x: p.x, y: p.y - 170 };
+      if (typeof setZoomPercent === "function") setZoomPercent(92, false);
+      beep(660, 0.1, "triangle", 0.12);
+      playApplauseSound();
+      showBubble();
     };
-  }
+  });
 
   setTimeout(() => {
-    const inp = $("#reasonIn");
+    const inp = $(".reason-input-field");
     if (inp) inp.focus();
   }, 120);
-
-  $("#sendBtn").onclick=()=>{
-    const r=$("#reasonIn").value.trim();
-    if(r.length<10){toast("근거를 조금 더 써 주세요 (최소 10자 이상)");return;}
-    const claimObj = {thinkerId:p.thinkerId,stance:$("#stanceIn").value,reason:r,who:p.no};
-    S.claim = claimObj;
-    p.claim = claimObj;
-    // 거대한 말풍선과 사상가가 맵에 시원하게 꽉 차도록 클로즈업 및 카메라 위치 조정
-    S.cam = { x: p.x, y: p.y - 170 };
-    if(typeof setZoomPercent === "function") setZoomPercent(92, false);
-    beep(660,0.1,"triangle",0.12);
-    playApplauseSound(); // 주장 발표 시 축하 박수 효과음!
-    showBubble();
-  };
 }
 
 // 🎯 내가 당첨 학생이 되어 직접 주장 작성 및 채점 테스트하기 버튼 바인딩
@@ -4788,6 +5024,7 @@ setTimeout(() => {
     };
   }
 }, 100);
+
 // 교사 권한 관리 및 채점 로직 (학생은 클릭 불가, 교사 인증 필요)
 function handleTeacherGradeClick() {
   if (!S.claim) {
@@ -4848,72 +5085,63 @@ function showBubble(){
   const exp = CASE.answers[c.thinkerId]?.stance;
   const text = (c.reason || "").replace(/\s+/g, " ").trim();
 
-  const panel = $("#mapDiscussionPanel");
-  if (!panel) return;
-  panel.classList.remove("hide");
-
-  let html = `
-    <div class="map-discussion-header">
-      <div class="map-discussion-title">
-        <span>💬 <b>${c.who}번 · <span style="color:#FEF08A;">${t.scholar}</span>(${t.name})</b> 토론석</span>
+  // 1. 교사 채점 툴바 HTML (선생님 채점칸)
+  const teacherBarHtml = `
+    <div class="grade-action-toolbar">
+      <div class="grade-action-left">
+        <span class="teacher-pill">👨‍🏫 교사 채점석</span>
+        <span class="teacher-auth-tag">${S.isTeacher ? "🟢 교사 인증됨" : "🔒 학생 모드 (클릭 시 교사 인증)"}</span>
       </div>
-      <div class="map-discussion-header-btns">
-        <button type="button" class="btn-panel-toggle" id="togglePanelCollapseBtn" title="패널 접기/펼치기">${panel.classList.contains("is-collapsed") ? "▲ 펼치기" : "▼ 접기"}</button>
+      <div class="grade-action-right">
+        <button type="button" class="btn-role-switch btn-role-toggle-action">${S.isTeacher ? "👨‍🎓 학생으로 전환" : "🔑 교사 전환 (PW: 1234)"}</button>
+        <button type="button" class="btn-teacher-grade-direct btn-teacher-grade-action">${c.grade ? "🔄 재채점하기" : "📝 교사 채점하기"}</button>
       </div>
     </div>
-    <div class="map-discussion-body">
-      <!-- 1. 교사 채점 툴바 (맵 안에서 교사가 즉시 해결) -->
-      <div class="grade-action-toolbar" id="teacherGradeBar">
-        <div class="grade-action-left">
-          <span class="teacher-pill">👨‍🏫 교사 채점석</span>
-          <span class="teacher-auth-tag" id="teacherAuthTag">${S.isTeacher ? "🟢 교사 인증됨" : "🔒 학생 모드 (클릭 시 교사 인증)"}</span>
-        </div>
-        <div class="grade-action-right">
-          <button id="toggleTeacherRoleBtn" class="btn-role-switch">${S.isTeacher ? "👨‍🎓 학생으로 전환" : "🔑 교사 전환 (PW: 1234)"}</button>
-          <button id="claimTeacherGradeBtn" class="btn-teacher-grade-direct">${c.grade ? "🔄 재채점하기" : "📝 교사 채점하기"}</button>
-        </div>
-      </div>
-
-      <!-- 2. 동료 학생 실시간 투표 칸 (맵 안에서 투표 진행) -->
-      <div class="inmap-vote-box">
-        <div class="inmap-vote-header">
-          <span>🗳️ <b>학생 실시간 투표:</b> 이 주장은 <b>${t.scholar}</b>의 근거로 정확한가요?</span>
-        </div>
-        <div class="inmap-vote-actions">
-          <button type="button" id="vOk" class="btn-vote-ok">👍 정확하다</button>
-          <button type="button" id="vNo" class="btn-vote-no">👎 아니다</button>
-        </div>
-        <div id="voteRes" class="inmap-vote-res"></div>
-      </div>
   `;
 
+  // 2. 동료 학생 실시간 투표 칸
+  const voteHtml = `
+    <div class="inmap-vote-box" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 14px;margin:10px 0;">
+      <div class="inmap-vote-header" style="font-size:13.5px;font-weight:700;margin-bottom:8px;color:#1e293b;">
+        <span>🗳️ <b>학생 실시간 투표:</b> 이 주장은 <b>${t.scholar}</b>의 근거로 정확한가요?</span>
+      </div>
+      <div class="inmap-vote-actions" style="display:flex;gap:8px;align-items:center;">
+        <button type="button" class="btn-vote-ok-action" style="background:#10b981;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-weight:700;font-size:13px;cursor:pointer;">👍 정확하다</button>
+        <button type="button" class="btn-vote-no-action" style="background:#f43f5e;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-weight:700;font-size:13px;cursor:pointer;">👎 아니다</button>
+      </div>
+      <div class="vote-result-view" style="margin-top:8px;font-size:13px;font-weight:600;"></div>
+    </div>
+  `;
+
+  let bubbleBodyHtml = "";
   if (!c.grade) {
-    // 아직 채점되지 않은 초기 말풍선 상태
-    html += `
-      <div class="bubble" id="domBubbleCard" style="cursor:pointer;" title="클릭하여 10배 확대">
+    // 미채점 상태: 학생 답변 말풍선 및 채점 대기 안내
+    bubbleBodyHtml = `
+      <div class="bubble bubble-card-click" style="cursor:pointer;" title="클릭하여 10배 확대">
         <span class="stance ${c.stance === '찬성' ? 'correct' : 'diff'}">${c.stance}</span>${c.reason}
         <div style="font-size:12px;color:var(--accent);margin-top:6px;font-weight:700">🔍 클릭하여 10배 확대 보기</div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap;gap:8px;">
         <span class="muted" style="font-size:13px;">${c.who}번 · ${t.scholar} (${t.name}) (본인과 교사만 수정 가능)</span>
         <div style="display:flex;gap:6px;">
-          <button class="ghost" id="editBtn" style="padding:4px 10px;font-size:13px">✏️ 답변 수정</button>
-          <button class="btn-start-tab2" id="zoomBubbleBtn" style="padding:4px 12px;font-size:13px">🔍 10배 확대</button>
+          <button type="button" class="ghost btn-edit-claim-action" style="padding:4px 10px;font-size:13px">✏️ 답변 수정</button>
+          <button type="button" class="btn-start-tab2 btn-zoom-bubble-action" style="padding:4px 12px;font-size:13px">🔍 10배 확대</button>
         </div>
       </div>
       <div class="grade-waiting-notice" style="margin-top:10px;">
-        ℹ️ 상단의 <b>[📝 교사 채점하기]</b> 버튼을 누르면 점수와 왜 틀렸는지 분석, 사상가 모범답안 비교가 맵 안에서 즉시 표시됩니다.
+        ℹ️ 상단의 <b>[📝 교사 채점하기]</b> 버튼을 누르면 점수와 왜 틀렸는지 분석, 사상가 모범답안 비교가 즉시 표시됩니다.
       </div>
     `;
+    if ($("#gradeCard")) $("#gradeCard").classList.add("hide");
   } else {
-    // 채점 완료 상태: 몇 점인지, 왜 틀렸는지 학생 답과 모범 답안을 나란히 1:1 비교 표시!
+    // 3. 채점 완료 상태: 채점 후 확인 창 (1:1 비교 보드)
     const g = c.grade;
     const wrongReasons = g.feedback.filter(f => f.includes("입장이 다릅니다") || f.includes("핵심 표현") || f.includes("다른 사상") || f.includes("사례 속"));
     const goodReasons = g.feedback.filter(f => !wrongReasons.includes(f));
 
-    html += `
-      <div class="grade-comparison-board" id="domBubbleCard">
-        <!-- 1. 몇 점인지 총점 및 항목별 점수 헤더 -->
+    bubbleBodyHtml = `
+      <div class="grade-comparison-board bubble-card-click">
+        <!-- 1. 총점 및 세부 점수 헤더 -->
         <div class="grade-score-header">
           <div class="score-main-badge">
             <span class="score-trophy">🏆</span>
@@ -4929,7 +5157,7 @@ function showBubble(){
 
         <!-- 2. 학생 답 vs 사상가 모범 답안 1:1 직접 비교 그리드 -->
         <div class="comparison-grid">
-          <!-- 좌측: 학생이 작성한 말풍선 답변 & 왜 틀렸는지 상세 분석 -->
+          <!-- 좌측: 학생이 작성한 말풍선 답변 & 감점 원인 분석 -->
           <div class="comparison-col student-col">
             <div class="col-header">
               <span class="col-title">💬 [${c.who}번 학생의 말풍선 답변]</span>
@@ -4940,7 +5168,6 @@ function showBubble(){
               <span class="bubble-user-text">${c.reason}</span>
             </div>
             
-            <!-- 왜 맞았는지 / 왜 틀렸는지 상세 분석 박스 -->
             <div class="why-analysis-box">
               ${wrongReasons.length > 0 ? `
                 <div class="analysis-item wrong">
@@ -4972,7 +5199,6 @@ function showBubble(){
               <span class="bubble-model-text">${g.model}</span>
             </div>
 
-            <!-- 필수 핵심 개념어 목록 -->
             <div class="model-criteria-box">
               <div class="criteria-title">🔑 <b>필수 핵심 개념어 점검</b></div>
               <div class="keyword-tags">
@@ -4986,40 +5212,74 @@ function showBubble(){
           </div>
         </div>
 
-        <!-- 하단 액션 버튼 -->
+        <!-- 하단 버튼 -->
         <div class="comparison-footer">
-          <button class="ghost" id="editBtn" style="padding:5px 14px;font-size:13px">✏️ 답변 수정</button>
-          <button class="btn-start-tab2" id="zoomBubbleBtn" style="padding:5px 14px;font-size:13px">🔍 10배 확대 보기</button>
+          <button type="button" class="ghost btn-edit-claim-action" style="padding:5px 14px;font-size:13px">✏️ 답변 수정</button>
+          <button type="button" class="btn-start-tab2 btn-zoom-bubble-action" style="padding:5px 14px;font-size:13px">🔍 10배 확대 보기</button>
         </div>
       </div>
     `;
+
+    // 3번 탭 전용 채점 결과 카드(#gradeCard)에도 채점 후 확인 창 렌더링!
+    const gradeCard = $("#gradeCard");
+    const gradeOut = $("#gradeOut");
+    if (gradeCard && gradeOut) {
+      gradeCard.classList.remove("hide");
+      gradeOut.innerHTML = bubbleBodyHtml;
+    }
   }
 
-  html += `</div>`;
+  // 3번 탭의 주장 카드(#claimArea)에 교사 채점석 + 투표 + 말풍선/채점결과 렌더링
+  if ($("#claimArea")) {
+    if ($("#claimCard")) $("#claimCard").classList.remove("hide");
+    $("#claimArea").innerHTML = `
+      ${teacherBarHtml}
+      ${voteHtml}
+      ${bubbleBodyHtml}
+    `;
+  }
 
-  panel.innerHTML = html;
+  // 맵 내부 패널(#mapDiscussionPanel)에도 동일 렌더링
+  const panel = $("#mapDiscussionPanel");
+  if (panel) {
+    panel.classList.remove("hide");
+    panel.innerHTML = `
+      <div class="map-discussion-header">
+        <div class="map-discussion-title">
+          <span>💬 <b>${c.who}번 · <span style="color:#FEF08A;">${t.scholar}</span>(${t.name})</b> 토론석</span>
+        </div>
+        <div class="map-discussion-header-btns">
+          <button type="button" class="btn-panel-toggle" id="togglePanelCollapseBtn" title="패널 접기/펼치기">${panel.classList.contains("is-collapsed") ? "▲ 펼치기" : "▼ 접기"}</button>
+        </div>
+      </div>
+      <div class="map-discussion-body">
+        ${teacherBarHtml}
+        ${voteHtml}
+        ${bubbleBodyHtml}
+      </div>
+    `;
+    const toggleBtn = $("#togglePanelCollapseBtn");
+    if (toggleBtn) {
+      toggleBtn.onclick = () => {
+        panel.classList.toggle("is-collapsed");
+        toggleBtn.textContent = panel.classList.contains("is-collapsed") ? "▲ 펼치기" : "▼ 접기";
+      };
+    }
+  }
 
-  // 이벤트 핸들러 바인딩
-  const gradeBtn = $("#claimTeacherGradeBtn");
-  if (gradeBtn) gradeBtn.onclick = handleTeacherGradeClick;
-  const roleBtn = $("#toggleTeacherRoleBtn");
-  if (roleBtn) roleBtn.onclick = handleTeacherRoleToggle;
-  if ($("#domBubbleCard")) $("#domBubbleCard").onclick = (e) => {
+  // 공통 이벤트 핸들러 바인딩
+  $$(".btn-teacher-grade-action").forEach(btn => btn.onclick = handleTeacherGradeClick);
+  $$(".btn-role-toggle-action").forEach(btn => btn.onclick = handleTeacherRoleToggle);
+  $$(".btn-edit-claim-action").forEach(btn => btn.onclick = () => openClaim(S.drawn || { no: c.who, thinkerId: c.thinkerId, id: "drawn" }));
+  $$(".btn-zoom-bubble-action").forEach(btn => btn.onclick = () => showEnlargedBubble(c));
+  $$(".bubble-card-click").forEach(el => el.onclick = (e) => {
     if (e.target.closest("button")) return;
     showEnlargedBubble(c);
-  };
-  if ($("#zoomBubbleBtn")) $("#zoomBubbleBtn").onclick = () => showEnlargedBubble(c);
-  if ($("#editBtn")) $("#editBtn").onclick = () => openClaim(S.drawn);
+  });
 
-  const toggleBtn = $("#togglePanelCollapseBtn");
-  if (toggleBtn) {
-    toggleBtn.onclick = () => {
-      panel.classList.toggle("is-collapsed");
-      toggleBtn.textContent = panel.classList.contains("is-collapsed") ? "▲ 펼치기" : "▼ 접기";
-    };
-  }
-
-  // Bind votes
+  // 투표 버튼 바인딩
+  $$(".btn-vote-ok-action").forEach(btn => btn.onclick = () => vote(true));
+  $$(".btn-vote-no-action").forEach(btn => btn.onclick = () => vote(false));
   const vOk = $("#vOk"), vNo = $("#vNo");
   if (vOk) vOk.onclick = () => vote(true);
   if (vNo) vNo.onclick = () => vote(false);
@@ -5036,13 +5296,13 @@ function vote(ok){
 
 function renderVotes(){
   const o = S.votes.ok, n = S.votes.no, tot = o + n || 1;
+  const resHtml = `정확하다 ${o}표 (${Math.round(o/tot*100)}%)
+    <div class="bar"><i style="width:${o/tot*100}%"></i></div>
+    아니다 ${n}표 (${Math.round(n/tot*100)}%)
+    <div class="bar"><i style="width:${n/tot*100}%;background:#e11d48"></i></div>`;
+  $$(".vote-result-view").forEach(el => el.innerHTML = resHtml);
   const resEl = $("#voteRes");
-  if (resEl) {
-    resEl.innerHTML = `정확하다 ${o}표 (${Math.round(o/tot*100)}%)
-      <div class="bar"><i style="width:${o/tot*100}%"></i></div>
-      아니다 ${n}표 (${Math.round(n/tot*100)}%)
-      <div class="bar"><i style="width:${n/tot*100}%;background:#e11d48"></i></div>`;
-  }
+  if (resEl) resEl.innerHTML = resHtml;
 }
 
 /* ===== 4번 탭: 도덕적 고려 범위 연습장 ===== */
